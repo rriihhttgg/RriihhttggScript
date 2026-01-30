@@ -57,6 +57,46 @@ local Ang = {
 	"Normal"
 }
 
+-- Цикл
+while wait() do
+Anc = {
+	"BeginnersDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+Jun = {
+	"JungleDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+Snow = {
+	"ArcticBastionDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+Atl = {
+	"UnderwaterDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+Und = {
+	"FireDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+Ang = {
+	"CloudDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+end
+
 -- Загрузка библиотеки
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 
@@ -112,42 +152,6 @@ end)
 
 MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"}, function(difficulty)
     print(difficulty)
-Anc = {
-	"BeginnersDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-Jun = {
-	"JungleDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-Snow = {
-	"ArcticBastionDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-Atl = {
-	"UnderwaterDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-Und = {
-	"FireDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-Ang = {
-	"CloudDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
 end)
 
 -- Кнопка
@@ -158,7 +162,7 @@ MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
         game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Jun))
     elseif dungeon == "Snow Castle" and difficulty ~= nil then
         game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Snow))
-    elseif dungeon == "Atlantis" then
+    elseif dungeon == "Atlantis" and difficulty ~= nil then
         game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Atl))
     elseif dungeon == "Underworld" and difficulty ~= nil then
         game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Und))
