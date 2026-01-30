@@ -76,15 +76,11 @@ end)
 local MainSection = MainTab:NewSection("Dungeons")
 
 -- Список
-MainSection:NewDropdown("Dungeons", "Select Dungeon",
-{"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
-function(value)
+MainSection:NewDropdown("Dungeons", "Select Dungeon", {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"}, function(value)
     dungeon = value
 end)
 
-MainSection:NewDropdown("Difficulties", "Select Difficulty",
-{"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"},
-function(value)
+MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"}, function(value)
     difficulty = value
 end)
 
@@ -93,18 +89,15 @@ MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
         warn("Dungeon or difficulty not selected")
         return
     end
-
     if dungeon == "Jungle" and difficulty == "Easy" then
         warn("Jungle нельзя на Easy")
         return
     end
-
     local args = {
         dungeonIds[dungeon],
         difficulty,
         "All",
         "Normal"
     }
-
     CreateParty:InvokeServer(unpack(args))
 end)
