@@ -54,6 +54,6 @@ end)
 local MainSection = MainTab:NewSection("Craft")
 
 -- Кнопки
-MainSection:NewButton("Time banner roll", "Craft 1 time shard for 100 tickmetal fragments", function()
+MainSection:NewButton("Craft time shard", "Craft 1 time shard for 100 tickmetal fragments", function()
 game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService"):WaitForChild("RF"):WaitForChild("CraftSpecialMaterial"):InvokeServer(unpack(args))
 end)
