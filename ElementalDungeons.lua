@@ -57,46 +57,6 @@ local Ang = {
 	"Normal"
 }
 
--- Цикл
-while wait() do
-Anc = {
-	"BeginnersDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-Jun = {
-	"JungleDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-Snow = {
-	"ArcticBastionDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-Atl = {
-	"UnderwaterDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-Und = {
-	"FireDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-Ang = {
-	"CloudDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-end
-
 -- Загрузка библиотеки
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 
@@ -152,6 +112,47 @@ end)
 
 MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"}, function(difficulty)
     print(difficulty)
+	local Anc = {
+    	"BeginnersDungeon",
+	    difficulty,
+    	"All",
+    	"Normal"
+    }
+
+    local Jun = {
+	    "JungleDungeon",
+	    difficulty,
+	    "All",
+    	"Normal"
+    }
+
+    local Snow = {
+    	"ArcticBastionDungeon",
+    	difficulty,
+    	"All",
+    	"Normal"
+    }
+
+    local Atl = {
+    	"UnderwaterDungeon",
+    	difficulty,
+    	"All",
+    	"Normal"
+    }
+
+    local Und = {
+	    "FireDungeon",
+	    difficulty,
+	    "All",
+	    "Normal"
+    }
+
+    local Ang = {
+    	"CloudDungeon",
+    	difficulty,
+    	"All",
+    	"Normal"
+    }
 end)
 
 -- Кнопка
