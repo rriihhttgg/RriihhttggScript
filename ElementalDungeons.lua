@@ -88,6 +88,12 @@ MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", 
 end)
 
 MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
+	argas = {
+            dungeonIds[dungeon],
+		    difficulty,
+		    "All",
+		    "Normal"
+		}
 	if not dungeon or not difficulty then
 		warn("Dungeon or difficulty not selected")
 		return
@@ -98,10 +104,5 @@ MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
 		return
 	end
 
-	CreateParty:InvokeServer(
-		dungeonIds[dungeon],
-		difficulty,
-		"All",
-		"Normal"
-	)
+	CreateParty:InvokeServer(unpack(argas))
 end)
