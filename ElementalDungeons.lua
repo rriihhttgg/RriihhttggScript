@@ -89,21 +89,33 @@ MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", 
 end)
 
 MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
-	argas = {
-            dungeonIds[dungeon],
-		    difficulty,
-		    "All",
-		    "Normal"
-		}
-	if not dungeon or not difficulty then
-		warn("Dungeon or difficulty not selected")
-		return
-	end
 
-	if dungeon == "Jungle" and difficulty == "Easy" then
-		warn("Jungle нельзя на Easy")
-		return
-	end
+    if not dungeon or not difficulty then
+        warn("Dungeon or difficulty not selected")
+        return
+    end
 
-	CreateParty:InvokeServer(unpack(argas))
+    if dungeon == "Jungle" and difficulty == "Easy" then
+        warn("Jungle нельзя на Easy")
+        return
+    end
+
+    local dungeonIds = {
+        ["Ancient Tomb"] = "BeginnersDungeon",
+        ["Jungle"] = "JungleDungeon",
+        ["Snow Castle"] = "ArcticBastionDungeon",
+        ["Atlantis"] = "UnderwaterDungeon",
+        ["Underworld"] = "FireDungeon",
+        ["Angel Sanctuary"] = "CloudDungeon"
+    }
+
+    local args = {
+        dungeonIds[dungeon],
+        difficulty,
+        "All",
+        "Normal"
+    }
+
+    game:GetService("ReplicatedStorage")
+        .Packages.Knit.Services.PartyService.RF.CreateParty:InvokeServer(unpack(args))
 end)
