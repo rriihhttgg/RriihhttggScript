@@ -13,18 +13,21 @@ local npcSus = workspace.MapContent.NPCs["Sus Vampire"]:WaitForChild("HumanoidRo
 
 local npcHG = workspace.MapContent.NPCs["Handy Gorilla"]:WaitForChild("HumanoidRootPart")
 
+local difficulty = nil
+local dungeon = nil
+
 -- Массивы
 local TimeBanner = {
 	"TimeBanner2025"
 }
 
 local dungeonIds = {
-    ["Ancient Tomb"] = "BeginnersDungeon",
-    ["Jungle"] = "JungleDungeon",
-    ["Snow Castle"] = "ArcticBastionDungeon",
-    ["Atlantis"] = "UnderwaterDungeon",
-    ["Underworld"] = "FireDungeon",
-    ["Angel Sanctuary"] = "CloudDungeon"
+	["Ancient Tomb"] = "BeginnersDungeon",
+	["Jungle"] = "JungleDungeon",
+	["Snow Castle"] = "ArcticBastionDungeon",
+	["Atlantis"] = "UnderwaterDungeon",
+	["Underworld"] = "FireDungeon",
+	["Angel Sanctuary"] = "CloudDungeon"
 }
 
 -- Загрузка библиотеки
@@ -76,28 +79,31 @@ end)
 local MainSection = MainTab:NewSection("Dungeons")
 
 -- Список
-MainSection:NewDropdown("Dungeons", "Select Dungeon", {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"}, function(value1)
-    dungeon = value1
+MainSection:NewDropdown("Dungeons", "Select Dungeon", {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"}, function(value)
+	dungeon = value
 end)
 
-MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"}, function(value2)
-    difficulty = value2
+MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"}, function(valuer)
+	difficulty = valuer
 end)
 
 MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
-    if not dungeon or not difficulty then
-        warn("Dungeon or difficulty not selected")
-        return
-    end
-    if dungeon == "Jungle" and difficulty == "Easy" then
-        warn("Jungle нельзя на Easy")
-        return
-    end
-    local args = {
-        dungeonIds[dungeon],
-        difficulty,
-        "All",
-        "Normal"
-    }
-    CreateParty:InvokeServer(unpack(args))
+	if not dungeon or not difficulty then
+		warn("Dungeon or difficulty not selected")
+		return
+	end
+
+	if dungeon == "Jungle" and difficulty == "Easy" then
+		warn("Jungle нельзя на Easy")
+		return
+	end
+
+	CreateParty:InvokeServer(
+		dungeonIds[dungeon],
+		difficulty,
+		"All",
+		"Normal"
+	)
+end)
+
 end)
