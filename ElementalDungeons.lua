@@ -1,4 +1,10 @@
 -- Переменные
+local RS = game:GetService("ReplicatedStorage")
+local CreateParty = RS.Packages.Knit.Services.PartyService.RF.CreateParty
+
+local dungeon = nil
+local difficulty = nil
+
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer -- для LocalScript
 local character = player.Character or player.CharacterAdded:Wait()
@@ -12,46 +18,13 @@ local TimeBanner = {
 	"TimeBanner2025"
 }
 
-local Anc = {
-	"BeginnersDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-
-local Jun = {
-	"JungleDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-
-local Snow = {
-	"ArcticBastionDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-
-local Atl = {
-	"UnderwaterDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-
-local Und = {
-	"FireDungeon",
-	difficulty,
-	"All",
-	"Normal"
-}
-
-local Ang = {
-	"CloudDungeon",
-	difficulty,
-	"All",
-	"Normal"
+local dungeonIds = {
+    ["Ancient Tomb"] = "BeginnersDungeon",
+    ["Jungle"] = "JungleDungeon",
+    ["Snow Castle"] = "ArcticBastionDungeon",
+    ["Atlantis"] = "UnderwaterDungeon",
+    ["Underworld"] = "FireDungeon",
+    ["Angel Sanctuary"] = "CloudDungeon"
 }
 
 -- Загрузка библиотеки
@@ -103,68 +76,35 @@ end)
 local MainSection = MainTab:NewSection("Dungeons")
 
 -- Список
-MainSection:NewDropdown("Dungeons", "Select Dungeon", {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"}, function(dungeon)
-    print(dungeon)
+MainSection:NewDropdown("Dungeons", "Select Dungeon",
+{"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
+function(value)
+    dungeon = value
 end)
 
-MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"}, function(difficulty)
-    print(difficulty)
-	local Anc = {
-    	"BeginnersDungeon",
-	    difficulty,
-    	"All",
-    	"Normal"
-    }
-
-    local Jun = {
-	    "JungleDungeon",
-	    difficulty,
-	    "All",
-    	"Normal"
-    }
-
-    local Snow = {
-    	"ArcticBastionDungeon",
-    	difficulty,
-    	"All",
-    	"Normal"
-    }
-
-    local Atl = {
-    	"UnderwaterDungeon",
-    	difficulty,
-    	"All",
-    	"Normal"
-    }
-
-    local Und = {
-	    "FireDungeon",
-	    difficulty,
-	    "All",
-	    "Normal"
-    }
-
-    local Ang = {
-    	"CloudDungeon",
-    	difficulty,
-    	"All",
-    	"Normal"
-    }
+MainSection:NewDropdown("Difficulties", "Select Difficulty",
+{"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"},
+function(value)
+    difficulty = value
 end)
 
--- Кнопка
 MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
-    if dungeon == "Ancient Tomb" and difficulty ~= nil then
-        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Anc))
-    elseif (dungeon == "Jungle" and difficulty ~= "Easy") and difficulty ~= nil then
-        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Jun))
-    elseif dungeon == "Snow Castle" and difficulty ~= nil then
-        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Snow))
-    elseif dungeon == "Atlantis" and difficulty ~= nil then
-        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Atl))
-    elseif dungeon == "Underworld" and difficulty ~= nil then
-        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Und))
-    elseif dungeon == "Angel Sanctuary" and difficulty ~= nil then
-        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Ang))
+    if not dungeon or not difficulty then
+        warn("Dungeon or difficulty not selected")
+        return
     end
+
+    if dungeon == "Jungle" and difficulty == "Easy" then
+        warn("Jungle нельзя на Easy")
+        return
+    end
+
+    local args = {
+        dungeonIds[dungeon],
+        difficulty,
+        "All",
+        "Normal"
+    }
+
+    CreateParty:InvokeServer(unpack(args))
 end)
