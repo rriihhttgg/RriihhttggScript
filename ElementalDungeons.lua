@@ -106,6 +106,5 @@ MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
         "Normal"
     }
 
-    game:GetService("ReplicatedStorage")
-        .Packages.Knit.Services.PartyService.RF.CreateParty:InvokeServer(unpack(args))
+    game:GetService("ReplicatedStorage").Packages.Knit.Services.PartyService.RF.CreateParty:InvokeServer(unpack(args))
 end)
