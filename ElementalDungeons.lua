@@ -66,12 +66,12 @@ local MainSection = MainTab:NewSection("Dungeons")
 -- Список
 MainSection:NewDropdown("Dungeons", "Select Dungeon", {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"}, function(dungeons)
     print(dungeon)
-	dungeon = dungeons
+dungeon = dungeons
 end)
 
 MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"}, function(difficultys)
     print(difficulty)
-	difficulty = difficultys
+difficulty = difficultys
 end)
 
 -- Кнопка
