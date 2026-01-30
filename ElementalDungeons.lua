@@ -7,9 +7,54 @@ local npcSus = workspace.MapContent.NPCs["Sus Vampire"]:WaitForChild("HumanoidRo
 
 local npcHG = workspace.MapContent.NPCs["Handy Gorilla"]:WaitForChild("HumanoidRootPart")
 
+local difficulty = nil
+local dungeon = nil
+
 -- Массивы
 local TimeBanner = {
 	"TimeBanner2025"
+}
+
+local Anc = {
+	"BeginnersDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+
+local Jun = {
+	"JungleDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+
+local Snow = {
+	"ArcticBastionDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+
+local Atl = {
+	"UnderwaterDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+
+local Und = {
+	"FireDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+
+local Ang = {
+	"CloudDungeon",
+	difficulty,
+	"All",
+	"Normal"
 }
 
 -- Загрузка библиотеки
@@ -47,7 +92,6 @@ game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForCh
 end)
 MainSection:NewButton("Sus Vampire Element", "Buying element for gold from Sus Vampire", function()
 game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("MiscContentService"):WaitForChild("RF"):WaitForChild("BuyElementForGold"):InvokeServer(player)
-
 end)
 
 -- Создание секции
@@ -56,4 +100,33 @@ local MainSection = MainTab:NewSection("Craft")
 -- Кнопки
 MainSection:NewButton("Craft time shard", "Craft 1 time shard for 100 tickmetal fragments", function()
 game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService"):WaitForChild("RF"):WaitForChild("CraftSpecialMaterial"):InvokeServer(unpack(TimeBanner))
+end)
+
+-- Создание секции
+local MainSection = MainTab:NewSection("Dungeons")
+
+-- Список
+MainSection:NewDropdown("Dungeons", "Select Dungeon", {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"}, function(dungeon)
+    print(dungeon)
+end)
+
+MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"}, function(difficulty)
+    print(difficulty)
+end)
+
+-- Кнопка
+MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
+    if dungeon == "Ancient Tomb" and difficulty ~= nil then
+        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Anc))
+    elseif (dungeon == "Jungle" and difficulty ~= "Easy") and difficulty ~= nil then
+        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Jun))
+    elseif dungeon == "Snow Castle" and difficulty ~= nil then
+        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Snow))
+    elseif dungeon == "Atlantis" then
+        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Atl))
+    elseif dungeon == "Underworld" and difficulty ~= nil then
+        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Und))
+    elseif dungeon == "Angel Sanctuary" and difficulty ~= nil then
+        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Ang))
+    end
 end)
