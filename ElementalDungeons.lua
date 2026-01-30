@@ -112,53 +112,46 @@ end)
 
 MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"}, function(difficulty)
     print(difficulty)
-end)
-
--- Кнопка
-MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
-
 Anc = {
 	"BeginnersDungeon",
 	difficulty,
 	"All",
 	"Normal"
 }
-
 Jun = {
 	"JungleDungeon",
 	difficulty,
 	"All",
 	"Normal"
 }
-
 Snow = {
 	"ArcticBastionDungeon",
 	difficulty,
 	"All",
 	"Normal"
 }
-
 Atl = {
 	"UnderwaterDungeon",
 	difficulty,
 	"All",
 	"Normal"
 }
-
 Und = {
 	"FireDungeon",
 	difficulty,
 	"All",
 	"Normal"
 }
-
 Ang = {
 	"CloudDungeon",
 	difficulty,
 	"All",
 	"Normal"
 }
+end)
 
+-- Кнопка
+MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
     if dungeon == "Ancient Tomb" and difficulty ~= nil then
         game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Anc))
     elseif (dungeon == "Jungle" and difficulty ~= "Easy") and difficulty ~= nil then
