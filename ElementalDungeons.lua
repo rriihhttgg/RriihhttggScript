@@ -7,9 +7,6 @@ local npcSus = workspace.MapContent.NPCs["Sus Vampire"]:WaitForChild("HumanoidRo
 
 local npcHG = workspace.MapContent.NPCs["Handy Gorilla"]:WaitForChild("HumanoidRootPart")
 
-local difficulty = nil
-local dungeon = nil
-
 -- Массивы
 local TimeBanner = {
 	"TimeBanner2025"
