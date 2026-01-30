@@ -27,16 +27,6 @@ local TimeBanner = {
 	"TimeBanner2025"
 }
 
-local dungeonIds = {
-	["Ancient Tomb"] = "BeginnersDungeon",
-	["Jungle"] = "JungleDungeon",
-	["Snow Castle"] = "ArcticBastionDungeon",
-	["Atlantis"] = "UnderwaterDungeon",
-	["Underworld"] = "FireDungeon",
-	["Angel Sanctuary"] = "CloudDungeon"
-}
-
-
 -- Создание вкладки
 local MainTab = Window:NewTab("Hub")
 
