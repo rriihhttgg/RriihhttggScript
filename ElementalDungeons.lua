@@ -1,4 +1,6 @@
 -- Переменные
+local RS = game:GetService("ReplicatedStorage")
+local CreateParty = RS.Packages.Knit.Services.PartyService.RF.CreateParty
 
 local dungeon = nil
 local difficulty = nil
@@ -96,12 +98,10 @@ MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
 		return
 	end
 
-	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(
+	CreateParty:InvokeServer(
 		dungeonIds[dungeon],
 		difficulty,
 		"All",
 		"Normal"
 	)
-end)
-
 end)
