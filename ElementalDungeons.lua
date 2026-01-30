@@ -1,9 +1,3 @@
--- Загрузка библиотеки
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-
--- Создание окна
-local Window = Library.CreateLib("Rriihhttgg ED hub", "DarkTheme")
-
 -- Переменные
 local RS = game:GetService("ReplicatedStorage")
 local CreateParty = RS.Packages.Knit.Services.PartyService.RF.CreateParty
@@ -26,6 +20,12 @@ local dungeon = nil
 local TimeBanner = {
 	"TimeBanner2025"
 }
+
+-- Загрузка библиотеки
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+
+-- Создание окна
+local Window = Library.CreateLib("Rriihhttgg ED hub", "DarkTheme")
 
 -- Создание вкладки
 local MainTab = Window:NewTab("Hub")
