@@ -76,12 +76,12 @@ end)
 local MainSection = MainTab:NewSection("Dungeons")
 
 -- Список
-MainSection:NewDropdown("Dungeons", "Select Dungeon", {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"}, function(value)
-    dungeon = value
+MainSection:NewDropdown("Dungeons", "Select Dungeon", {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"}, function(value1)
+    dungeon = value1
 end)
 
-MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"}, function(value)
-    difficulty = value
+MainSection:NewDropdown("Difficulties", "Select Difficulty", {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"}, function(value2)
+    difficulty = value2
 end)
 
 MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
