@@ -1,3 +1,15 @@
+-- Загрузка библиотеки
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+
+-- Создание окна
+local Window = Library.CreateLib("Rriihhttgg ED hub", "DarkTheme")
+
+-- Создание вкладки
+local MainTab = Window:NewTab("Hub")
+
+-- Создание секции
+local MainSection = MainTab:NewSection("Teleports")
+
 -- Переменные
 local RS = game:GetService("ReplicatedStorage")
 local CreateParty = RS.Packages.Knit.Services.PartyService.RF.CreateParty
@@ -21,17 +33,6 @@ local TimeBanner = {
 	"TimeBanner2025"
 }
 
--- Загрузка библиотеки
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-
--- Создание окна
-local Window = Library.CreateLib("Rriihhttgg ED hub", "DarkTheme")
-
--- Создание вкладки
-local MainTab = Window:NewTab("Hub")
-
--- Создание секции
-local MainSection = MainTab:NewSection("Teleports")
 
 -- Кнопки
 MainSection:NewButton("Tp to Sus Vampire", "Teleport to Sus vampire", function()
