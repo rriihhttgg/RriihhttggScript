@@ -15,6 +15,48 @@ local TimeBanner = {
 	"TimeBanner2025"
 }
 
+local Anc = {
+	"BeginnersDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+
+local Jun = {
+	"JungleDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+
+local Snow = {
+	"ArcticBastionDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+
+local Atl = {
+	"UnderwaterDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+
+local Und = {
+	"FireDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+
+local Ang = {
+	"CloudDungeon",
+	difficulty,
+	"All",
+	"Normal"
+}
+
 -- Загрузка библиотеки
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 
@@ -74,47 +116,49 @@ end)
 
 -- Кнопка
 MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
-local Anc = {
+
+Anc = {
 	"BeginnersDungeon",
 	difficulty,
 	"All",
 	"Normal"
 }
 
-local Jun = {
+Jun = {
 	"JungleDungeon",
 	difficulty,
 	"All",
 	"Normal"
 }
 
-local Snow = {
+Snow = {
 	"ArcticBastionDungeon",
 	difficulty,
 	"All",
 	"Normal"
 }
 
-local Atl = {
+Atl = {
 	"UnderwaterDungeon",
 	difficulty,
 	"All",
 	"Normal"
 }
 
-local Und = {
+Und = {
 	"FireDungeon",
 	difficulty,
 	"All",
 	"Normal"
 }
 
-local Ang = {
+Ang = {
 	"CloudDungeon",
 	difficulty,
 	"All",
 	"Normal"
 }
+
     if dungeon == "Ancient Tomb" and difficulty ~= nil then
         game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Anc))
     elseif (dungeon == "Jungle" and difficulty ~= "Easy") and difficulty ~= nil then
