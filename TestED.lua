@@ -34,7 +34,7 @@ local Window = Fluent:CreateWindow({
     SubTitle = "by ChatGPT",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
+    Acrylic = false,
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.RightControl
 })
