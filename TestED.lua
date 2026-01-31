@@ -202,4 +202,4 @@ local Tabs = {
 }
 
 -- Создание секции
-local MainSection = MainTab:NewSection("Hub esp")
+Tabs.Main:AddSection("Hub Esp")
