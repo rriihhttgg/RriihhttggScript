@@ -125,7 +125,6 @@ Tabs.Main:AddDropdown("Difficulties", {
 })
 
 -- Кнопка
-MainSection:NewButton("Create Dungeon", "Creating selected dungeon", function()
 Tabs.Main:AddButton({
     Title = "Create Dungeon",
     Callback = function()
