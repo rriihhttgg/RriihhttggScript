@@ -10,6 +10,9 @@ local npcHG = workspace.MapContent.NPCs["Handy Gorilla"]:WaitForChild("HumanoidR
 local difficulty = nil
 local dungeon = nil
 
+local Tabs = {}
+local Esp = {}
+
 -- Массивы
 local TimeBanner = {
 	"TimeBanner2025"
@@ -37,7 +40,7 @@ local Window = Fluent:CreateWindow({
 })
 
 -- Создание вкладки
-local Tabs.Hub = Window:AddTab({ Title = "Hub", Icon = "home" })
+Tabs.Hub = Window:AddTab({ Title = "Hub", Icon = "home" })
 
 -- Создание секции
 Tabs.Hub:AddSection("Teleports")
@@ -192,7 +195,7 @@ Tabs.Hub:AddButton({
 
 
 -- Создание вкладки
-local Tabs.Esp = Window:AddTab({ Title = "Esp", Icon = "home" }),
+Tabs.Esp = Window:AddTab({ Title = "Esp", Icon = "home" }),
 
 
 -- Создание секции
