@@ -1,22 +1,17 @@
 -- Переменные
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer -- для LocalScript
+local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local playerr = character:WaitForChild("HumanoidRootPart")
-local npcSus = workspace.MapContent.NPCs["Sus Vampire"]:WaitForChild("HumanoidRootPart")
 
-local npcHG = workspace.MapContent.NPCs["Handy Gorilla"]:WaitForChild("HumanoidRootPart")
+local npcSus = workspace.MapContent.NPCs["Sus Vampire"]:WaitForChild("HumanoidRootPart")
+local npcHG  = workspace.MapContent.NPCs["Handy Gorilla"]:WaitForChild("HumanoidRootPart")
 
 local difficulty = nil
 local dungeon = nil
 
-local Tabs = {}
-local Esp = {}
-
 -- Массивы
-local TimeBanner = {
-	"TimeBanner2025"
-}
+local TimeBanner = { "TimeBanner2025" }
 
 local args = {
 	"InfiniteTimeDungeon",
@@ -25,178 +20,181 @@ local args = {
 	"MiscChallenges"
 }
 
--- Загрузка библиотеки
-local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/main.lua"))()
+-- Fluent
+local Fluent = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/dawid-scripts/Fluent/master/main.lua"
+))()
 
--- Создание окна
 local Window = Fluent:CreateWindow({
-    Title = "Elemental Dungeon Script",
-    SubTitle = "by rriihhttGG",
+    Title = "Rriihhttgg ED hub",
+    SubTitle = "Fluent version",
     TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = false,
+    Size = UDim2.fromOffset(600, 500),
+    Acrylic = false, -- для Delta X
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.RightControl
 })
 
--- Создание вкладки
-Tabs.Hub = Window:AddTab({ Title = "Hub", Icon = "" })
+local Tabs = {
+    Hub = Window:AddTab({ Title = "Hub", Icon = "home" }),
+    Esp = Window:AddTab({ Title = "ESP", Icon = "eye" })
+}
 
--- Создание секции
+----------------------------------------------------------------
+-- HUB
+----------------------------------------------------------------
+
 Tabs.Hub:AddSection("Teleports")
 
--- Кнопки
 Tabs.Hub:AddButton({
-    Title = "Teleport to Sus Vampire",
+    Title = "Tp to Sus Vampire",
     Callback = function()
         playerr.CFrame = npcSus.CFrame
     end
 })
 
 Tabs.Hub:AddButton({
-    Title = "Teleport to Handy Gorilla",
+    Title = "Tp to Handy Gorilla",
     Callback = function()
-playerr.CFrame = npcHG.CFrame
+        playerr.CFrame = npcHG.CFrame
     end
 })
 
--- Создание секции
+----------------------------------------------------------------
+
 Tabs.Hub:AddSection("Rolls")
 
--- Кнопки
 Tabs.Hub:AddButton({
     Title = "Summon banner 1 time",
     Callback = function()
-	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService"):WaitForChild("RF"):WaitForChild("SummonOnce"):InvokeServer()
+        game.ReplicatedStorage.ReplicatedStorage.Packages.Knit.Services
+        .SummoningService.RF.SummonOnce:InvokeServer()
     end
 })
+
 Tabs.Hub:AddButton({
     Title = "Summon banner 10 times",
     Callback = function()
-	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService"):WaitForChild("RF"):WaitForChild("SummonThree"):InvokeServer()
-    end
-})
-Tabs.Hub:AddButton({
-    Title = "Time Banner roll",
-    Callback = function()
-	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService"):WaitForChild("RF"):WaitForChild("Spin"):InvokeServer(unpack(TimeBanner))
-    end
-})
-Tabs.Hub:AddButton({
-    Title = "Buy element orb from Sus Vampire",
-    Callback = function()
-	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("MiscContentService"):WaitForChild("RF"):WaitForChild("BuyElementForGold"):InvokeServer(player)
+        game.ReplicatedStorage.ReplicatedStorage.Packages.Knit.Services
+        .SummoningService.RF.SummonThree:InvokeServer()
     end
 })
 
--- Создание секции
+Tabs.Hub:AddButton({
+    Title = "Time banner roll",
+    Callback = function()
+        game.ReplicatedStorage.ReplicatedStorage.Packages.Knit.Services
+        .GachaService.RF.Spin:InvokeServer(unpack(TimeBanner))
+    end
+})
+
+Tabs.Hub:AddButton({
+    Title = "Sus Vampire Element",
+    Callback = function()
+        game.ReplicatedStorage.ReplicatedStorage.Packages.Knit.Services
+        .MiscContentService.RF.BuyElementForGold:InvokeServer(player)
+    end
+})
+
+----------------------------------------------------------------
+
 Tabs.Hub:AddSection("Craft")
 
--- Кнопка
 Tabs.Hub:AddButton({
-    Title = "Craft Time Shard",
+    Title = "Craft time shard",
     Callback = function()
-	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService"):WaitForChild("RF"):WaitForChild("CraftSpecialMaterial"):InvokeServer(unpack(TimeBanner))
+        game.ReplicatedStorage.ReplicatedStorage.Packages.Knit.Services
+        .GachaService.RF.CraftSpecialMaterial:InvokeServer(unpack(TimeBanner))
     end
 })
 
--- Создание секции
+----------------------------------------------------------------
+
 Tabs.Hub:AddSection("Dungeons")
 
--- Список
-Tabs.Hub:AddDropdown("Dungeons", {
+Tabs.Hub:AddDropdown("DungeonSelect", {
     Title = "Select Dungeon",
-    Values = {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
+    Values = {
+        "Ancient Tomb", "Jungle", "Snow Castle",
+        "Atlantis", "Underworld", "Angel Sanctuary"
+    },
     Default = "Ancient Tomb",
-    Callback = function(dungeons)
-        print("Selected:", dungeons)
-	dungeon = dungeons
+    Callback = function(v)
+        dungeon = v
     end
 })
 
-Tabs.Hub:AddDropdown("Difficulties", {
+Tabs.Hub:AddDropdown("DifficultySelect", {
     Title = "Select Difficulty",
-    Values = {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"},
+    Values = { "Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite" },
     Default = "Easy",
-    Callback = function(difficultys)
-        print("Выбрано:", difficultys)
-	difficulty = difficultys
+    Callback = function(v)
+        difficulty = v
     end
 })
 
--- Кнопка
 Tabs.Hub:AddButton({
     Title = "Create Dungeon",
     Callback = function()
-    local Anc = {
-     	    "BeginnersDungeon",
-	    difficulty,
-	    "All",
-	    "Normal"
-    }
+        local mapIds = {
+            ["Ancient Tomb"] = "BeginnersDungeon",
+            ["Jungle"] = "JungleDungeon",
+            ["Snow Castle"] = "ArcticBastionDungeon",
+            ["Atlantis"] = "UnderwaterDungeon",
+            ["Underworld"] = "FireDungeon",
+            ["Angel Sanctuary"] = "CloudDungeon"
+        }
 
-    local Jun = {
-    	    "JungleDungeon",
-	    difficulty,
-	    "All",
-	    "Normal"
-    }
-
-    local Snow = {
-	    "ArcticBastionDungeon",
-	    difficulty,
-	    "All",
-	    "Normal"
-    }
-
-    local Atl = {
-	    "UnderwaterDungeon",
-	    difficulty,
-	    "All",
-	    "Normal"
-    }
-
-    local Und = {
-	    "FireDungeon",
-	    difficulty,
-	    "All",
-	    "Normal"
-    }
-
-    local Ang = {
-	    "CloudDungeon",
-	    difficulty,
-	    "All",
-	    "Normal"
-    }
-	if dungeon == "Ancient Tomb" and difficulty ~= nil then
-            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Anc))
-        elseif (dungeon == "Jungle" and difficulty ~= "Easy") and difficulty ~= nil then
-            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Jun))
-        elseif dungeon == "Snow Castle" and difficulty ~= nil then
-            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Snow))
-        elseif dungeon == "Atlantis" then
-            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Atl))
-        elseif dungeon == "Underworld" and difficulty ~= nil then
-            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Und))
-        elseif dungeon == "Angel Sanctuary" and difficulty ~= nil then
-            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Ang))
+        if dungeon and difficulty then
+            game.ReplicatedStorage.ReplicatedStorage.Packages.Knit.Services
+            .PartyService.RF.CreateParty:InvokeServer(
+                mapIds[dungeon], difficulty, "All", "Normal"
+            )
         end
-end
-})
-
--- Кнопка
-Tabs.Hub:AddButton({
-    Title = "Create Infinite Time Tower Dungeon",
-    Callback = function()
-	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(args))
     end
 })
 
+Tabs.Hub:AddButton({
+    Title = "Create Infinite Time Dungeon",
+    Callback = function()
+        game.ReplicatedStorage.ReplicatedStorage.Packages.Knit.Services
+        .PartyService.RF.CreateParty:InvokeServer(unpack(args))
+    end
+})
 
--- Создание вкладки
-Tabs.Esp = Window:AddTab({ Title = "Esp", Icon = "" })
+----------------------------------------------------------------
+-- ESP
+----------------------------------------------------------------
 
+Tabs.Esp:AddSection("Hub ESP")
 
--- Создание секции
-Tabs.Esp:AddSection("Hub Esp")
+local EspEnabled = false
+
+Tabs.Esp:AddToggle("OrbESP", {
+    Title = "ESP Element Orbs",
+    Default = false,
+    Callback = function(state)
+        EspEnabled = state
+
+        if state then
+            task.spawn(function()
+                while EspEnabled do
+                    task.wait(1)
+                    for _, orb in pairs(workspace:GetDescendants()) do
+                        if orb:FindFirstChild("OrbHandler") and not orb:FindFirstChild("EspBox") then
+                            local box = Instance.new("BoxHandleAdornment")
+                            box.Name = "EspBox"
+                            box.Adornee = orb
+                            box.Size = Vector3.new(4,5,1)
+                            box.Transparency = 0.6
+                            box.Color3 = Color3.fromRGB(255,48,48)
+                            box.AlwaysOnTop = true
+                            box.ZIndex = 0
+                            box.Parent = orb
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
