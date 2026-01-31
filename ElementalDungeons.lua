@@ -142,3 +142,33 @@ end)
 MainSection:NewButton("Create Infinite Time Dungeon", "Creating Infinite Tower Time Dungeon", function()
 game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(args))
 end)
+
+
+-- Создание вкладки
+local MainTab = Window:NewTab("Esp")
+
+-- Создание секции
+local MainSection = MainTab:NewSection("Hub esp")
+
+
+-- Тумблер
+MainSection:NewToggle("ESP element orbs", "Turn on/ Turn off", function(state)
+    if state then
+        while wait(1) do
+	    for i, ElementOrb in pairs(workspace:GetDescnedants()) do
+		if ElementOrb:FindFirstChild("OrbHandler") then
+		    if not ElementOrb:FindFirstChild("EspBox") then
+			local EspElement = Instance.new("BoxHandlerAdorment", ELementOrb)
+			EspElement.Adornee = ElementOrb
+			EspElement.ZIndex = 0
+			EspElement.Size = Vector.new(4, 5, 1)
+			EspElement.Transparency = 0.6
+			EspElement.Color = Color3.fromRGB(255, 48, 48)
+			EspElement.AlwaysOnTop = true
+			EspElement.Name = "EspBox"
+		    end
+		end
+	    end
+        end
+    end
+end)
