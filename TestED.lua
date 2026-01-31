@@ -195,7 +195,7 @@ Tabs.Hub:AddButton({
 
 
 -- Создание вкладки
-Tabs.Esp = Window:AddTab({ Title = "Esp", Icon = "home" }),
+Tabs.Esp = Window:AddTab({ Title = "Esp", Icon = "eye" })
 
 
 -- Создание секции
