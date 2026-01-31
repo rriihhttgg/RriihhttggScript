@@ -15,6 +15,13 @@ local TimeBanner = {
 	"TimeBanner2025"
 }
 
+local args = {
+	"InfiniteTimeDungeon",
+	"Hardcore",
+	"All",
+	"MiscChallenges"
+}
+
 -- Загрузка библиотеки
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 
@@ -130,4 +137,8 @@ local Ang = {
     elseif dungeon == "Angel Sanctuary" and difficulty ~= nil then
         game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Ang))
     end
+end)
+
+MainSection:NewButton("Create Infinite Time Dungeon", "Creating Infinite Tower Time Dungeon", function()
+game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(args))
 end)
