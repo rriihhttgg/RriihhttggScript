@@ -171,6 +171,6 @@ MainSection:NewToggle("ESP element orbs", "Turn on/ Turn off", function(state)
 	    end
         end
     else
-	print("Turn Off")
+	    print("Turn Off")
     end
 end)
