@@ -104,7 +104,7 @@ Tabs.Main:AddSection("Dungeons")
 Tabs.Main:AddDropdown("Dungeons", {
     Title = "Select Dungeon",
     Values = {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
-    Default = "None",
+    Default = "Ancient Tomb",
     Callback = function(dungeons)
         print("Selected:", dungeons)
 	dungeon = dungeons
@@ -114,7 +114,7 @@ Tabs.Main:AddDropdown("Dungeons", {
 Tabs.Main:AddDropdown("Difficulties", {
     Title = "Select Difficulty",
     Values = {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"},
-    Default = "None",
+    Default = "Easy",
     Callback = function(difficultys)
         print("Выбрано:", difficultys)
 	difficulty = difficultys
