@@ -37,10 +37,7 @@ local Window = Fluent:CreateWindow({
 })
 
 -- Создание вкладки
-local Tabs = {
-    Main = Window:AddTab({ Title = "Hub", Icon = "home" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
+local Tabs.Hub = Window:AddTab({ Title = "Hub", Icon = "home" })
 
 -- Создание секции
 Tabs.Main:AddSection("Teleports")
@@ -54,7 +51,7 @@ Tabs.Main:AddButton({
 })
 
 Tabs.Main:AddButton({
-    Title = "Teleport to Handy Gorrila",
+    Title = "Teleport to Handy Gorilla",
     Callback = function()
 playerr.CFrame = npcHG.CFrame
     end
@@ -195,10 +192,8 @@ Tabs.Main:AddButton({
 
 
 -- Создание вкладки
-local Tabs = {
-    Main = Window:AddTab({ Title = "Esp", Icon = "home" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
+local Tabs.Esp = Window:AddTab({ Title = "Esp", Icon = "home" }),
+
 
 -- Создание секции
 Tabs.Main:AddSection("Hub Esp")
