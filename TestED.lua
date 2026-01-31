@@ -40,17 +40,17 @@ local Window = Fluent:CreateWindow({
 local Tabs.Hub = Window:AddTab({ Title = "Hub", Icon = "home" })
 
 -- Создание секции
-Tabs.Main:AddSection("Teleports")
+Tabs.Hub:AddSection("Teleports")
 
 -- Кнопки
-Tabs.Main:AddButton({
+Tabs.Hub:AddButton({
     Title = "Teleport to Sus Vampire",
     Callback = function()
         playerr.CFrame = npcSus.CFrame
     end
 })
 
-Tabs.Main:AddButton({
+Tabs.Hub:AddButton({
     Title = "Teleport to Handy Gorilla",
     Callback = function()
 playerr.CFrame = npcHG.CFrame
@@ -58,28 +58,28 @@ playerr.CFrame = npcHG.CFrame
 })
 
 -- Создание секции
-Tabs.Main:AddSection("Rolls")
+Tabs.Hub:AddSection("Rolls")
 
 -- Кнопки
-Tabs.Main:AddButton({
+Tabs.Hub:AddButton({
     Title = "Summon banner 1 time",
     Callback = function()
 	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService"):WaitForChild("RF"):WaitForChild("SummonOnce"):InvokeServer()
     end
 })
-Tabs.Main:AddButton({
+Tabs.Hub:AddButton({
     Title = "Summon banner 10 times",
     Callback = function()
 	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService"):WaitForChild("RF"):WaitForChild("SummonThree"):InvokeServer()
     end
 })
-Tabs.Main:AddButton({
+Tabs.Hub:AddButton({
     Title = "Time Banner roll",
     Callback = function()
 	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService"):WaitForChild("RF"):WaitForChild("Spin"):InvokeServer(unpack(TimeBanner))
     end
 })
-Tabs.Main:AddButton({
+Tabs.Hub:AddButton({
     Title = "Buy element orb from Sus Vampire",
     Callback = function()
 	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("MiscContentService"):WaitForChild("RF"):WaitForChild("BuyElementForGold"):InvokeServer(player)
@@ -87,10 +87,10 @@ Tabs.Main:AddButton({
 })
 
 -- Создание секции
-Tabs.Main:AddSection("Craft")
+Tabs.Hub:AddSection("Craft")
 
 -- Кнопка
-Tabs.Main:AddButton({
+Tabs.Hub:AddButton({
     Title = "Craft Time Shard",
     Callback = function()
 	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService"):WaitForChild("RF"):WaitForChild("CraftSpecialMaterial"):InvokeServer(unpack(TimeBanner))
@@ -98,10 +98,10 @@ Tabs.Main:AddButton({
 })
 
 -- Создание секции
-Tabs.Main:AddSection("Dungeons")
+Tabs.Hub:AddSection("Dungeons")
 
 -- Список
-Tabs.Main:AddDropdown("Dungeons", {
+Tabs.Hub:AddDropdown("Dungeons", {
     Title = "Select Dungeon",
     Values = {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
     Default = "Ancient Tomb",
@@ -111,7 +111,7 @@ Tabs.Main:AddDropdown("Dungeons", {
     end
 })
 
-Tabs.Main:AddDropdown("Difficulties", {
+Tabs.Hub:AddDropdown("Difficulties", {
     Title = "Select Difficulty",
     Values = {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"},
     Default = "Easy",
@@ -122,7 +122,7 @@ Tabs.Main:AddDropdown("Difficulties", {
 })
 
 -- Кнопка
-Tabs.Main:AddButton({
+Tabs.Hub:AddButton({
     Title = "Create Dungeon",
     Callback = function()
     local Anc = {
@@ -183,7 +183,7 @@ end
 })
 
 -- Кнопка
-Tabs.Main:AddButton({
+Tabs.Hub:AddButton({
     Title = "Create Infinite Time Tower Dungeon",
     Callback = function()
 	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(args))
@@ -196,4 +196,4 @@ local Tabs.Esp = Window:AddTab({ Title = "Esp", Icon = "home" }),
 
 
 -- Создание секции
-Tabs.Main:AddSection("Hub Esp")
+Tabs.Esp:AddSection("Hub Esp")
