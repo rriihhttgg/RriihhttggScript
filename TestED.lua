@@ -30,8 +30,8 @@ local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-
 
 -- Создание окна
 local Window = Fluent:CreateWindow({
-    Title = "Fluent Example",
-    SubTitle = "by ChatGPT",
+    Title = "Elemental Dungeon Script",
+    SubTitle = "by rriihhttGG",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = false,
@@ -40,7 +40,7 @@ local Window = Fluent:CreateWindow({
 })
 
 -- Создание вкладки
-Tabs.Hub = Window:AddTab({ Title = "Hub", Icon = "home" })
+Tabs.Hub = Window:AddTab({ Title = "Hub", Icon = "" })
 
 -- Создание секции
 Tabs.Hub:AddSection("Teleports")
@@ -195,7 +195,7 @@ Tabs.Hub:AddButton({
 
 
 -- Создание вкладки
-Tabs.Esp = Window:AddTab({ Title = "Esp", Icon = "eye" })
+Tabs.Esp = Window:AddTab({ Title = "Esp", Icon = "" })
 
 
 -- Создание секции
