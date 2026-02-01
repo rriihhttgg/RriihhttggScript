@@ -48,7 +48,7 @@ local Options = Fluent.Options
 
 do
     -- Создание секции
-    Fluent.Main:AddParagraph({
+    Tabs.Main:AddParagraph({
 	Title = "Teleports",
 	Content = "Teleports to Npc",
     })
@@ -107,7 +107,7 @@ do
 
     -- Создание секции
     Tabs.Main:AddParagraph({
-		Title = "Craft"
+		Title = "Craft",
 		Content = "Crafting"
     })
 
@@ -122,12 +122,12 @@ do
 
     -- Создание секции
     Tabs.Main:AddParagraph({
-		Title = "Dungeons"
-		Content = "Dungeons",
+		Title = "Dungeons",
+		Content = "Dungeons"
     })
 
     -- Список
-    local Dropdown = Tabs.Main:AddDropdown("Dungeons", {
+    local DungeonDropdown = Tabs.Main:AddDropdown("Dungeons", {
 		Title = "Select Dungeon",
 		Values = {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
 		Multi = false,
@@ -141,7 +141,7 @@ do
 		dungeon = dungeons
     end)
 
-    local Dropdown = Tabs.Main:AddDropdown("Difficulties", {
+    local DifficultyDropdown = Tabs.Main:AddDropdown("Difficulties", {
 		Title = "Select Difficulty",
 		Values = {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"},
 		Multi = false,
@@ -224,3 +224,4 @@ do
 	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(args))
 		end
     })
+end
