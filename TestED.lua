@@ -1,4 +1,4 @@
--- Update 0.0.2
+-- Update 0.0.3
 -- Переменные
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer -- для LocalScript
@@ -49,7 +49,7 @@ local Window = Fluent:CreateWindow({
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
-    Theme = "Dark",
+    Theme = "Light",
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
