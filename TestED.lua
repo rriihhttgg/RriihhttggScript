@@ -57,21 +57,21 @@ do
     Tabs.Main:AddButton({
 		Title = "Tp to Sus Vampire",
 		Description = "Teleporting to Sus Vampire",
-		CallBack = function()
+		Callback = function()
 	    	playerr.CFrame = npcSus.CFrame
 		end
     })
     Tabs.Main:AddButton({
 		Title = "Tp to Handy Gorilla",
 		Description = "Teleport to Handy Gorilla",
-		CallBack = function()
+		Callback = function()
 	    	playerr.CFrame = npcHG.CFrame
 		end
     })
 
     -- Создание секции
     Tabs.Main:AddParagraph({
-		Title = "Rolls"
+		Title = "Rolls",
 		Content = "Rolling"
     })
 
@@ -79,7 +79,7 @@ do
     Tabs.Main:AddButton({
 		Title = "Summon banner 1 time",
 		Description = "Summon banner 1 time for 100 gems",
-		CallBack = function()
+		Callback = function()
 	  	    game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService"):WaitForChild("RF"):WaitForChild("SummonOnce"):InvokeServer()
 		end
     })
@@ -121,7 +121,7 @@ do
     })
 
     -- Создание секции
-    Tabs.Main.AddParagraph({
+    Tabs.Main:AddParagraph({
 		Title = "Dungeons"
 		Content = "Dungeons",
     })
@@ -129,7 +129,7 @@ do
     -- Список
     local Dropdown = Tabs.Main:AddDropdown("Dungeons", {
 		Title = "Select Dungeon",
-		dungeons = {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
+		Values = {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
 		Multi = false,
 		Default = 1,
     })
@@ -143,7 +143,7 @@ do
 
     local Dropdown = Tabs.Main:AddDropdown("Difficulties", {
 		Title = "Select Difficulty",
-		difficultys = {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"},
+		Values = {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"},
 		Multi = false,
 		Default = 1,
     })
@@ -219,7 +219,7 @@ do
 
     Tabs.Main:AddButton({
 		Title = "Create Infinite Time Dungeon",
-		Title = "Creating Infinite Tower Time Dungeon",
+		Description = "Creating Infinite Tower Time Dungeon",
 		Callback = function()
 	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(args))
 		end
