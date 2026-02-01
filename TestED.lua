@@ -55,172 +55,172 @@ do
 
     -- Кнопки
     Tabs.Main:AddButton({
-	Title = "Tp to Sus Vampire",
-	Description = "Teleporting to Sus Vampire",
-	CallBack = function()
-	    playerr.CFrame = npcSus.CFrame
-	end
+		Title = "Tp to Sus Vampire",
+		Description = "Teleporting to Sus Vampire",
+		CallBack = function()
+	    	playerr.CFrame = npcSus.CFrame
+		end
     })
     Tabs.Main:AddButton({
-	Title = "Tp to Handy Gorilla",
-	Description = "Teleport to Handy Gorilla",
-	CallBack = function()
-	    playerr.CFrame = npcHG.CFrame
-	end
+		Title = "Tp to Handy Gorilla",
+		Description = "Teleport to Handy Gorilla",
+		CallBack = function()
+	    	playerr.CFrame = npcHG.CFrame
+		end
     })
 
     -- Создание секции
     Tabs.Main:AddParagraph({
-	Title = "Rolls"
-	Content = "Rolling"
+		Title = "Rolls"
+		Content = "Rolling"
     })
 
     -- Кнопки
     Tabs.Main:AddButton({
-	Title = "Summon banner 1 time",
-	Description = "Summon banner 1 time for 100 gems",
-	CallBack = function()
-	    game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService"):WaitForChild("RF"):WaitForChild("SummonOnce"):InvokeServer()
-	end
+		Title = "Summon banner 1 time",
+		Description = "Summon banner 1 time for 100 gems",
+		CallBack = function()
+	  	    game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService"):WaitForChild("RF"):WaitForChild("SummonOnce"):InvokeServer()
+		end
     })
     Tabs.Main:AddButton({
-	Title = "Summon banner 10 times",
-	Description = "Summon banner 10 times for 1000 gems",
-	Callback = function()
-	    game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService"):WaitForChild("RF"):WaitForChild("SummonThree"):InvokeServer()
-	end
+		Title = "Summon banner 10 times",
+		Description = "Summon banner 10 times for 1000 gems",
+		Callback = function()
+	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService"):WaitForChild("RF"):WaitForChild("SummonThree"):InvokeServer()
+		end
     })
     Tabs.Main:AddButton({
-	Title = "Time banner roll",
-	Description = "Roll time banner 1 time for 1 time shard",
-	Callback = function()
-	    game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService"):WaitForChild("RF"):WaitForChild("Spin"):InvokeServer(unpack(TimeBanner))
-	end
+		Title = "Time banner roll",
+		Description = "Roll time banner 1 time for 1 time shard",
+		Callback = function()
+	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService"):WaitForChild("RF"):WaitForChild("Spin"):InvokeServer(unpack(TimeBanner))
+		end
     })
-    Tabs.Main:AddButton({
-	Title = "Sus Vampire Element",
-	Description = "Buying element for gold from Sus Vampire",
-	Callback = function()
-	    game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("MiscContentService"):WaitForChild("RF"):WaitForChild("BuyElementForGold"):InvokeServer(player)
-	end
+    	Tabs.Main:AddButton({
+		Title = "Sus Vampire Element",
+		Description = "Buying element for gold from Sus Vampire",
+		Callback = function()
+	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("MiscContentService"):WaitForChild("RF"):WaitForChild("BuyElementForGold"):InvokeServer(player)
+		end
     })
 
     -- Создание секции
     Tabs.Main:AddParagraph({
-	Title = "Craft"
-	Content = "Crafting"
+		Title = "Craft"
+		Content = "Crafting"
     })
 
     -- Кнопки
     Tabs.Main:AddButton({
-	Title = "Craft time shard",
-	Description = "Craft 1 time shard for 100 tickmetal fragments",
-	Callback = function()
-	    game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService"):WaitForChild("RF"):WaitForChild("CraftSpecialMaterial"):InvokeServer(unpack(TimeBanner))
-	end
+		Title = "Craft time shard",
+		Description = "Craft 1 time shard for 100 tickmetal fragments",
+		Callback = function()
+	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService"):WaitForChild("RF"):WaitForChild("CraftSpecialMaterial"):InvokeServer(unpack(TimeBanner))
+		end
     })
 
     -- Создание секции
     Tabs.Main.AddParagraph({
-	Title = "Dungeons"
-	Content = "Dungeons",
+		Title = "Dungeons"
+		Content = "Dungeons",
     })
 
     -- Список
     local Dropdown = Tabs.Main:AddDropdown("Dungeons", {
-	Title = "Select Dungeon",
-	dungeons = {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
-	Multi = false,
-	Default = 1,
+		Title = "Select Dungeon",
+		dungeons = {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
+		Multi = false,
+		Default = 1,
     })
     
     Dropdown:SetValue("Ancient Tomb")
 
     Dropdown:OnChanged(function(dungeons)
-	print(dungeons)
-	dungeon = dungeons
+		print(dungeons)
+		dungeon = dungeons
     end)
 
     local Dropdown = Tabs.Main:AddDropdown("Difficulties", {
-	Title = "Select Difficulty",
-	difficultys = {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"},
-	Multi = false,
-	Default = 1,
+		Title = "Select Difficulty",
+		difficultys = {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"},
+		Multi = false,
+		Default = 1,
     })
 
     Dropdown:SetValue("Easy")
 
     Dropdown:OnChanged(function(difficultys)
         print(difficultys)
-	difficulty = difficultys
+		difficulty = difficultys
     end)
 
     -- Кнопка
     Tabs.Main:AddButton({
-	Title = "Create Dungeon", 
-	Description = "Creating selected dungeon",
-	Callback = function()
-	    local Anc = {
-		"BeginnersDungeon",
-		difficulty,
-		"All",
-		"Normal"
-	    }
+		Title = "Create Dungeon", 
+		Description = "Creating selected dungeon",
+		Callback = function()
+	    	local Anc = {
+				"BeginnersDungeon",
+				difficulty,
+				"All",
+				"Normal"
+	    	}
 
-	    local Jun = {
-		"JungleDungeon",
-		difficulty,
-		"All",
-		"Normal"
-	    }
+	    	local Jun = {
+				"JungleDungeon",
+				difficulty,
+				"All",
+				"Normal"
+	    	}
 
-	    local Snow = {
-		"ArcticBastionDungeon",
-		difficulty,
-		"All",
-		"Normal"
-	    }
+		    local Snow = {
+				"ArcticBastionDungeon",
+				difficulty,
+				"All",
+				"Normal"
+	    	}
 
-	    local Atl = {
-		"UnderwaterDungeon",
-		difficulty,
-		"All",
-		"Normal"
-	    }
+		    local Atl = {
+				"UnderwaterDungeon",
+				difficulty,
+				"All",
+				"Normal"
+	    	}
 
-	    local Und = {
-		"FireDungeon",
-		difficulty,
-		"All",
-		"Normal"
-	    }
+	    	local Und = {
+				"FireDungeon",
+				difficulty,
+				"All",
+				"Normal"
+	    	}
 
-	    local Ang = {
-		"CloudDungeon",
-		difficulty,
-		"All",
-		"Normal"
-	    }
-	    if dungeon == "Ancient Tomb" and difficulty ~= nil then
-                game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Anc))
-	    elseif (dungeon == "Jungle" and difficulty ~= "Easy") and difficulty ~= nil then
-        	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Jun))
-    	    elseif dungeon == "Snow Castle" and difficulty ~= nil then
-        	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Snow))
-    	    elseif dungeon == "Atlantis" then
-        	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Atl))
-            elseif dungeon == "Underworld" and difficulty ~= nil then
-        	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Und))
-    	    elseif dungeon == "Angel Sanctuary" and difficulty ~= nil then
-        	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Ang))
-    	    end
-	end
+	    	local Ang = {
+				"CloudDungeon",
+				difficulty,
+				"All",
+				"Normal"
+	    	}
+	    	if dungeon == "Ancient Tomb" and difficulty ~= nil then
+            	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Anc))
+	    	elseif (dungeon == "Jungle" and difficulty ~= "Easy") and difficulty ~= nil then
+        		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Jun))
+    		elseif dungeon == "Snow Castle" and difficulty ~= nil then
+        		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Snow))
+    		elseif dungeon == "Atlantis" then
+        		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Atl))
+        	elseif dungeon == "Underworld" and difficulty ~= nil then
+        		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Und))
+    		elseif dungeon == "Angel Sanctuary" and difficulty ~= nil then
+        		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Ang))
+    		end
+		end
     })
 
     Tabs.Main:AddButton({
-	Title = "Create Infinite Time Dungeon",
-	Title = "Creating Infinite Tower Time Dungeon",
-	Callback = function()
-	    game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(args))
-	end
+		Title = "Create Infinite Time Dungeon",
+		Title = "Creating Infinite Tower Time Dungeon",
+		Callback = function()
+	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(args))
+		end
     })
