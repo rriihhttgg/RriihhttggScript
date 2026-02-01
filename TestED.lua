@@ -1,4 +1,4 @@
--- Update 0.0.1
+-- Update 0.0.2
 -- Переменные
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer -- для LocalScript
@@ -27,6 +27,20 @@ local args = {
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+
+InterfaceManager:SetFolder("ElementalDungeonHub")
+SaveManager:SetFolder("ElementalDungeonHub")
+
+InterfaceManager:BuildInterfaceSection(Tabs.Esp)
+SaveManager:BuildConfigSection(Tabs.Esp)
+
+Window:SelectTab(1)
 
 -- Создание окна
 local Window = Fluent:CreateWindow({
