@@ -40,7 +40,7 @@ local Window = Fluent.CreateWindow({
 
 -- Создание вкладки
 local Tabs = {
-    Hub = Window:AddTab({ Title = "Hub", Icon = "home"}),
+    Main = Window:AddTab({ Title = "Hub", Icon = "home"}),
     Esp = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
