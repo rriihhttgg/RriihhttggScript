@@ -134,9 +134,9 @@ do
 		Default = 1,
     })
     
-    Dropdown:SetValue("Ancient Tomb")
+    DungeonDropdown:SetValue("Ancient Tomb")
 
-    Dropdown:OnChanged(function(dungeons)
+    DungeonDropdown:OnChanged(function(dungeons)
 		print(dungeons)
 		dungeon = dungeons
     end)
@@ -148,9 +148,9 @@ do
 		Default = 1,
     })
 
-    Dropdown:SetValue("Easy")
+    DifficultyDropdown:SetValue("Easy")
 
-    Dropdown:OnChanged(function(difficultys)
+    DifficultyDropdown:OnChanged(function(difficultys)
         print(difficultys)
 		difficulty = difficultys
     end)
