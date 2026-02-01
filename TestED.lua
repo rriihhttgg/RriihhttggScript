@@ -1,3 +1,4 @@
+-- Update 0.0.1
 -- Переменные
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer -- для LocalScript
@@ -28,7 +29,7 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 -- Создание окна
-local Window = Fluent.CreateWindow({
+local Window = Fluent:CreateWindow({
     Title = "Elemental dungeon hub",
     SubTitle = "by rriihhttGG",
     TabWidth = 160,
