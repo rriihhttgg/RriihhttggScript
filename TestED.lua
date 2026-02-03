@@ -56,8 +56,8 @@ SaveManager:SetIgnoreIndexes({})
 InterfaceManager:SetFolder("ElementalDungeonHub")
 SaveManager:SetFolder("ElementalDungeonHub")
 
-InterfaceManager:BuildInterfaceSection(Tabs.Esp)
-SaveManager:BuildConfigSection(Tabs.Esp)
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
 
 Window:SelectTab(1)
 
