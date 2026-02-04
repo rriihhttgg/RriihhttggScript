@@ -1,4 +1,4 @@
--- Update 0.0.3
+-- Update 0.0.4
 -- Переменные
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer -- для LocalScript
@@ -254,7 +254,7 @@ do
     {
 	Title = "Esp elements",
 	Description = "Show element orbs on map",
-	Defaultt = false,
+	Default = false,
 	Callback = function(elementorb)
 	if elementorb then
 	    EspElement = true
@@ -267,7 +267,7 @@ do
     ElementEsp:OnChanged(function()
 	while wait(0.5) and EspElement do
     	    for i, ElementalOrb in ipairs(workspace:GetDescendants()) do
-        	if ElementOrb:FindFirstChild("OrbHandler") then
+        	if ElementalOrb:FindFirstChild("OrbHandler") then
             	    if not ElementalOrb:FindFirstChild("EspBox") then
                 	local esp = Instance.new("BoxHandleAdornment",ElementalOrb)
                 	esp.Adornee = childrik
