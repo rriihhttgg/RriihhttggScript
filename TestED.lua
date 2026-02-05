@@ -265,22 +265,28 @@ do
     })
     
     ElementEsp:OnChanged(function()
-	while wait(0.5) and EspElement do
-    	    for i, ElementalOrb in ipairs(workspace:GetDescendants()) do
-        	if ElementalOrb:FindFirstChild("OrbHandler") then
-            	    if not ElementalOrb:FindFirstChild("EspBox") then
-                	local esp = Instance.new("BoxHandleAdornment",ElementalOrb)
-                	esp.Adornee = childrik
-                	esp.ZIndex = 0
-                	esp.Size = Vector3.new(4, 5, 1)
-                	esp.Transparency = 0.65
-                	esp.Color3 = Color3.fromRGB(255,48,48)
-                	esp.AlwaysOnTop = true
-                	esp.Name = "EspBox"
-            	    end
-        	end
-    	    end
-	end
+		while wait(10) do
+			if EspElement == true then
+				for dildi in range(10) do
+    				for i, childrik in ipairs(workspace:GetDescendants()) do
+        				if childrik:FindFirstChild("OrbHandler") then
+            				if not childrik:FindFirstChild("EspBox") then
+                				if childrik ~= game.Players.LocalPlayer.Character then
+                    				local esp = Instance.new("BoxHandleAdornment",childrik)
+                    				esp.Adornee = childrik
+                    				esp.ZIndex = 0
+                    				esp.Size = Vector3.new(4, 5, 1)
+                   	    			esp.Transparency = 0.65
+                   	    			esp.Color3 = Color3.fromRGB(255,48,48)
+                    				esp.AlwaysOnTop = true
+                    				esp.Name = "EspBox"
+                				end
+            				end
+        				end
+    				end
+				end
+			end
+		end
     end)
 
     ElementEsp:SetValue(false)
