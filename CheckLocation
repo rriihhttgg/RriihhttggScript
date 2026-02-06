@@ -1,5 +1,17 @@
 for i, childrik in ipairs(workspace:GetDescendants()) do
     if childrik:FindFirstChild("ElementSpawns") then
         loadstring(game:HttpGet("https://raw.githubusercontent.com/rriihhttgg/RriihhttggScript/refs/heads/main/TestED.lua"))()
+    elif childrik:FintFirstChild("BegginersDungeon") then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/rriihhttgg/RriihhttggScript/refs/heads/main/AncientTomb.lua"))()
+    elif childrik:FintFirstChild("JungleDungeon") then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/rriihhttgg/RriihhttggScript/refs/heads/main/Jungle.lua"))()
+    elif childrik:FintFirstChild("SnowCastleDungeon") then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/rriihhttgg/RriihhttggScript/refs/heads/main/SnowCastle.lua"))()
+    elif childrik:FintFirstChild("BegginersDungeon") then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/rriihhttgg/RriihhttggScript/refs/heads/main/Atlantis.lua"))()
+    elif childrik:FintFirstChild("BegginersDungeon") then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/rriihhttgg/RriihhttggScript/refs/heads/main/UnderWorld.lua"))()
+    elif childrik:FintFirstChild("BegginersDungeon") then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/rriihhttgg/RriihhttggScript/refs/heads/main/AngelSanctuary.lua"))()
     end
 end
