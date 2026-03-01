@@ -1,4 +1,4 @@
--- Update 0.0.4
+-- Update 0.0.5
 -- Переменные
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer -- для LocalScript
@@ -10,6 +10,7 @@ local npcHG = workspace.MapContent.NPCs["Handy Gorilla"]:WaitForChild("HumanoidR
 
 local difficulty = nil
 local dungeon = nil
+local Key = nil
 
 -- Массивы
 local TimeBanner = {
@@ -43,6 +44,7 @@ local Window = Fluent:CreateWindow({
 local Tabs = {
     Main = Window:AddTab({ Title = "Hub", Icon = "home"}),
     Esp = Window:AddTab({ Title = "Esp", Icon = "eye"}),
+	Craft = Window:AddTab({ Title = "Craft", Icon = "anvil"}),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
@@ -291,3 +293,41 @@ do
 
     ElementEsp:SetValue(false)
 end
+
+	-- Список
+    local KeyDropdown = Tabs.Craft:AddDropdown("Craft Keys", {
+		Title = "Select Key",
+		Values = {"Angel Key", "Dragon Key", "Zeus Key", "Reaper Key", "Skeleton Key", "Kronax Key", "Heroic Kronax Key"},
+		Multi = false,
+		Default = 1,
+    })
+    
+    KeyDropdown:SetValue("Angel Key")
+
+    KeyDropdown:OnChanged(function(Keys)
+		print(Keys)
+		Key = Keys
+    end)
+
+	-- Кнопка
+    Tabs.Craft:AddButton({
+		Title = "Craft Selected Dungeon", 
+		Description = "Crafting Selected Key",
+		Callback = function()
+	    	if Key = "Angel Key" then
+				print("Angel")
+	    	elseif Key = "Zeus Key" then
+				game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft"):InvokeServer(19)
+    		elseif Key = "Dragon Key" then
+				game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft"):InvokeServer(20)
+        	elseif Key = "Reaper Key" then
+        		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft"):InvokeServer(17)
+    		elseif Key = "Skeleton Key" then
+				game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft"):InvokeServer(21)
+			elseif Key = "Kronax Key" then
+				print("Kronax")
+			elseif Key = "Heroic Kronax Key" then
+				print("Heroic Kronax")
+    		end
+		end
+    })
