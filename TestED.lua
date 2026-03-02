@@ -1,4 +1,4 @@
--- Update 0.0.6
+-- Update 0.0.7
 -- Alpha Version
 -- Переменные
 local Players = game:GetService("Players")
@@ -294,6 +294,12 @@ do
 
     ElementEsp:SetValue(false)
 end
+
+	-- Создание секции
+    Tabs.Craft:AddParagraph({
+	Title = "Esp",
+	Content = "Show items on map",
+    })
 
 	-- Список
     local KeyDropdown = Tabs.Craft:AddDropdown("Craft Keys", {
