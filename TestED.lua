@@ -1,4 +1,5 @@
--- Update 0.0.5
+-- Update 0.0.6
+-- Alpha Version
 -- Переменные
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer -- для LocalScript
@@ -314,19 +315,19 @@ end
 		Title = "Craft Selected Dungeon", 
 		Description = "Crafting Selected Key",
 		Callback = function()
-	    	if Key = "Angel Key" then
+	    	if Key == "Angel Key" then
 				print("Angel")
-	    	elseif Key = "Zeus Key" then
+	    	elseif Key == "Zeus Key" then
 				game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft"):InvokeServer(19)
-    		elseif Key = "Dragon Key" then
+    		elseif Key == "Dragon Key" then
 				game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft"):InvokeServer(20)
-        	elseif Key = "Reaper Key" then
+        	elseif Key == "Reaper Key" then
         		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft"):InvokeServer(17)
-    		elseif Key = "Skeleton Key" then
+    		elseif Key == "Skeleton Key" then
 				game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft"):InvokeServer(21)
-			elseif Key = "Kronax Key" then
+			elseif Key == "Kronax Key" then
 				print("Kronax")
-			elseif Key = "Heroic Kronax Key" then
+			elseif Key == "Heroic Kronax Key" then
 				print("Heroic Kronax")
     		end
 		end
