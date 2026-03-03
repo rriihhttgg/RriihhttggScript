@@ -1,30 +1,20 @@
 -- Update 0.1.1
 -- Alpha Version
+
 -- Переменные
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer -- для LocalScript
+local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local playerr = character:WaitForChild("HumanoidRootPart")
 local npcSus = workspace.MapContent.NPCs["Sus Vampire"]:WaitForChild("HumanoidRootPart")
 local npcHG = workspace.MapContent.NPCs["Handy Gorilla"]:WaitForChild("HumanoidRootPart")
 
-local SecondWindow -- переменная вне кнопки
-
-local difficulty = nil
-local dungeon = nil
-local Key = nil
+local StatusPanel
+local difficulty, dungeon, Key
 
 -- Массивы
-local TimeBanner = {
-	"TimeBanner2025"
-}
-
-local args = {
-	"InfiniteTimeDungeon",
-	"Hardcore",
-	"All",
-	"MiscChallenges"
-}
+local TimeBanner = {"TimeBanner2025"}
+local args = {"InfiniteTimeDungeon", "Hardcore", "All", "MiscChallenges"}
 
 -- Загрузка библиотеки
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
@@ -42,283 +32,221 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
--- Создание вкладки
+-- Создание вкладок
 local Tabs = {
     Main = Window:AddTab({ Title = "Hub", Icon = "home"}),
-	Craft = Window:AddTab({ Title = "Craft", Icon = "hammer"}),
-	Roll = Window:AddTab({ Title = "Roll List" , Icon = "list"}),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+    Craft = Window:AddTab({ Title = "Craft", Icon = "hammer"}),
+    Roll = Window:AddTab({ Title = "Roll List", Icon = "list"}),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings"})
 }
 
--- Создание сохранений
+-- Сохранения
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
-
 SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({})
-
 InterfaceManager:SetFolder("ElementalDungeonHub")
 SaveManager:SetFolder("ElementalDungeonHub")
-
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
-
 Window:SelectTab(1)
 
+-- Функция обновления статуса
+local function UpdateStatus()
+    if not StatusPanel then return end
 
-local Options = Fluent.Options
+    local diffColor = "⚪"
+    if difficulty == "Easy" then diffColor = "🟢"
+    elseif difficulty == "Medium" then diffColor = "🟡"
+    elseif difficulty == "Hard" then diffColor = "🟠"
+    elseif difficulty == "Hell" then diffColor = "🔴"
+    elseif difficulty == "Hardcore" then diffColor = "💀"
+    elseif difficulty == "Infinite" then diffColor = "♾️" end
 
+    StatusPanel:SetDesc(
+        "Dungeon: " .. tostring(dungeon or "None") ..
+        "\nDifficulty: " .. diffColor .. " " .. tostring(difficulty or "None") ..
+        "\nSelected Key: " .. tostring(Key or "None")
+    )
+end
+
+-- Основной блок интерфейса
 do
-    -- Создание секции
-    Tabs.Main:AddParagraph({
-	Title = "Teleports",
-	Content = "Teleports to Npc",
+    -- Статус панель
+    StatusPanel = Tabs.Main:AddParagraph({
+        Title = "📊 Live Status",
+        Content = "Dungeon: None\nDifficulty: None\nStatus: Idle"
     })
 
-    -- Кнопки
+    -- Teleports
+    Tabs.Main:AddParagraph({Title = "Teleports", Content = "Teleports to Npc"})
     Tabs.Main:AddButton({
-		Title = "Tp to Sus Vampire",
-		Description = "Teleporting to Sus Vampire",
-		Callback = function()
-	    	playerr.CFrame = npcSus.CFrame
-		end
-    })
-    Tabs.Main:AddButton({
-		Title = "Tp to Handy Gorilla",
-		Description = "Teleport to Handy Gorilla",
-		Callback = function()
-	    	playerr.CFrame = npcHG.CFrame
-		end
-    })
-
-    -- Создание секции
-    Tabs.Main:AddParagraph({
-		Title = "Rolls",
-		Content = "Rolling"
-    })
-
-    -- Кнопки
-    Tabs.Main:AddButton({
-		Title = "Summon banner 1 time",
-		Description = "Summon banner 1 time for 100 gems",
-		Callback = function()
-	  	    game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService"):WaitForChild("RF"):WaitForChild("SummonOnce"):InvokeServer()
-		end
+        Title = "Tp to Sus Vampire",
+        Description = "Teleporting to Sus Vampire",
+        Callback = function() playerr.CFrame = npcSus.CFrame end
     })
     Tabs.Main:AddButton({
-		Title = "Summon banner 10 times",
-		Description = "Summon banner 10 times for 1000 gems",
-		Callback = function()
-	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService"):WaitForChild("RF"):WaitForChild("SummonThree"):InvokeServer()
-		end
+        Title = "Tp to Handy Gorilla",
+        Description = "Teleport to Handy Gorilla",
+        Callback = function() playerr.CFrame = npcHG.CFrame end
+    })
+
+    -- Rolls
+    Tabs.Main:AddParagraph({Title = "Rolls", Content = "Rolling"})
+    Tabs.Main:AddButton({
+        Title = "Summon banner 1 time",
+        Description = "Summon banner 1 time for 100 gems",
+        Callback = function()
+            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages")
+                :WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService")
+                :WaitForChild("RF"):WaitForChild("SummonOnce"):InvokeServer()
+        end
     })
     Tabs.Main:AddButton({
-		Title = "Time banner roll",
-		Description = "Roll time banner 1 time for 1 time shard",
-		Callback = function()
-	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService"):WaitForChild("RF"):WaitForChild("Spin"):InvokeServer(unpack(TimeBanner))
-		end
+        Title = "Summon banner 10 times",
+        Description = "Summon banner 10 times for 1000 gems",
+        Callback = function()
+            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages")
+                :WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("SummoningService")
+                :WaitForChild("RF"):WaitForChild("SummonThree"):InvokeServer()
+        end
     })
-    	Tabs.Main:AddButton({
-		Title = "Sus Vampire Element",
-		Description = "Buying element for gold from Sus Vampire",
-		Callback = function()
-	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("MiscContentService"):WaitForChild("RF"):WaitForChild("BuyElementForGold"):InvokeServer(player)
-		end
-    })
-
-    -- Создание секции
-    Tabs.Main:AddParagraph({
-		Title = "Craft",
-		Content = "Crafting"
-    })
-
-    -- Кнопки
     Tabs.Main:AddButton({
-		Title = "Craft time shard",
-		Description = "Craft 1 time shard for 100 tickmetal fragments",
-		Callback = function()
-	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService"):WaitForChild("RF"):WaitForChild("CraftSpecialMaterial"):InvokeServer(unpack(TimeBanner))
-		end
+        Title = "Time banner roll",
+        Description = "Roll time banner 1 time for 1 time shard",
+        Callback = function()
+            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages")
+                :WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService")
+                :WaitForChild("RF"):WaitForChild("Spin"):InvokeServer(unpack(TimeBanner))
+        end
+    })
+    Tabs.Main:AddButton({
+        Title = "Sus Vampire Element",
+        Description = "Buying element for gold from Sus Vampire",
+        Callback = function()
+            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages")
+                :WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("MiscContentService")
+                :WaitForChild("RF"):WaitForChild("BuyElementForGold"):InvokeServer(player)
+        end
     })
 
-    -- Создание секции
-    Tabs.Main:AddParagraph({
-		Title = "Dungeons",
-		Content = "Dungeons"
+    -- Craft
+    Tabs.Main:AddParagraph({Title = "Craft", Content = "Crafting"})
+    Tabs.Main:AddButton({
+        Title = "Craft time shard",
+        Description = "Craft 1 time shard for 100 tickmetal fragments",
+        Callback = function()
+            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages")
+                :WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GachaService")
+                :WaitForChild("RF"):WaitForChild("CraftSpecialMaterial"):InvokeServer(unpack(TimeBanner))
+        end
     })
 
-    -- Список
+    -- Dungeons
+    Tabs.Main:AddParagraph({Title = "Dungeons", Content = "Dungeons"})
     local DungeonDropdown = Tabs.Main:AddDropdown("Dungeons", {
-		Title = "Select Dungeon",
-		Values = {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
-		Multi = false,
-		Default = 1,
+        Title = "Select Dungeon",
+        Values = {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
+        Multi = false,
+        Default = 1
     })
-    
     DungeonDropdown:SetValue("Ancient Tomb")
-
     DungeonDropdown:OnChanged(function(dungeons)
-		print(dungeons)
-		dungeon = dungeons
+        dungeon = dungeons
+        UpdateStatus()
     end)
 
     local DifficultyDropdown = Tabs.Main:AddDropdown("Difficulties", {
-		Title = "Select Difficulty",
-		Values = {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"},
-		Multi = false,
-		Default = 1,
+        Title = "Select Difficulty",
+        Values = {"Easy", "Medium", "Hard", "Hell", "Hardcore", "Infinite"},
+        Multi = false,
+        Default = 1
     })
-
     DifficultyDropdown:SetValue("Easy")
-
     DifficultyDropdown:OnChanged(function(difficultys)
-        print(difficultys)
-		difficulty = difficultys
+        difficulty = difficultys
+        UpdateStatus()
     end)
 
-    -- Кнопка
+    -- Кнопки создания
     Tabs.Main:AddButton({
-		Title = "Create Dungeon", 
-		Description = "Creating selected dungeon",
-		Callback = function()
-	    	local Anc = {
-				"BeginnersDungeon",
-				difficulty,
-				"All",
-				"Normal"
-	    	}
+        Title = "Create Dungeon",
+        Description = "Creating selected dungeon",
+        Callback = function()
+            local DungeonsMap = {
+                ["Ancient Tomb"] = {"BeginnersDungeon", difficulty, "All", "Normal"},
+                ["Jungle"] = {"JungleDungeon", difficulty, "All", "Normal"},
+                ["Snow Castle"] = {"ArcticBastionDungeon", difficulty, "All", "Normal"},
+                ["Atlantis"] = {"UnderwaterDungeon", difficulty, "All", "Normal"},
+                ["Underworld"] = {"FireDungeon", difficulty, "All", "Normal"},
+                ["Angel Sanctuary"] = {"CloudDungeon", difficulty, "All", "Normal"}
+            }
 
-	    	local Jun = {
-				"JungleDungeon",
-				difficulty,
-				"All",
-				"Normal"
-	    	}
-
-		    local Snow = {
-				"ArcticBastionDungeon",
-				difficulty,
-				"All",
-				"Normal"
-	    	}
-
-		    local Atl = {
-				"UnderwaterDungeon",
-				difficulty,
-				"All",
-				"Normal"
-	    	}
-
-	    	local Und = {
-				"FireDungeon",
-				difficulty,
-				"All",
-				"Normal"
-	    	}
-
-	    	local Ang = {
-				"CloudDungeon",
-				difficulty,
-				"All",
-				"Normal"
-	    	}
-	    	if dungeon == "Ancient Tomb" and difficulty ~= nil then
-            	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Anc))
-	    	elseif (dungeon == "Jungle" and difficulty ~= "Easy") and difficulty ~= nil then
-        		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Jun))
-    		elseif dungeon == "Snow Castle" and difficulty ~= nil then
-        		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Snow))
-    		elseif dungeon == "Atlantis" then
-        		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Atl))
-        	elseif dungeon == "Underworld" and difficulty ~= nil then
-        		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Und))
-    		elseif dungeon == "Angel Sanctuary" and difficulty ~= nil then
-        		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(Ang))
-    		end
-		end
-    })
-
-    Tabs.Main:AddButton({
-		Title = "Create Infinite Time Dungeon",
-		Description = "Creating Infinite Tower Time Dungeon",
-		Callback = function()
-	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(args))
-		end
-    })
-
-	-- Создание секции
-    Tabs.Craft:AddParagraph({
-	Title = "Esp",
-	Content = "Show items on map",
-    })
-
-	-- Список
-    local KeyDropdown = Tabs.Craft:AddDropdown("Craft Keys", {
-		Title = "Select Key",
-		Values = {"Angel Key", "Dragon Key", "Zeus Key", "Reaper Key", "Skeleton Key", "Kronax Key", "Heroic Kronax Key"},
-		Multi = false,
-		Default = 1,
-    })
-    
-    KeyDropdown:SetValue("Angel Key")
-
-    KeyDropdown:OnChanged(function(Keys)
-		print(Keys)
-		Key = Keys
-    end)
-
-	-- Кнопка
-    Tabs.Craft:AddButton({
-		Title = "Craft Selected Dungeon", 
-		Description = "Crafting Selected Key",
-		Callback = function()
-	    	if Key == "Angel Key" then
-				print("Angel")
-	    	elseif Key == "Zeus Key" then
-				game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft"):InvokeServer(19)
-    		elseif Key == "Dragon Key" then
-				game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft"):InvokeServer(20)
-        	elseif Key == "Reaper Key" then
-        		game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft"):InvokeServer(17)
-    		elseif Key == "Skeleton Key" then
-				game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft"):InvokeServer(21)
-			elseif Key == "Kronax Key" then
-				print("Kronax")
-			elseif Key == "Heroic Kronax Key" then
-				print("Heroic Kronax")
+            if dungeon and DungeonsMap[dungeon] then
+                game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage")
+                    :WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services")
+                    :WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty")
+                    :InvokeServer(unpack(DungeonsMap[dungeon]))
             end
-		end
-    })
-
-Tabs.Roll:AddButton({
-    Title = "Open Roll List",
-    Description = "Opens roll window",
-    Callback = function()
-        if SecondWindow then
-            SecondWindow:SelectTab(1)
-            return
         end
-        SecondWindow = Fluent:CreateWindow({
-            Title = "Extra Window",
-            SubTitle = "Additional Menu",
-            TabWidth = 160,
-            Size = UDim2.fromOffset(400, 300),
-            Acrylic = true,
-            Theme = "Light",
-            MinimizeKey = Enum.KeyCode.RightControl
-        })
-        local Tabs2 = {
-            Main = SecondWindow:AddTab({ Title = "Main", Icon = "home" })
-        }
-        Tabs2.Roll:AddButton({
-            Title = "Test Button",
-            Callback = function()
-                print("Second window works")
-            end
-        })
+    })
 
-    end
-})
--- Этот end нужно передвигать
+    Tabs.Main:AddButton({
+        Title = "Create Infinite Time Dungeon",
+        Description = "Creating Infinite Tower Time Dungeon",
+        Callback = function()
+            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage")
+                :WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services")
+                :WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty")
+                :InvokeServer(unpack(args))
+        end
+    })
+
+    -- Craft Keys
+    Tabs.Craft:AddParagraph({Title = "Esp", Content = "Show items on map"})
+    local KeyDropdown = Tabs.Craft:AddDropdown("Craft Keys", {
+        Title = "Select Key",
+        Values = {"Angel Key", "Dragon Key", "Zeus Key", "Reaper Key", "Skeleton Key", "Kronax Key", "Heroic Kronax Key"},
+        Multi = false,
+        Default = 1
+    })
+    KeyDropdown:SetValue("Angel Key")
+    KeyDropdown:OnChanged(function(Keys)
+        Key = Keys
+        UpdateStatus()
+    end)
+
+    Tabs.Craft:AddButton({
+        Title = "Craft Selected Key",
+        Description = "Crafting or Buying Key",
+        Callback = function()
+            local CraftMap = {
+                ["Zeus Key"] = 19,
+                ["Dragon Key"] = 20,
+                ["Reaper Key"] = 17,
+                ["Skeleton Key"] = 21
+            }
+            if CraftMap[Key] then
+                game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage")
+                    :WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services")
+                    :WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft")
+                    :InvokeServer(CraftMap[Key])
+            else
+                print(Key .. " crafting not implemented")
+            end
+        end
+    })
+
+    -- роллы
+     local SwordRollDropdown = Tabs.Roll:AddDropdown("Select Sword for check roll", {
+        Title = "Select Sword",
+        Values = {"Asc Daggers", "Asc Lightning Katana", "Menta V2", "Asc Abyssal Trident", "Asc Magma's Edge", "Asc Wooden Sword", "Conq Blade"},
+        Multi = false,
+        Default = 1
+    })
+    KeyDropdown:SetValue("Asc Daggers")
+    KeyDropdown:OnChanged(function(Swords)
+        Sword = Swords
+        UpdateStatus()
+    end)   
 end
