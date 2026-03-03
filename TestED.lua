@@ -1,4 +1,5 @@
--- Update 0.1.1
+-- Update 0.1.2
+-- Added Sword Rolls btw doesnt work roll
 -- Alpha Version
 
 -- Переменные
@@ -10,11 +11,35 @@ local npcSus = workspace.MapContent.NPCs["Sus Vampire"]:WaitForChild("HumanoidRo
 local npcHG = workspace.MapContent.NPCs["Handy Gorilla"]:WaitForChild("HumanoidRootPart")
 
 local StatusPanel
+local Roll
+local StatusPanelRoll
 local difficulty, dungeon, Key
+local Cor = false
+
+local function findClosestIndex(base, list)
+    local closestIndex = 1
+    local smallestDiff = math.abs(base - list[1])
+
+    for i = 2, #list do
+        local diff = math.abs(base - list[i])
+        if diff < smallestDiff then
+            smallestDiff = diff
+            closestIndex = i
+        end
+    end
+
+    return closestIndex
+end
 
 -- Массивы
 local TimeBanner = {"TimeBanner2025"}
 local args = {"InfiniteTimeDungeon", "Hardcore", "All", "MiscChallenges"}
+local AscDaggersRolls = {5126.44, 5175.30, 5224.16, 5273.01, 5321.87, 5370.73}
+local AscSwordRolls = {8434.12, 8514.45, 8594.77, 8675.10, 8755.42, 8835.75}
+local ConqBladeRolls = {8032.50, 8112.82, 8193.15, 8273.48, 8353.80, 8434.12, 8514.45, 8594.77, 8675.10, 8755.42, 8835.75}
+local DoombringerRolls = {6300, 6363, 6426, 6489, 6552, 6615, 6678, 6741, 6804, 6867, 6930}
+local TLConqRolls = {6825, 6893.25, 6961.50, 7029.75, 7098.05, 7166.25, 7234.50, 7302.75, 7371, 7439.25, 7507.50}
+
 
 -- Загрузка библиотеки
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
@@ -224,29 +249,163 @@ do
                 ["Zeus Key"] = 19,
                 ["Dragon Key"] = 20,
                 ["Reaper Key"] = 17,
-                ["Skeleton Key"] = 21
+                ["Skeleton Key"] = 21,
+                ["Angel Key"] = 18,
+                ["Kronax Key"] = 199,
+                ["Heroic Kronax Key"] = 200
             }
-            if CraftMap[Key] then
+            if CraftMap[Key] > 16 and CraftMap[Key] < 22 then
                 game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage")
                     :WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services")
                     :WaitForChild("CraftingService"):WaitForChild("RF"):WaitForChild("Craft")
                     :InvokeServer(CraftMap[Key])
-            else
-                print(Key .. " crafting not implemented")
+            elseif CraftMap[Key] == 199 then
+                game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("MiscContentService"):WaitForChild("RF"):WaitForChild("PurchaseKronaxKey"):InvokeServer()
+            elseif CraftMap[Key] == 200 then
+                game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("MiscContentService"):WaitForChild("RF"):WaitForChild("PurchaseHeroicKronaxKey"):InvokeServer()
             end
         end
     })
 
+    -- Функция обновления статуса
+local function UpdateStatusRoll()
+    if not StatusPanelRoll then return end
+
+    StatusPanelRoll:SetDesc(
+        "⚔ Sword: " .. tostring(Sword or "None") ..
+        "\n💥 Damage: " .. tostring(Damage or "—") ..
+        "\n⬆ Upgrade: " .. tostring(Upgrade or "—") ..
+        "\n🟣 Corrupted: " .. (Cor and "🟢" or "🔴") ..
+        "\n✨ Reforge: " .. tostring(Reforge or "None") ..
+        "\n🎲 Roll: " .. tostring(Roll or "—") ..
+        "\n📈 Base Damage: " .. tostring(BaseDamage or "—")
+    )
+end
+
+    -- Статус панель
+    StatusPanelRoll = Tabs.Roll:AddParagraph({
+        Title = "Roll Status",
+        Content = "Sword: None\nDamage: None\nUpgrade: None\nCorrupted: No\nReforge: None\nRoll: idk\nMaxDamage: idk"
+    })
+
+    local Reforges = {
+                ["Godly"] = 1.5,
+                ["Mythical"] = 1.4,
+                ["Vicious"] = 1.4,
+                ["Cruel"] = 1.3,
+                ["Ruthless"] = 1.3,
+                ["Frenzied"] = 1.3,
+                ["Furious"] = 1.2,
+                ["Legendary"] = 1.2,
+                ["Relentless"] = 1.2,
+                ["Superior"] = 1.2,
+                ["Savage"] = 1.1,
+                ["Dangerous"] = 1.1,
+                ["Hasty"] = 1.1,
+                ["Mystical"] = 1.1,
+                ["Percise"] = 1,
+                ["Swift"] = 1,
+                ["Murderous"] = 0.9
+            }
+
+    local RollList = {
+        ["Asc Daggers"] = AscDaggersRolls,
+        ["Asc Lightning Katana"] = AscSwordRolls,
+        ["Menta V2"] = AscSwordRolls,
+        ["Asc Abyssal Trident"] = AscSwordRolls,
+        ["Asc Magma's Edge"] = AscSwordRolls,
+        ["Conq Blade"] = ConqBladeRolls,
+        ["Doombringer"] = DoombringerRolls,
+        ["TL Conq Blade"] = TLConqRolls
+    }
+
+    Tabs.Roll:AddButton({
+    Title = "Calculate",
+    Description = "Calculate Roll",
+    Callback = function()
+
+        local dmg = Damage
+        local upg = Upgrade
+
+        if Cor then
+            dmg = dmg / 1.5
+        end
+
+        dmg = dmg / Reforges[Reforge]
+
+        local result = dmg / (1 + (upg * 0.047619))
+
+        BaseDamage = result
+
+        print("Base Damage:", BaseDamage)
+
+        Roll = findClosestIndex(BaseDamage, RollList[Sword])
+
+        if RollList[Sword] == AscDaggersRolls or RollList[Sword] == AscSwordRolls then
+            Roll = Roll + 5
+        end
+        
+        UpdateStatusRoll()
+    end
+})
+
     -- роллы
      local SwordRollDropdown = Tabs.Roll:AddDropdown("Select Sword for check roll", {
         Title = "Select Sword",
-        Values = {"Asc Daggers", "Asc Lightning Katana", "Menta V2", "Asc Abyssal Trident", "Asc Magma's Edge", "Asc Wooden Sword", "Conq Blade"},
+        Values = {"Asc Daggers", "Asc Lightning Katana", "Menta V2", "Asc Abyssal Trident", "Asc Magma's Edge", "TL Conq Blade", "Conq Blade", "Doombringer"},
         Multi = false,
         Default = 1
     })
-    KeyDropdown:SetValue("Asc Daggers")
-    KeyDropdown:OnChanged(function(Swords)
+    SwordRollDropdown:SetValue("Asc Daggers")
+    SwordRollDropdown:OnChanged(function(Swords)
         Sword = Swords
-        UpdateStatus()
-    end)   
+        UpdateStatusRoll()
+    end)
+
+    local DamageInput = Tabs.Roll:AddInput("Damage Input", {
+    Title = "Damage",
+    Default = "",
+    Placeholder = "Need Press Enter!",
+    Numeric = true,
+    Finished = true,
+    Callback = function(Hit)
+        Damage = Hit
+        print("Damage: ", Damage)
+        UpdateStatusRoll()
+    end
+})  
+
+    local UpgradeInput = Tabs.Roll:AddInput("Upgrade Input", {
+    Title = "Upgrade",
+    Default = "",
+    Placeholder = "Need Press Enter!",
+    Numeric = true,
+    Finished = true,
+    Callback = function(Upg)
+        Upgrade = Upg
+        print("Upgrade: ", Upgrade)
+        UpdateStatusRoll()
+    end
+})  
+
+    Tabs.Roll:AddToggle("Is Sword Corrupted", {
+    Title = "Corrupted",
+    Default = false,
+    Callback = function(IsCor)
+        Cor = IsCor
+        UpdateStatusRoll()
+    end
+})
+
+    local SwordReforgeDropdown = Tabs.Roll:AddDropdown("Select Reforge for check roll", {
+        Title = "Select Reforge",
+        Values = {"Godly", "Mythical", "Vicious", "Cruel", "Ruthless", "Frenzied", "Superior", "Furious", "Legendary", "Relenless", "Savage", "Dangerous", "Hasty", "Mystical", "Swift", "Percise", "Murderous"},
+        Multi = false,
+        Default = 1
+    })
+    SwordReforgeDropdown:SetValue("Godly")
+    SwordReforgeDropdown:OnChanged(function(Ref)
+        Reforge = Ref
+        UpdateStatusRoll()
+    end)
 end
