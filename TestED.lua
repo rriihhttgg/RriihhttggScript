@@ -1,4 +1,4 @@
--- Update 0.0.9
+-- Update 0.1.0
 -- Alpha Version
 -- Переменные
 local Players = game:GetService("Players")
@@ -285,6 +285,7 @@ do
 				print("Kronax")
 			elseif Key == "Heroic Kronax Key" then
 				print("Heroic Kronax")
-    		end
+            end
 		end
     })
+end
