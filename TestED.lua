@@ -1,4 +1,4 @@
--- Update 0.0.8
+-- Update 0.0.9
 -- Alpha Version
 -- Переменные
 local Players = game:GetService("Players")
@@ -288,4 +288,3 @@ do
     		end
 		end
     })
-end
