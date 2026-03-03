@@ -45,7 +45,7 @@ local Window = Fluent:CreateWindow({
 local Tabs = {
     Main = Window:AddTab({ Title = "Hub", Icon = "home"}),
     Esp = Window:AddTab({ Title = "Esp", Icon = "eye"}),
-	Craft = Window:AddTab({ Title = "Craft", Icon = "eye"}),
+	Craft = Window:AddTab({ Title = "Craft", Icon = "hammer"}),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
@@ -293,7 +293,6 @@ do
     end)
 
     ElementEsp:SetValue(false)
-end
 
 	-- Создание секции
     Tabs.Craft:AddParagraph({
@@ -338,3 +337,4 @@ end
     		end
 		end
     })
+end
