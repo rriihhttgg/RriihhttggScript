@@ -1,4 +1,4 @@
--- Update 0.1.0
+-- Update 0.1.1
 -- Alpha Version
 -- Переменные
 local Players = game:GetService("Players")
@@ -6,8 +6,9 @@ local player = Players.LocalPlayer -- для LocalScript
 local character = player.Character or player.CharacterAdded:Wait()
 local playerr = character:WaitForChild("HumanoidRootPart")
 local npcSus = workspace.MapContent.NPCs["Sus Vampire"]:WaitForChild("HumanoidRootPart")
-
 local npcHG = workspace.MapContent.NPCs["Handy Gorilla"]:WaitForChild("HumanoidRootPart")
+
+local SecondWindow -- переменная вне кнопки
 
 local difficulty = nil
 local dungeon = nil
@@ -45,6 +46,7 @@ local Window = Fluent:CreateWindow({
 local Tabs = {
     Main = Window:AddTab({ Title = "Hub", Icon = "home"}),
 	Craft = Window:AddTab({ Title = "Craft", Icon = "hammer"}),
+	Roll = Window:AddTab({ Title = "Roll List, Icon = "list"}),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
@@ -288,4 +290,35 @@ do
             end
 		end
     })
+
+Tabs.Roll:AddButton({
+    Title = "Open Roll List",
+    Description = "Opens roll window",
+    Callback = function()
+        if SecondWindow then
+            SecondWindow:SelectTab(1)
+            return
+        end
+        SecondWindow = Fluent:CreateWindow({
+            Title = "Extra Window",
+            SubTitle = "Additional Menu",
+            TabWidth = 160,
+            Size = UDim2.fromOffset(400, 300),
+            Acrylic = true,
+            Theme = "Light",
+            MinimizeKey = Enum.KeyCode.RightControl
+        })
+        local Tabs2 = {
+            Main = SecondWindow:AddTab({ Title = "Main", Icon = "home" })
+        }
+        Tabs2.Roll:AddButton({
+            Title = "Test Button",
+            Callback = function()
+                print("Second window works")
+            end
+        })
+
+    end
+})
+-- Этот end нужно передвигать
 end
