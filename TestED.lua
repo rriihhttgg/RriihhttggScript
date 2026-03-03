@@ -1,4 +1,4 @@
--- Update 0.0.7
+-- Update 0.0.8
 -- Alpha Version
 -- Переменные
 local Players = game:GetService("Players")
@@ -44,7 +44,6 @@ local Window = Fluent:CreateWindow({
 -- Создание вкладки
 local Tabs = {
     Main = Window:AddTab({ Title = "Hub", Icon = "home"}),
-    Esp = Window:AddTab({ Title = "Esp", Icon = "eye"}),
 	Craft = Window:AddTab({ Title = "Craft", Icon = "hammer"}),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
@@ -245,54 +244,6 @@ do
 	    	game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("CreateParty"):InvokeServer(unpack(args))
 		end
     })
-
-    -- Создание секции
-    Tabs.Esp:AddParagraph({
-	Title = "Esp",
-	Content = "Show items on map",
-    })
-
-    -- Тумблер
-    local ElementEsp = Tabs.Esp:AddToggle("Esp Element orb",
-    {
-	Title = "Esp elements",
-	Description = "Show element orbs on map",
-	Default = false,
-	Callback = function(elementorb)
-	if elementorb then
-	    EspElement = true
-	else
-	    EspElement = false
-	    end
-	end
-    })
-    
-    ElementEsp:OnChanged(function()
-		while wait(10) do
-			if EspElement == true then
-				for dildi in range(10) do
-    				for i, childrik in ipairs(workspace:GetDescendants()) do
-        				if childrik:FindFirstChild("OrbHandler") then
-            				if not childrik:FindFirstChild("EspBox") then
-                				if childrik ~= game.Players.LocalPlayer.Character then
-                    				local esp = Instance.new("BoxHandleAdornment",childrik)
-                    				esp.Adornee = childrik
-                    				esp.ZIndex = 0
-                    				esp.Size = Vector3.new(4, 5, 1)
-                   	    			esp.Transparency = 0.65
-                   	    			esp.Color3 = Color3.fromRGB(255,48,48)
-                    				esp.AlwaysOnTop = true
-                    				esp.Name = "EspBox"
-                				end
-            				end
-        				end
-    				end
-				end
-			end
-		end
-    end)
-
-    ElementEsp:SetValue(false)
 
 	-- Создание секции
     Tabs.Craft:AddParagraph({
