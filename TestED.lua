@@ -34,7 +34,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 -- Создание окна
 local Window = Fluent:CreateWindow({
     Title = "Elemental dungeon hub",
-    SubTitle = "Version 0.0.1",
+    SubTitle = "Version 0.1.1",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -46,7 +46,7 @@ local Window = Fluent:CreateWindow({
 local Tabs = {
     Main = Window:AddTab({ Title = "Hub", Icon = "home"}),
 	Craft = Window:AddTab({ Title = "Craft", Icon = "hammer"}),
-	Roll = Window:AddTab({ Title = "Roll List, Icon = "list"}),
+	Roll = Window:AddTab({ Title = "Roll List" , Icon = "list"}),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
