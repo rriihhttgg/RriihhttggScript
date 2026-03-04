@@ -1,5 +1,5 @@
--- Update 0.1.2
--- Added Sword Rolls btw doesnt work roll
+-- Update 0.1.3
+-- Added Sword Roll Panel
 -- Alpha Version
 
 -- Переменные
@@ -10,12 +10,17 @@ local playerr = character:WaitForChild("HumanoidRootPart")
 local npcSus = workspace.MapContent.NPCs["Sus Vampire"]:WaitForChild("HumanoidRootPart")
 local npcHG = workspace.MapContent.NPCs["Handy Gorilla"]:WaitForChild("HumanoidRootPart")
 
+local ClosestRollDamage
+local GoldSpent = 0
+local GoldLeftToSpent = 0
+local RollTable
 local StatusPanel
 local Roll
 local StatusPanelRoll
 local difficulty, dungeon, Key
 local Cor = false
 
+-- Функции
 local function findClosestIndex(base, list)
     local closestIndex = 1
     local smallestDiff = math.abs(base - list[1])
@@ -31,6 +36,16 @@ local function findClosestIndex(base, list)
     return closestIndex
 end
 
+local function formatNumber(n)
+    if not n then return "0" end
+    
+    local formatted = tostring(math.floor(n))
+    formatted = formatted:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+    formatted = formatted:gsub("^,", "")
+    
+    return formatted
+end
+
 -- Массивы
 local TimeBanner = {"TimeBanner2025"}
 local args = {"InfiniteTimeDungeon", "Hardcore", "All", "MiscChallenges"}
@@ -40,6 +55,9 @@ local ConqBladeRolls = {8032.50, 8112.82, 8193.15, 8273.48, 8353.80, 8434.12, 85
 local DoombringerRolls = {6300, 6363, 6426, 6489, 6552, 6615, 6678, 6741, 6804, 6867, 6930}
 local TLConqRolls = {6825, 6893.25, 6961.50, 7029.75, 7098.05, 7166.25, 7234.50, 7302.75, 7371, 7439.25, 7507.50}
 
+local AscSwordsGold = {500, 1500, 2750, 4000, 6000, 8000, 10500, 13000, 15500, 18000, 21000, 24500, 28000, 32000, 35000, 45000, 57500, 70000, 73000, 88000, 100000, 150000, 250000, 400000, 550000, 700000, 900000, 1100000, 1300000, 1800000, 2300000, 2800000, 3300000, 3800000, 4300000, 4800000, 5300000, 5800000, 6300000, 6800000, 7300000, 7800000, 8300000, 8800000, 9300000, 9800000, 10300000, 10800000, 11300000, 11800000, 12300000, 12800000, 13300000, 13800000, 14300000, 14800000, 15300000, 15800000, 16300000, 16800000, 17300000, 17800000, 18300000, 18800000, 19300000, 19800000, 20300000, 20800000, 21300000, 21800000, 22300000, 22800000, 23300000, 23800000}
+local ConqBladeGold = {500, 1500, 2750, 4000, 6000, 8000, 10500, 13000, 15500, 18000, 21000, 24500, 28000, 32000, 35000, 45000, 57500, 70000, 73000, 88000, 100000, 150000, 250000, 400000, 550000, 700000, 900000, 1100000, 1300000, 1800000, 2300000, 2800000, 3300000, 3800000, 4300000, 4800000, 5300000, 5800000, 6300000, 6800000, 7300000, 7800000, 8300000, 8800000}
+local DoombringerGold = {500, 1500, 2750, 4000, 6000, 8000, 10500, 13000, 15500, 18000, 21000, 24500, 28000, 32000, 35000, 45000, 57500, 70000, 73000, 88000, 100000, 150000, 250000, 400000, 550000, 700000, 900000, 1100000, 1300000, 1800000, 2300000, 2800000, 3300000, 3800000}
 
 -- Загрузка библиотеки
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
@@ -49,7 +67,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 -- Создание окна
 local Window = Fluent:CreateWindow({
     Title = "Elemental dungeon hub",
-    SubTitle = "Version 0.1.1",
+    SubTitle = "Version 0.1.3",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -60,8 +78,10 @@ local Window = Fluent:CreateWindow({
 -- Создание вкладок
 local Tabs = {
     Main = Window:AddTab({ Title = "Hub", Icon = "home"}),
+    Summon = Window:AddTab({ Title = "Summon", Icon = "sparkles"}),
+    Dungeon = Window:AddTab({ Title = "Dungeon", Icon = "door-open"}),
     Craft = Window:AddTab({ Title = "Craft", Icon = "hammer"}),
-    Roll = Window:AddTab({ Title = "Roll List", Icon = "list"}),
+    Roll = Window:AddTab({ Title = "Sword Roll", Icon = "swords"}),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings"})
 }
 
@@ -273,12 +293,15 @@ local function UpdateStatusRoll()
 
     StatusPanelRoll:SetDesc(
         "⚔ Sword: " .. tostring(Sword or "None") ..
-        "\n💥 Damage: " .. tostring(Damage or "—") ..
-        "\n⬆ Upgrade: " .. tostring(Upgrade or "—") ..
+        "\n💥 Damage: " .. tostring(Damage or "Make Sure You Press Enter!") ..
+        "\n⬆ Upgrade: " .. tostring(Upgrade or "Make Sure You Press Enter!") ..
         "\n🟣 Corrupted: " .. (Cor and "🟢" or "🔴") ..
         "\n✨ Reforge: " .. tostring(Reforge or "None") ..
-        "\n🎲 Roll: " .. tostring(Roll or "—") ..
-        "\n📈 Base Damage: " .. tostring(BaseDamage or "—")
+        "\n🎲 Roll: " .. tostring(Roll or "Uhm. . .") ..
+        " (" .. tostring(ClosestRollDamage or "Hmm. . .") .. ")" ..
+        "\n📈 Base Damage: " .. tostring(BaseDamage or "Idk") ..
+        "\n🥇 Gold Spent: " .. tostring(formatNumber(GoldSpent) or "Uh. . .") ..
+        "\n🟡 Gold Left To Spent: " .. tostring(formatNumber(GoldLeftToSpent) or "🤔")
     )
 end
 
@@ -287,6 +310,17 @@ end
         Title = "Roll Status",
         Content = "Sword: None\nDamage: None\nUpgrade: None\nCorrupted: No\nReforge: None\nRoll: idk\nMaxDamage: idk"
     })
+
+    local GoldTables = {
+    ["Asc Daggers"] = AscSwordsGold,
+    ["Asc Lightning Katana"] = AscSwordsGold,
+    ["Menta V2"] = AscSwordsGold,
+    ["Asc Abyssal Trident"] = AscSwordsGold,
+    ["Asc Magma's Edge"] = AscSwordsGold,
+    ["TL Conq Blade"] = ConqBladeGold,
+    ["Conq Blade"] = ConqBladeGold,
+    ["Doombringer"] = DoombringerGold
+}
 
     local Reforges = {
                 ["Godly"] = 1.5,
@@ -319,32 +353,53 @@ end
         ["TL Conq Blade"] = TLConqRolls
     }
 
-    Tabs.Roll:AddButton({
+Tabs.Roll:AddButton({
     Title = "Calculate",
     Description = "Calculate Roll",
     Callback = function()
+        local goldTable = GoldTables[Sword]
 
-        local dmg = Damage
-        local upg = Upgrade
+        -- Приводим значения к числу
+        local dmg = tonumber(Damage) or 0
+        local upg = tonumber(Upgrade) or 0
 
+        GoldSpent = 0
+        GoldLeftToSpent = 0
+
+        -- Считаем GoldSpent
+        for i = 1, upg do
+            GoldSpent += goldTable[i] or 0
+        end
+
+        -- Считаем GoldLeftToSpend
+        for i = upg + 1, #goldTable do
+            GoldLeftToSpent += goldTable[i] or 0
+        end
+
+        -- Коррупция
         if Cor then
             dmg = dmg / 1.5
         end
 
-        dmg = dmg / Reforges[Reforge]
+        -- Reforge
+        dmg = dmg / (Reforges[Reforge] or 1)
 
-        local result = dmg / (1 + (upg * 0.047619))
+        -- Базовый урон
+        BaseDamage = dmg / (1 + (upg * 0.047619))
 
-        BaseDamage = result
-
+        print("Gold Spent:", GoldSpent)
+        print("Gold Left To Spend:", GoldLeftToSpend)
         print("Base Damage:", BaseDamage)
 
+        -- Находим ближайший ролл
         Roll = findClosestIndex(BaseDamage, RollList[Sword])
+        RollTable = RollList[Sword]
+        ClosestRollDamage = RollTable[Roll]
 
         if RollList[Sword] == AscDaggersRolls or RollList[Sword] == AscSwordRolls then
             Roll = Roll + 5
         end
-        
+
         UpdateStatusRoll()
     end
 })
