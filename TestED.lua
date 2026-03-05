@@ -1,4 +1,4 @@
--- Update 0.1.4
+-- Update 0.1.6
 -- Added Armor and Sword Rolls
 -- Alpha Version
 
@@ -24,6 +24,9 @@ local Armor
 local Health
 local UpgradeArmor
 local CorArmor = false
+local KeyRaid = game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("RaidAwakeningService"):WaitForChild("RF"):WaitForChild("RequestCreateRaid")
+local ConsumableRaid = game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("InventoryService"):WaitForChild("RF"):WaitForChild("UseConsumable")
+
 
 local RollArmor
 local ClosestRollHealth
@@ -32,6 +35,7 @@ local GoldLeftToSpentArmor = 0
 local BaseHeal
 
 -- Функции
+
 local function findClosestIndex(base, list)
     local closestIndex = 1
     local smallestDiff = math.abs(base - list[1])
@@ -87,8 +91,8 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 -- Создание окна
 local Window = Fluent:CreateWindow({
-    Title = "Elemental dungeon hub",
-    SubTitle = "Version 0.1.4",
+    Title = "⚡ Elemental dungeon hub ⚡",
+    SubTitle = "Alpha v0.1.6",
     TabWidth = 180,
     Size = UDim2.fromOffset(580, 560),
     Acrylic = true,
@@ -122,9 +126,10 @@ Window:SelectTab(1)
 local function UpdateStatus()
     if not StatusPanel then return end
 
-    local Gems = game:GetService("Players").rriihhttGG.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Gems.Value
-    local Gold = game:GetService("Players").rriihhttGG.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Gold.Value
-    local Raidium = game:GetService("Players").rriihhttGG.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Raidium.Value
+    local Gems = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Gems.Value
+    local Gold = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Gold.Value
+    local Raidium = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Raidium.Value
+    local Tickmetal = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController["Material_Tickmetal Fragments"].Value
 
     local diffColor = "⚪"
     if difficulty == "Easy" then diffColor = "🟢"
@@ -135,14 +140,41 @@ local function UpdateStatus()
     elseif difficulty == "Infinite" then diffColor = "♾️" end
 
     StatusPanel:SetDesc(
-        "Dungeon: " .. tostring(dungeon or "None") ..
-        "\nDifficulty: " .. diffColor .. " " .. tostring(difficulty or "None") ..
-        "\nSelected Key: " .. tostring(Key or "None") ..
-        "\n🟡Gold: " .. tostring(Gold) ..
-        "\n💎Gems: " .. tostring(Gems) ..
-        "\n®Raidiums: " .. tostring(Raidium)
+        "☠ Raid: " .. tostring(Raid) ..
+        "\n🗺 Dungeon: " .. tostring(dungeon or "None") ..
+        "\n⚔ Difficulty: " .. diffColor .. " " .. tostring(difficulty or "None") ..
+        "\n🔑 Selected Key: " .. tostring(Key or "None") ..
+        "\n🟡 Gold: " .. tostring(formatNumber(Gold)) ..
+        "\n💎 Gems: " .. tostring(formatNumber(Gems)) ..
+        "\n🧬 Raidiums: " .. tostring(formatNumber(Raidium)) ..
+        "\n⚙ Tickmetal Fragments: " .. tostring(formatNumber(Tickmetal))
     )
 end
+
+-- Функция обновления статуса
+local function UpdateStatusCurrency()
+    if not StatusPanelCurrency then return end
+
+    local Gems = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Gems.Value
+    local Gold = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Gold.Value
+    local Raidium = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Raidium.Value
+    local Tickmetal = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController["Material_Tickmetal Fragments"].Value
+
+    StatusPanelCurrency:SetDesc(
+        "🟡 Gold: " .. tostring(formatNumber(Gold)) ..
+        "\n💎 Gems: " .. tostring(formatNumber(Gems)) ..
+        "\n🧬 Raidiums: " .. tostring(formatNumber(Raidium)) ..
+        "\n⚙ Tickmetal Fragments: " .. tostring(formatNumber(Tickmetal))
+    )
+end
+
+task.spawn(function()
+    while true do
+        task.wait(0.05) -- обновление каждые 2 секунды
+        UpdateStatus()
+        UpdateStatusCurrency()
+    end
+end)
 
 -- Основной блок интерфейса
 do
@@ -153,7 +185,11 @@ do
     })
 
     -- Teleports
-    Tabs.Main:AddParagraph({Title = "Teleports", Content = "Teleports to Npc"})
+    Tabs.Main:AddParagraph({
+    Title = "📍 Teleports 📍",
+    Content = "Fast travel to NPCs"
+})
+
     Tabs.Main:AddButton({
         Title = "Tp to Sus Vampire",
         Description = "Teleporting to Sus Vampire",
@@ -166,6 +202,18 @@ do
     })
 
     -- Rolls
+
+    -- Статус панель
+    StatusPanelCurrency = Tabs.Summon:AddParagraph({
+        Title = "📊 Currency Status",
+        Content = ""
+    })
+
+    Tabs.Summon:AddParagraph({
+    Title = "✨ Summons ✨",
+    Content = "Summon element or roll banner"
+})
+
     Tabs.Summon:AddButton({
         Title = "Summon banner 1 time",
         Description = "Summon banner 1 time for 100 gems",
@@ -205,6 +253,35 @@ do
 
 
     -- Dungeons
+    -- Функция обновления статуса
+local function UpdateStatusDungeon()
+    if not StatusPanelDungeon then return end
+
+        local diffColor = "⚪"
+        if difficulty == "Easy" then diffColor = "🟢"
+        elseif difficulty == "Medium" then diffColor = "🟡"
+        elseif difficulty == "Hard" then diffColor = "🟠"
+        elseif difficulty == "Hell" then diffColor = "🔴"
+        elseif difficulty == "Hardcore" then diffColor = "💀"
+        elseif difficulty == "Infinite" then diffColor = "♾️" end
+
+        StatusPanelDungeon:SetDesc(
+        "☠ Raid: " .. tostring(Raid) ..
+        "\n🗺 Dungeon: " .. tostring(dungeon or "None") ..
+        "\n⚔ Difficulty: " .. diffColor .. " " .. tostring(difficulty or "None")
+    )
+end
+
+ -- Статус панель
+    StatusPanelDungeon = Tabs.Dungeon:AddParagraph({
+        Title = "📊 Dungeon Status",
+        Content = ""
+    })
+
+    Tabs.Dungeon:AddParagraph({
+    Title = "⚔ Dungeons ⚔",
+    Content = "Creating Dungeons"
+})
     local DungeonDropdown = Tabs.Dungeon:AddDropdown("Dungeons", {
         Title = "Select Dungeon",
         Values = {"Ancient Tomb", "Jungle", "Snow Castle", "Atlantis", "Underworld", "Angel Sanctuary"},
@@ -227,6 +304,7 @@ do
     DifficultyDropdown:OnChanged(function(difficultys)
         difficulty = difficultys
         UpdateStatus()
+        UpdateStatusDungeon()
     end)
 
     -- Кнопки создания
@@ -263,7 +341,92 @@ do
         end
     })
 
+    
+    Tabs.Dungeon:AddParagraph({
+    Title = "☠ Raids ☠",
+    Content = "Creating Dungeons"
+})
+
+    local RaidDropdown = Tabs.Dungeon:AddDropdown("Raids", {
+        Title = "Select Raid",
+        Values = {"Angel Raid", "Zeus Raid", "Dragon Raid", "Reaper Raid", "Skeleton Raid", "Kronax Raid", "Heroic Kronax Raid", "Timelost Jungle Raid", "Timelost Snow Castle Raid", "Timelost Atlantis Raid", "Timelost Underworld Raid", "Timelost Angel Sanctuary Raid"},
+        Multi = false,
+        Default = 1
+    })
+    RaidDropdown:SetValue("Angel Raid")
+    RaidDropdown:OnChanged(function(Raids)
+        Raid = Raids
+        UpdateStatus()
+        UpdateStatusDungeon()
+    end)
+
+ local RaidMap = {
+    ["Angel Raid"] = function()
+        KeyRaid:InvokeServer(2,"AngelRaid")
+    end,
+
+    ["Zeus Raid"] = function()
+        KeyRaid:InvokeServer(2,"LightningRaid")
+    end,
+
+    ["Dragon Raid"] = function()
+        KeyRaid:InvokeServer(2,"DragonRaid")
+    end,
+
+    ["Reaper Raid"] = function()
+        KeyRaid:InvokeServer(2,"ReaperRaid")
+    end,
+
+    ["Kronax Raid"] = function()
+        ConsumableRaid:InvokeServer("Kronax Key")
+    end,
+
+    ["Heroic Kronax Raid"] = function()
+        ConsumableRaid:InvokeServer("Heroic Kronax Key")
+    end,
+
+    ["Skeleton Raid"] = function()
+        ConsumableRaid:InvokeServer("Skeletons Key")
+    end,
+
+    ["Timelost Jungle Raid"] = function()
+        ConsumableRaid:InvokeServer("Timelost Jungle Shard")
+    end,
+
+    ["Timelost Snow Castle Raid"] = function()
+        ConsumableRaid:InvokeServer("TimeLost Ice Shard")
+    end,
+
+    ["Timelost Atlantis Raid"] = function()
+        ConsumableRaid:InvokeServer("Timelost Atlantic Shard")
+    end,
+
+    ["Timelost Underworld Raid"] = function()
+        ConsumableRaid:InvokeServer("Timelost Lava Shard")
+    end,
+
+    ["Timelost Angel Sanctuary Raid"] = function()
+        ConsumableRaid:InvokeServer("Timelost Angelic Shard")
+    end
+}
+
+Tabs.Dungeon:AddButton({
+    Title = "Create Raid",
+    Description = "Create selected raid",
+    Callback = function()
+        if Raid and RaidMap[Raid] then
+            RaidMap[Raid]()
+        else
+            warn("Raid not selected")
+        end
+    end
+})
+
     -- Craft Keys
+    Tabs.Craft:AddParagraph({
+    Title = "🔑 Craft Keys 🔑",
+    Content = "Crafting keys"
+})
     local KeyDropdown = Tabs.Craft:AddDropdown("Craft Keys", {
         Title = "Select Key",
         Values = {"Angel Key", "Dragon Key", "Zeus Key", "Reaper Key", "Skeleton Key", "Kronax Key", "Heroic Kronax Key"},
@@ -332,10 +495,12 @@ local function UpdateStatusRoll()
 
     StatusPanelRoll:SetDesc(
         "⚔ Sword: " .. tostring(Sword or "None") ..
+        "\n━━━━━━━━━━━━━━━"..
         "\n💥 Damage: " .. tostring(Damage or "Make Sure You Press Enter!") ..
         "\n⬆ Upgrade: " .. tostring(Upgrade or "Make Sure You Press Enter!") ..
         "\n🟣 Corrupted: " .. (Cor and "✅" or "❌") ..
         "\n✨ Reforge: " .. tostring(Reforge or "None") ..
+        "\n━━━━━━━━━━━━━━━"..
         "\n🎲 Roll: "..(Roll or "Uhm. . .").." "..rollDmgColor.." ("..(ClosestRollDamage or "Hmm. . .")..")"..
         "\n📈 Base Damage: " .. tostring(BaseDamage or "Idk") ..
         "\n🥇 Gold Spent: " .. tostring(formatNumber(GoldSpent) or "Uh. . .") ..
@@ -426,7 +591,7 @@ Tabs.Roll:AddButton({
         BaseDamage = dmg / (1 + (upg * 0.047619))
 
         print("Gold Spent:", GoldSpent)
-        print("Gold Left To Spend:", GoldLeftToSpend)
+        print("Gold Left To Spend:", GoldLeftToSpent)
         print("Base Damage:", BaseDamage)
 
         -- Находим ближайший ролл
@@ -534,9 +699,11 @@ StatusPanelArmor = Tabs.Armor:AddParagraph({
     Title = "Armor Roll Status",
     Content = 
         "🛡 Set: -\n" ..
+        "\n━━━━━━━━━━━━━━━"..
         "💓 Health: -\n" ..
         "⬆ Upgrade: -\n" ..
         "🟣 Corrupted: -\n" ..
+        "\n━━━━━━━━━━━━━━━"..
         "🎲 Roll: - (-)\n" ..
         "♥ Base Heal: -\n" ..
         "🥇 Gold Spent: -\n" ..
@@ -562,9 +729,11 @@ local function UpdateStatusArmor()
 
     StatusPanelArmor:SetDesc(
         "🛡 Set: "..(ArmorSet or "-").." ("..(Armor or "-")..")"..
+        "\n━━━━━━━━━━━━━━━"..
         "\n💓 Health: "..(Health or "Make Sure You Press Enter!")..
         "\n⬆ Upgrade: "..(UpgradeArmor or "Make Sure You Press Enter!")..
         "\n🟣 Corrupted: "..(CorArmor and "✅" or "❌")..
+        "\n━━━━━━━━━━━━━━━"..
         "\n🎲 Roll: "..(RollArmor or "Idk").." "..rollColor.." ("..(ClosestRollHealth or "🤔")..")"..
         "\n♥ Base Heal: "..(BaseHeal or "Uhh. . .")..
         "\n🥇 Gold Spent: "..(GoldSpentArmor > 0 and formatNumber(GoldSpentArmor) or "0")..
