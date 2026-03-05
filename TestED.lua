@@ -661,4 +661,6 @@ Tabs.Armor:AddToggle("ArmorCor", {
         UpdateStatusArmor()
     end
 })
+
+    
 end
