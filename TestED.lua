@@ -1,5 +1,5 @@
--- Update 0.1.6
--- Added Armor and Sword Rolls
+-- Update 0.1.7
+-- Added Esp
 -- Alpha Version
 
 -- Переменные
@@ -35,6 +35,86 @@ local GoldLeftToSpentArmor = 0
 local BaseHeal
 
 -- Функции
+local espEnabled = false
+
+local function createESP(model)
+
+    if model:FindFirstChild("Highlight") then return end
+
+    -- Highlight
+    local highlight = Instance.new("Highlight")
+    highlight.FillColor = Color3.fromRGB(255,170,0)
+    highlight.OutlineColor = Color3.fromRGB(255,255,255)
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = model
+
+    -- ищем часть для крепления текста
+    local handle = model:FindFirstChild("Handle")
+    if not handle then return end
+
+    -- BillboardGui
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "OrbESP"
+    billboard.Size = UDim2.new(0,120,0,40)
+    billboard.StudsOffset = Vector3.new(0,2,0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = handle
+
+    -- TextLabel
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1,0,1,0)
+    text.BackgroundTransparency = 1
+    text.Text = model.Name
+    text.TextColor3 = Color3.new(1,1,1)
+    text.TextStrokeTransparency = 0
+    text.TextScaled = true
+    text.Font = Enum.Font.SourceSansBold
+    text.Parent = billboard
+
+end
+
+local function removeESP(model)
+
+    local h = model:FindFirstChild("Highlight")
+    if h then
+        h:Destroy()
+    end
+
+    local handle = model:FindFirstChild("Handle")
+    if handle and handle:FindFirstChild("OrbESP") then
+        handle.OrbESP:Destroy()
+    end
+
+end
+
+local function scanOrbs()
+
+    for _,v in pairs(workspace:GetDescendants()) do
+
+        if v.Name == "OrbHandler" then
+
+            local orbModel = v.Parent
+
+            if espEnabled then
+                createESP(orbModel)
+            else
+                removeESP(orbModel)
+            end
+
+        end
+
+    end
+
+end
+
+workspace.DescendantAdded:Connect(function(obj)
+
+    if obj.Name == "OrbHandler" and espEnabled then
+        task.wait()
+        createESP(obj.Parent)
+    end
+
+end)
 
 local function findClosestIndex(base, list)
     local closestIndex = 1
@@ -108,6 +188,8 @@ local Tabs = {
     Craft = Window:AddTab({ Title = "Craft", Icon = "hammer"}),
     Roll = Window:AddTab({ Title = "Sword Roll", Icon = "swords"}),
     Armor = Window:AddTab({ Title = "Armor Roll", Icon = "shield"}),
+    Esp = Window:AddTab({ Title = "Esp", Icon = "eye"}),
+    Other = Window:AddTab({ Title = "Other", Icon = "question"}),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings"})
 }
 
@@ -833,3 +915,13 @@ Tabs.Armor:AddToggle("ArmorCor", {
 
     
 end
+
+Tabs.Esp:AddToggle("OrbESP",{
+    Title="Orb ESP",
+    Default=false
+}):OnChanged(function(state)
+
+    espEnabled = state
+    scanOrbs()
+
+end)
