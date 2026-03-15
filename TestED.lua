@@ -1,5 +1,5 @@
--- Update 0.1.7
--- Added Esp
+-- Update 0.1.8
+-- Added Webhook
 -- Alpha Version
 
 -- Переменные
@@ -10,6 +10,9 @@ local playerr = character:WaitForChild("HumanoidRootPart")
 local npcSus = workspace.MapContent.NPCs["Sus Vampire"]:WaitForChild("HumanoidRootPart")
 local npcHG = workspace.MapContent.NPCs["Handy Gorilla"]:WaitForChild("HumanoidRootPart")
 
+
+
+local Level = player.leaderstats.Level.Value
 local ClosestRollDamage
 local GoldSpent = 0
 local GoldLeftToSpent = 0
@@ -26,7 +29,6 @@ local UpgradeArmor
 local CorArmor = false
 local KeyRaid = game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("RaidAwakeningService"):WaitForChild("RF"):WaitForChild("RequestCreateRaid")
 local ConsumableRaid = game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("InventoryService"):WaitForChild("RF"):WaitForChild("UseConsumable")
-
 
 local RollArmor
 local ClosestRollHealth
@@ -189,7 +191,7 @@ local Tabs = {
     Roll = Window:AddTab({ Title = "Sword Roll", Icon = "swords"}),
     Armor = Window:AddTab({ Title = "Armor Roll", Icon = "shield"}),
     Esp = Window:AddTab({ Title = "Esp", Icon = "eye"}),
-    Other = Window:AddTab({ Title = "Other", Icon = "question"}),
+    Webhook = Window:AddTab({ Title = "Webhook", Icon = "webhook"}),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings"})
 }
 
@@ -229,7 +231,8 @@ local function UpdateStatus()
         "\n🟡 Gold: " .. tostring(formatNumber(Gold)) ..
         "\n💎 Gems: " .. tostring(formatNumber(Gems)) ..
         "\n🧬 Raidiums: " .. tostring(formatNumber(Raidium)) ..
-        "\n⚙ Tickmetal Fragments: " .. tostring(formatNumber(Tickmetal))
+        "\n⚙ Tickmetal Fragments: " .. tostring(formatNumber(Tickmetal)) ..
+        "\n📊 Level: " .. tostring(formatNumber(Level))
     )
 end
 
@@ -925,3 +928,143 @@ Tabs.Esp:AddToggle("OrbESP",{
     scanOrbs()
 
 end)
+
+local HttpService = game:GetService("HttpService")
+
+local function SendWebhook(title)
+
+    if WebhookURL == "" then return end
+
+    local Gems = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Gems.Value
+    local Gold = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Gold.Value
+    local Raidium = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Raidium.Value
+
+    local data = {
+        ["username"] = "Elemental Dungeon Hub",
+        ["avatar_url"] = "https://i.pinimg.com/736x/ce/95/04/ce950418ac0191b1cf514236b5388b9b.jpg",
+
+        ["embeds"] = {{
+            ["title"] = "⚡ "..title.." ⚡",
+            ["color"] = 16753920,
+
+            ["fields"] = {
+
+                {
+                    ["name"] = "👤 Player",
+                    ["value"] = 
+                    "||"..
+                    player.Name..
+                    "\n||",
+                    ["inline"] = true
+                },
+
+                {
+                    ["name"] = "🆔 UserId",
+                    ["value"] = 
+                    "||" ..
+                    tostring(player.UserId) ..
+                    "\n||",
+                    ["inline"] = true
+                },
+
+                {
+                    ["name"] = "🖥 Server",
+                    ["value"] = 
+                    "```" ..
+                    game.JobId ..
+                    "```",
+                    ["inline"] = false
+                },
+
+                {
+                    ["name"] = "🟡 Gold",
+                    ["value"] = 
+                    "```" ..
+                    tostring(Gold) ..
+                    "```",
+                    ["inline"] = true
+                },
+
+                {
+                    ["name"] = "💎 Gems",
+                    ["value"] = 
+                    "```" ..
+                    tostring(Gems) ..
+                    "```",
+                    ["inline"] = true
+                },
+
+                {
+                    ["name"] = "🧬 Raidium",
+                    ["value"] = 
+                    "```" ..
+                    tostring(Raidium) ..
+                    "```",
+                    ["inline"] = true
+                },
+
+                {
+                    ["name"] = "📊 Level",
+                    ["value"] = 
+                    "```" ..
+                    tostring(Level) ..
+                    "```",
+                    ["inline"] = true
+                }
+
+            },
+
+            ["footer"] = {
+                ["text"] = "Elemental Dungeon Hub • Alpha"
+            },
+
+            ["timestamp"] = DateTime.now():ToIsoDate()
+        }}
+    }
+
+    local request = http_request or request or syn.request
+
+    request({
+        Url = WebhookURL,
+        Method = "POST",
+        Headers = {
+            ["Content-Type"] = "application/json"
+        },
+        Body = HttpService:JSONEncode(data)
+    })
+
+end
+
+
+Tabs.Webhook:AddParagraph({
+    Title = "Webhook Settings",
+    Content = "Send logs to Discord"
+})
+
+Tabs.Webhook:AddInput("WebhookURLInput", {
+    Title = "Webhook URL",
+    Placeholder = "Paste your webhook here",
+    Finished = true,
+    Callback = function(v)
+        WebhookURL = v
+    end
+})
+
+Tabs.Webhook:AddButton({
+    Title = "Send Player Stats",
+    Description = "Send currencies to webhook",
+    Callback = function()
+
+        local Gems = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Gems.Value
+        local Gold = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Gold.Value
+
+        SendWebhook(
+            "Player Stats",
+            "Player: "..player.Name..
+            "\nGold: "..Gold..
+            "\nGems: "..Gems
+        )
+
+    end
+})
+
