@@ -1,5 +1,5 @@
--- Update 0.1.8
--- Added Webhook
+-- Update 0.1.9
+-- Fixed Dungeon Status
 -- Alpha Version
 
 -- Переменные
@@ -377,6 +377,7 @@ end
     DungeonDropdown:OnChanged(function(dungeons)
         dungeon = dungeons
         UpdateStatus()
+        UpdateStatusDungeon()
     end)
 
     local DifficultyDropdown = Tabs.Dungeon:AddDropdown("Difficulties", {
