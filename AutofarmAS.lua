@@ -1,5 +1,5 @@
--- Update 0.0.1
--- Created Yay
+-- Update 0.0.2
+-- Fixed Tp to pos
 -- Alpha Version
 
 -- Загрузка библиотеки
@@ -10,7 +10,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 -- Создание окна
 local Window = Fluent:CreateWindow({
     Title = "⚡ Elemental dungeon hub ⚡",
-    SubTitle = "Alpha v0.1.6",
+    SubTitle = "Alpha v0.2.0",
     TabWidth = 180,
     Size = UDim2.fromOffset(580, 560),
     Acrylic = true,
@@ -42,6 +42,8 @@ Window:SelectTab(1)
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local WPlayer = game:GetService("workspace").LocalPlayer
 
 local player = Players.LocalPlayer
 local mobsFolder = workspace:WaitForChild("Mobs")
@@ -181,14 +183,14 @@ Tabs.Main:AddButton({
     Title = "Tp 1 pos",
     Description = "Teleport to 1 pos",
     Callback = function()
-        player.HumanoidRootPart.CFrame = game:GetService("Workspace").Map.pos1.CFrame
+        WPlayer.HumanoidRootPart.CFrame = game:GetService("Workspace").Map.pos1.CFrame
     end
 })
 Tabs.Main:AddButton({
     Title = "Tp 2 pos",
     Description = "Teleport to 2 pos",
     Callback = function()
-        player.HumanoidRootPart.CFrame = game:GetService("Workspace").Map.pos2.CFrame
+        WPlayer.HumanoidRootPart.CFrame = game:GetService("Workspace").Map.pos2.CFrame
     end
 })
 Tabs.Main:AddButton({
