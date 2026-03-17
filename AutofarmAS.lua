@@ -1,16 +1,19 @@
--- Update 0.0.2
--- Fixed Tp to pos
+-- Update 0.0.6
+-- Storm Titan + Celestial Conqueror System
 -- Alpha Version
+-- Надежный AutoAttack + TP + Storm Titan Transformation
 
--- Загрузка библиотеки
+--------------------------------------------------
+-- LOAD UI
+--------------------------------------------------
+
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
--- Создание окна
 local Window = Fluent:CreateWindow({
     Title = "⚡ Elemental dungeon hub ⚡",
-    SubTitle = "Alpha v0.2.0",
+    SubTitle = "Alpha v0.2.6",
     TabWidth = 180,
     Size = UDim2.fromOffset(580, 560),
     Acrylic = true,
@@ -18,17 +21,13 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
--- Вкладки
 local Tabs = {
     Main = Window:AddTab({ Title = "Hub", Icon = "home"}),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings"})
 }
 
--- Сохранения
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
 InterfaceManager:SetFolder("ElementalDungeonHub")
 SaveManager:SetFolder("ElementalDungeonHub")
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
@@ -43,196 +42,230 @@ Window:SelectTab(1)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local WPlayer = game:GetService("workspace").LocalPlayer
-
 local player = Players.LocalPlayer
 local mobsFolder = workspace:WaitForChild("Mobs")
 
-local AutoAttack = false
+local Character = player.Character or player.CharacterAdded:Wait()
+player.CharacterAdded:Connect(function(char)
+    Character = char
+end)
+
+--------------------------------------------------
+-- MAP / POSITIONS
+--------------------------------------------------
+
+local Map = workspace:WaitForChild("Map")
 
 local pos1 = Instance.new("Part")
-        pos1.Size = Vector3.new(1, 1, 1)
-        pos1.Position = Vector3.new(-4165.52, 377.045, -486.045)
-        pos1.Anchored = true
-        pos1.BrickColor = BrickColor.new("Bright red")
-        pos1.Name = "Bridge1"
-        pos1.Parent = Map
+pos1.Size = Vector3.new(1,1,1)
+pos1.Position = Vector3.new(-4437.43, 408.652, -877.571)
+pos1.Anchored = true
+pos1.Name = "pos1"
+pos1.Parent = Map
 
 local pos2 = Instance.new("Part")
-        pos2.Size = Vector3.new(1, 1, 1)
-        pos2.Position = Vector3.new(-4505.16, 428.136, 754.889)
-        pos2.Anchored = true
-        pos2.BrickColor = BrickColor.new("Bright red")
-        pos2.Name = "Bridge1"
-        pos2.Parent = Map
+pos2.Size = Vector3.new(1,1,1)
+pos2.Position = Vector3.new(-4505.16, 428.136, 754.889)
+pos2.Anchored = true
+pos2.Name = "pos2"
+pos2.Parent = Map
 
 --------------------------------------------------
--- FIND NEAREST MOB
+-- FLAGS
 --------------------------------------------------
 
+local AutoAttack = false
+local ConqKilled = false
+local CurrentTP = "pos1" -- Отслеживает текущую целевую позицию
+local StormTitanTransformed = false -- Однократная трансформация
+
+--------------------------------------------------
+-- FUNCTIONS
+--------------------------------------------------
+
+-- Safe teleport
+local function SafeTeleport(targetPos)
+    local hrp = Character and Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        if (hrp.Position - targetPos.Position).Magnitude > 2 then
+            hrp.CFrame = targetPos.CFrame
+        end
+    end
+end
+
+-- Get nearest mob
 local function getNearestMob()
-
-    local character = player.Character
-    if not character then return nil end
-
-    local root = character:FindFirstChild("HumanoidRootPart")
+    local root = Character and Character:FindFirstChild("HumanoidRootPart")
     if not root then return nil end
 
     local nearestMob = nil
     local shortestDistance = math.huge
 
     for _, mob in pairs(mobsFolder:GetChildren()) do
-
         local mobRoot = mob:FindFirstChild("HumanoidRootPart")
         local humanoid = mob:FindFirstChild("Humanoid")
 
         if mobRoot and humanoid and humanoid.Health > 0 then
-
             local distance = (mobRoot.Position - root.Position).Magnitude
-
             if distance < shortestDistance then
                 shortestDistance = distance
                 nearestMob = mob
             end
-
         end
     end
 
     return nearestMob
 end
 
---------------------------------------------------
--- ATTACK FUNCTION
---------------------------------------------------
-
+-- Attack mob
 local function AttackMob(mob)
-
     local mobRoot = mob:FindFirstChild("HumanoidRootPart")
     if not mobRoot then return end
 
     local pos = mobRoot.Position
 
-    -- M1
-    local arg3 = {
+    local args1 = {
         ReplicatedStorage.ReplicatedStorage.Abilities.Elements.Mech.M1,
-        {
-            Direction = Vector3.new(0,0,0),
-            Origin = pos,
-            Position = pos
-        },
+        {Direction = Vector3.new(0,0,0), Origin = pos, Position = pos},
         "Start"
     }
+    ReplicatedStorage.ReplicatedStorage.Abilities.Templates.ToolTemplate.RemoteEvent:FireServer(unpack(args1))
 
-    ReplicatedStorage.ReplicatedStorage.Abilities.Templates.ToolTemplate.RemoteEvent:FireServer(unpack(arg3))
+    task.wait(0.05) -- скорость атаки
 
-    task.wait(0.05)
-
-    local arg4 = {
+    local args2 = {
         ReplicatedStorage.ReplicatedStorage.Abilities.Elements.Mech.M1,
-        {
-            Direction = Vector3.new(0,0,0),
-            Origin = pos,
-            Position = pos
-        },
+        {Direction = Vector3.new(0,0,0), Origin = pos, Position = pos},
         "End"
     }
+    ReplicatedStorage.ReplicatedStorage.Abilities.Templates.ToolTemplate.RemoteEvent:FireServer(unpack(args2))
+end
 
-    ReplicatedStorage.ReplicatedStorage.Abilities.Templates.ToolTemplate.RemoteEvent:FireServer(unpack(arg4))
+-- Storm Titan Transformation (однократно)
+local function CheckStormTitanTransformation()
+    local titan = mobsFolder:FindFirstChild("[Lv. 220] Storm Titan")
+    if not titan then return end
 
+    local humanoid = titan:FindFirstChild("Humanoid")
+    if not humanoid then return end
+
+    if not StormTitanTransformed and humanoid.MaxHealth > 250000 then
+        StormTitanTransformed = true
+
+        -- Transformation Start
+        local startArgs = {
+            ReplicatedStorage:WaitForChild("ReplicatedStorage"):WaitForChild("Abilities"):WaitForChild("Elements"):WaitForChild("Mech"):WaitForChild("Transformation"),
+            {
+                Direction = Vector3.new(-0.4728613793849945, -0.25441843271255493, -0.8436074256896973),
+                Origin = Vector3.new(-4480.640625, 440.3681945800781, 776.1621704101562),
+                Position = Vector3.new(-4541.6201171875, 407.55877685546875, 667.371826171875)
+            },
+            "Start"
+        }
+        ReplicatedStorage:WaitForChild("ReplicatedStorage"):WaitForChild("Abilities"):WaitForChild("Templates"):WaitForChild("ToolTemplate"):WaitForChild("RemoteEvent"):FireServer(unpack(startArgs))
+
+        -- Transformation End
+        local endArgs = {
+            ReplicatedStorage:WaitForChild("ReplicatedStorage"):WaitForChild("Abilities"):WaitForChild("Elements"):WaitForChild("Mech"):WaitForChild("Transformation"),
+            {
+                Direction = Vector3.new(-0.6456324458122253, -0.2522144615650177, -0.7207959294319153),
+                Origin = Vector3.new(-4481.083984375, 439.70550537109375, 774.5275268554688),
+                Position = Vector3.new(-4582.77587890625, 399.9798583984375, 660.996826171875)
+            },
+            "End"
+        }
+        ReplicatedStorage:WaitForChild("ReplicatedStorage"):WaitForChild("Abilities"):WaitForChild("Templates"):WaitForChild("ToolTemplate"):WaitForChild("RemoteEvent"):FireServer(unpack(endArgs))
+    end
 end
 
 --------------------------------------------------
--- TOGGLE AUTO ATTACK
+-- AUTOATTACK + SAFE TP LOOP
+--------------------------------------------------
+
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if AutoAttack then
+            pcall(function()
+                -- Проверка боссов
+                local titan = mobsFolder:FindFirstChild("[Lv. 220] Storm Titan")
+                local conqueror = mobsFolder:FindFirstChild("[Lv. 220] Celestial Conqueror")
+                local bossActive = (titan and titan:FindFirstChild("Humanoid") and titan.Humanoid.Health > 0) 
+                                   or (conqueror and conqueror:FindFirstChild("Humanoid") and conqueror.Humanoid.Health > 0)
+
+                -- TP на pos2, если есть босс, иначе pos1
+                if bossActive then
+                    CurrentTP = "pos2"
+                    SafeTeleport(pos2)
+                else
+                    CurrentTP = "pos1"
+                    SafeTeleport(pos1)
+                end
+
+                -- Атака ближайшего моба
+                local mob = getNearestMob()
+                if mob then
+                    AttackMob(mob)
+                end
+
+                -- Storm Titan трансформация
+                CheckStormTitanTransformation()
+
+                -- Celestial Conqueror Retry
+                if conqueror and conqueror:FindFirstChild("Humanoid") then
+                    if conqueror.Humanoid.Health <= 0 and not ConqKilled then
+                        ConqKilled = true
+                        task.spawn(function()
+                            while ConqKilled do
+                                pcall(function()
+                                    ReplicatedStorage:WaitForChild("ReplicatedStorage")
+                                        :WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services")
+                                        :WaitForChild("PartyService"):WaitForChild("RF"):WaitForChild("VoteOn")
+                                        :InvokeServer("Retry")
+                                end)
+                                task.wait(1)
+                            end
+                        end)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+--------------------------------------------------
+-- TOGGLE
 --------------------------------------------------
 
 Tabs.Main:AddToggle("AutoAttack", {
     Title = "Auto Attack Mobs",
     Default = false,
-    Callback = function(Value)
-        AutoAttack = Value
+    Callback = function(state)
+        AutoAttack = state
+
+        if state then
+            -- Запускаем данж
+            pcall(function()
+                ReplicatedStorage.ReplicatedStorage.Packages.Knit.Services.DungeonService.RF.StartDungeon:InvokeServer()
+            end)
+        end
     end
 })
 
 --------------------------------------------------
--- AUTO ATTACK LOOP
+-- BUTTONS
 --------------------------------------------------
 
-task.spawn(function()
-
-    while true do
-        task.wait(0.3)
-
-        if AutoAttack then
-
-            local mob = getNearestMob()
-
-            if mob then
-                AttackMob(mob)
-            end
-
-        end
-
-    end
-
-end)
-
---------------------------------------------------
--- BRIDGE BUTTON
---------------------------------------------------
 Tabs.Main:AddButton({
     Title = "Tp 1 pos",
-    Description = "Teleport to 1 pos",
     Callback = function()
-        WPlayer.HumanoidRootPart.CFrame = game:GetService("Workspace").Map.pos1.CFrame
+        SafeTeleport(pos1)
     end
 })
+
 Tabs.Main:AddButton({
     Title = "Tp 2 pos",
-    Description = "Teleport to 2 pos",
     Callback = function()
-        WPlayer.HumanoidRootPart.CFrame = game:GetService("Workspace").Map.pos2.CFrame
-    end
-})
-Tabs.Main:AddButton({
-    Title = "Bridge",
-    Description = "Create bridge",
-    Callback = function()
-
-        local Map = workspace:WaitForChild("Map")
-
-        local Bridge1 = Instance.new("Part")
-        Bridge1.Size = Vector3.new(90,1,100)
-        Bridge1.Position = Vector3.new(-3758.91,29.251,-803.428)
-        Bridge1.Anchored = true
-        Bridge1.BrickColor = BrickColor.new("Bright red")
-        Bridge1.Name = "Bridge1"
-        Bridge1.Parent = Map
-
-        local Bridge2 = Instance.new("Part")
-        Bridge2.Size = Vector3.new(90,1,80)
-        Bridge2.Position = Vector3.new(-3955.5,22.5632,-600.395)
-        Bridge2.Orientation = Vector3.new(10,0,0)
-        Bridge2.Anchored = true
-        Bridge2.BrickColor = BrickColor.new("Bright red")
-        Bridge2.Name = "Bridge2"
-        Bridge2.Parent = Map
-
-        local Bridge3 = Instance.new("Part")
-        Bridge3.Size = Vector3.new(90,1,90)
-        Bridge3.Position = Vector3.new(-3978.5,18.6021,-1062.31)
-        Bridge3.Orientation = Vector3.new(-10,0,0)
-        Bridge3.Anchored = true
-        Bridge3.BrickColor = BrickColor.new("Bright red")
-        Bridge3.Name = "Bridge3"
-        Bridge3.Parent = Map
-
-        local Bridge4 = Instance.new("Part")
-        Bridge4.Size = Vector3.new(90,1,100)
-        Bridge4.Position = Vector3.new(-4184.13,29.734,-823.382)
-        Bridge4.Anchored = true
-        Bridge4.BrickColor = BrickColor.new("Bright red")
-        Bridge4.Name = "Bridge4"
-        Bridge4.Parent = Map
-
+        SafeTeleport(pos2)
     end
 })
