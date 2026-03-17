@@ -1,5 +1,5 @@
--- Update 0.1.9
--- Fixed Dungeon Status
+-- Update 0.2.0
+-- Added formatNumber to webhook and Toggle for Sus vampire element
 -- Alpha Version
 
 -- Переменные
@@ -326,15 +326,35 @@ do
                 :WaitForChild("RF"):WaitForChild("Spin"):InvokeServer(unpack(TimeBanner))
         end
     })
-    Tabs.Summon:AddButton({
-        Title = "Sus Vampire Element",
-        Description = "Buying element for gold from Sus Vampire",
-        Callback = function()
-            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages")
-                :WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("MiscContentService")
-                :WaitForChild("RF"):WaitForChild("BuyElementForGold"):InvokeServer(player)
+local SusVamps = false
+local SusThread = nil
+
+Tabs.Summon:AddToggle("SusVampireToggle", {
+    Title = "Sus Vampire Element",
+    Description = "Buying element for gold from Sus Vampire",
+    Default = false,
+    Callback = function(state)
+        SusVamps = state
+
+        if state then
+            if SusThread then return end
+
+            SusThread = task.spawn(function()
+                while SusVamps do
+                    pcall(function()
+                        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatedStorage"):WaitForChild("Packages")
+                            :WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("MiscContentService")
+                            :WaitForChild("RF"):WaitForChild("BuyElementForGold"):InvokeServer()
+                    end)
+
+                    task.wait(1)
+                end
+
+                SusThread = nil
+            end)
         end
-    })
+    end
+})
 
 
     -- Dungeons
@@ -981,7 +1001,7 @@ local function SendWebhook(title)
                     ["name"] = "🟡 Gold",
                     ["value"] = 
                     "```" ..
-                    tostring(Gold) ..
+                    tostring(formatNumber(Gold)) ..
                     "```",
                     ["inline"] = true
                 },
@@ -990,7 +1010,7 @@ local function SendWebhook(title)
                     ["name"] = "💎 Gems",
                     ["value"] = 
                     "```" ..
-                    tostring(Gems) ..
+                    tostring(formatNumber(Gems)) ..
                     "```",
                     ["inline"] = true
                 },
@@ -999,7 +1019,7 @@ local function SendWebhook(title)
                     ["name"] = "🧬 Raidium",
                     ["value"] = 
                     "```" ..
-                    tostring(Raidium) ..
+                    tostring(formatNumber(Raidium)) ..
                     "```",
                     ["inline"] = true
                 },
@@ -1008,7 +1028,7 @@ local function SendWebhook(title)
                     ["name"] = "📊 Level",
                     ["value"] = 
                     "```" ..
-                    tostring(Level) ..
+                    tostring(formatNumber(Level)) ..
                     "```",
                     ["inline"] = true
                 }
@@ -1068,4 +1088,3 @@ Tabs.Webhook:AddButton({
 
     end
 })
-
