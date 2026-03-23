@@ -1,5 +1,6 @@
--- Update 0.2.0
--- Added formatNumber to webhook and Toggle for Sus vampire element
+-- Update 0.2.1
+-- Now update 0.2.1
+-- Sorry for no updates i lost my potassiim😭
 -- Alpha Version
 
 -- Переменные
@@ -174,7 +175,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 -- Создание окна
 local Window = Fluent:CreateWindow({
     Title = "⚡ Elemental dungeon hub ⚡",
-    SubTitle = "Alpha v0.1.6",
+    SubTitle = "Alpha v0.2.1",
     TabWidth = 180,
     Size = UDim2.fromOffset(580, 560),
     Acrylic = true,
