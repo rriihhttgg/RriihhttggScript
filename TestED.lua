@@ -1,5 +1,5 @@
--- Update 0.2.1
--- Now update 0.2.1
+-- Update 0.2.2
+-- Bee hub now
 -- Sorry for no updates i lost my potassiim😭
 -- Alpha Version
 
@@ -174,8 +174,8 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 -- Создание окна
 local Window = Fluent:CreateWindow({
-    Title = "⚡ Elemental dungeon hub ⚡",
-    SubTitle = "Alpha v0.2.1",
+    Title = "🐝 Bee Hub 🐝",
+    SubTitle = "Elemental Dungeons Alpha v0.2.1",
     TabWidth = 180,
     Size = UDim2.fromOffset(580, 560),
     Acrylic = true,
@@ -962,7 +962,7 @@ local function SendWebhook(title)
     local Raidium = player.PlayerScripts.StarterPlayerScripts.Controllers.MainUIController.Raidium.Value
 
     local data = {
-        ["username"] = "Elemental Dungeon Hub",
+        ["username"] = "Bee hub (Elemental Dungeons)",
         ["avatar_url"] = "https://i.pinimg.com/736x/ce/95/04/ce950418ac0191b1cf514236b5388b9b.jpg",
 
         ["embeds"] = {{
@@ -1037,7 +1037,7 @@ local function SendWebhook(title)
             },
 
             ["footer"] = {
-                ["text"] = "Elemental Dungeon Hub • Alpha"
+                ["text"] = "Bee hub (Elemental Dungeons) • Alpha"
             },
 
             ["timestamp"] = DateTime.now():ToIsoDate()
