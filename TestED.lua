@@ -1,6 +1,5 @@
 -- Update 0.2.2
 -- Bee hub now
--- Sorry for no updates i lost my potassiim😭
 -- Alpha Version
 
 -- Переменные
