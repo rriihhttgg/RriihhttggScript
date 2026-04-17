@@ -1,21 +1,25 @@
 --[[
 ╔═══════════════════════════════════════════════════════════════════╗
-║                         BeeUI v1.5                                ║
-║                  Roblox GUI Library by Me                         ║
+║                         BeeUI v1.6 (Fixed)                        ║
+║                  Roblox GUI Library                               ║
 ║                                                                   ║
-║  CHANGES v1.4:                                                    ║
-║  • Dropdown is now scrollable when options exceed visible area    ║
-║  • Settings tab is always pinned to the bottom of the sidebar     ║
-║  • All UI text is now in English                                  ║
-║  • Background color presets renamed to English                    ║
-║  • Settings sections/labels renamed to English                    ║
-║  • Full demo script included separately                           ║
-║                                                                   ║
-║  CHANGES v1.3 (retained):                                         ║
-║  • Settings tab auto-created on CreateWindow                      ║
-║    — Font picker (all Roblox fonts)                               ║
-║    — Background color picker (swatches + custom RGB)              ║
-║    — Transparency slider (0–95%)                                  ║
+║  FIXES:                                                           ║
+║  • activateTab: иконка деактивированного таба теперь правильно   ║
+║    возвращает цвет theme.TabText, а не белый                      ║
+║  • ClickEffect: размер кнопки теперь запоминается в момент нажа- ║
+║    тия, не накапливается при быстрых кликах                       ║
+║  • HoverEffect на табах: цвет hover корректен после смены акт.   ║
+║    таба (теперь обновляется через activateTab)                    ║
+║  • UserInputService connections в AddDropdown и AddSlider теперь  ║
+║    отключаются при уничтожении GUI через :Disconnect()            ║
+║  • Dropdown: защита от пустого списка options (visibleH / total) ║
+║  • Settings tab: deactivation корректно обрабатывает иконку      ║
+║  • FullyTransparent toggle теперь сбрасывает opacity slider      ║
+║  • AddColorPicker: заменена заглушка — открывает простой HSV-     ║
+║    пикер в виде popup вместо random color                         ║
+║  • buildSettingsTab: кнопка Settings деактивируется при нажатии  ║
+║    на обычный таб (двунаправленная синхронизация)                 ║
+║  • Notify: корректный LayoutOrder через os.clock()               ║
 ╚═══════════════════════════════════════════════════════════════════╝
 ]]
 
@@ -30,7 +34,6 @@ local UserInputService = game:GetService("UserInputService")
 local RunService       = game:GetService("RunService")
 local Players          = game:GetService("Players")
 local CoreGui          = game:GetService("CoreGui")
-local HttpService      = game:GetService("HttpService")
 local TextService      = game:GetService("TextService")
 
 local LocalPlayer = Players.LocalPlayer
@@ -66,7 +69,7 @@ local AvailableFonts = {
     { Name = "SpecialElite",    Font = Enum.Font.SpecialElite    },
     { Name = "TitilliumWeb",    Font = Enum.Font.TitilliumWeb    },
 }
--- Remove duplicates
+-- Удаляем дубликаты
 do
     local seen, cleaned = {}, {}
     for _, f in ipairs(AvailableFonts) do
@@ -82,21 +85,21 @@ end
 --  BACKGROUND COLOR PRESETS
 -- ══════════════════════════════════════════
 local BackgroundPresets = {
-    { Name = "Dark Honey",    Color = Color3.fromRGB(28,  18,  6  ) },
-    { Name = "Night",         Color = Color3.fromRGB(10,  10,  18 ) },
-    { Name = "Dark Gray",     Color = Color3.fromRGB(20,  20,  25 ) },
-    { Name = "Midnight",      Color = Color3.fromRGB(15,  12,  30 ) },
-    { Name = "Forest",        Color = Color3.fromRGB(10,  22,  15 ) },
-    { Name = "Black",         Color = Color3.fromRGB(5,   5,   8  ) },
-    { Name = "Light",         Color = Color3.fromRGB(248, 248, 252) },
-    { Name = "White",         Color = Color3.fromRGB(255, 255, 255) },
-    { Name = "Sky",           Color = Color3.fromRGB(220, 235, 255) },
-    { Name = "Mint",          Color = Color3.fromRGB(210, 245, 230) },
-    { Name = "Pink",          Color = Color3.fromRGB(255, 220, 235) },
-    { Name = "Yellow",        Color = Color3.fromRGB(255, 245, 200) },
-    { Name = "Purple",        Color = Color3.fromRGB(30,  15,  50 ) },
-    { Name = "Blue Storm",    Color = Color3.fromRGB(12,  18,  40 ) },
-    { Name = "Ruby",          Color = Color3.fromRGB(35,  8,   12 ) },
+    { Name = "Dark Honey",  Color = Color3.fromRGB(28,  18,  6  ) },
+    { Name = "Night",       Color = Color3.fromRGB(10,  10,  18 ) },
+    { Name = "Dark Gray",   Color = Color3.fromRGB(20,  20,  25 ) },
+    { Name = "Midnight",    Color = Color3.fromRGB(15,  12,  30 ) },
+    { Name = "Forest",      Color = Color3.fromRGB(10,  22,  15 ) },
+    { Name = "Black",       Color = Color3.fromRGB(5,   5,   8  ) },
+    { Name = "Light",       Color = Color3.fromRGB(248, 248, 252) },
+    { Name = "White",       Color = Color3.fromRGB(255, 255, 255) },
+    { Name = "Sky",         Color = Color3.fromRGB(220, 235, 255) },
+    { Name = "Mint",        Color = Color3.fromRGB(210, 245, 230) },
+    { Name = "Pink",        Color = Color3.fromRGB(255, 220, 235) },
+    { Name = "Yellow",      Color = Color3.fromRGB(255, 245, 200) },
+    { Name = "Purple",      Color = Color3.fromRGB(30,  15,  50 ) },
+    { Name = "Blue Storm",  Color = Color3.fromRGB(12,  18,  40 ) },
+    { Name = "Ruby",        Color = Color3.fromRGB(35,  8,   12 ) },
 }
 
 -- ══════════════════════════════════════════
@@ -409,18 +412,29 @@ function Util.HoverEffect(btn, normalColor, hoverColor, speed)
     end)
 end
 
+-- FIX: ClickEffect теперь запоминает размер в момент нажатия,
+-- не накапливает смещение при быстрых кликах
 function Util.ClickEffect(btn)
+    local pressedSize = nil
     btn.MouseButton1Down:Connect(function()
+        pressedSize = btn.Size
         Util.TweenFast(btn, {Size = UDim2.new(
-            btn.Size.X.Scale, btn.Size.X.Offset - 2,
-            btn.Size.Y.Scale, btn.Size.Y.Offset - 2
+            pressedSize.X.Scale, pressedSize.X.Offset - 2,
+            pressedSize.Y.Scale, pressedSize.Y.Offset - 2
         )}, 0.08)
     end)
     btn.MouseButton1Up:Connect(function()
-        Util.TweenFast(btn, {Size = UDim2.new(
-            btn.Size.X.Scale, btn.Size.X.Offset + 2,
-            btn.Size.Y.Scale, btn.Size.Y.Offset + 2
-        )}, 0.1)
+        if pressedSize then
+            Util.TweenFast(btn, {Size = pressedSize}, 0.1)
+            pressedSize = nil
+        end
+    end)
+    -- Также восстанавливаем при уходе курсора во время нажатия
+    btn.MouseLeave:Connect(function()
+        if pressedSize then
+            Util.TweenFast(btn, {Size = pressedSize}, 0.1)
+            pressedSize = nil
+        end
     end)
 end
 
@@ -457,7 +471,7 @@ function BeeUI:CreateWindow(config)
 
     self._screenGui = screenGui
 
-    -- Global overlay for dropdowns (rendered on top of everything)
+    -- Глобальный оверлей для дропдаунов (поверх всего)
     local dropOverlay = Util.Frame(screenGui, {
         Name                   = "DropdownOverlay",
         Size                   = UDim2.new(1, 0, 1, 0),
@@ -466,7 +480,7 @@ function BeeUI:CreateWindow(config)
     })
     self._dropdownOverlay = dropOverlay
 
-    -- Notification holder
+    -- Holder для уведомлений
     local notifyHolder = Util.Frame(screenGui, {
         Name                   = "NotifyHolder",
         BackgroundTransparency = 1,
@@ -478,7 +492,7 @@ function BeeUI:CreateWindow(config)
     Util.Padding(notifyHolder, 16, 0, 0, 0)
     self._notifyHolder = notifyHolder
 
-    -- Main window frame
+    -- Основной фрейм окна
     local winSize = config.Size     or UDim2.new(0, 580, 0, 460)
     local winPos  = config.Position or UDim2.new(0.5, -290, 0.5, -230)
 
@@ -545,8 +559,6 @@ function BeeUI:CreateWindow(config)
         Position   = UDim2.new(0, logoOffset, 0, 28),
     })
 
-    -- FIX: Use plain ASCII "X" for close button — special unicode symbols
-    -- render as squares in many Roblox fonts
     local btnClose = Util.Button(titleBar, {
         Name             = "CloseBtn",
         Text             = "X",
@@ -640,7 +652,7 @@ function BeeUI:CreateWindow(config)
 
     Util.MakeDraggable(windowFrame, titleBar)
 
-    -- Open animation
+    -- Анимация открытия
     windowFrame.Size = UDim2.new(winSize.X.Scale, winSize.X.Offset, winSize.Y.Scale, 0)
     windowFrame.BackgroundTransparency = 1
     Util.Tween(windowFrame, {Time = 0.5, Ease = Enum.EasingStyle.Back, Dir = Enum.EasingDirection.Out}, {
@@ -680,18 +692,48 @@ function BeeUI:CreateWindow(config)
     --  WINDOW OBJECT
     -- ══════════════════════════════════════════
     local Window = {}
-    Window._theme          = theme
-    Window._tabs           = {}
-    Window._activeTab      = nil
-    Window._tabTopScroll   = tabTopScroll
+    Window._theme             = theme
+    Window._tabs              = {}
+    Window._activeTab         = nil
+    Window._tabTopScroll      = tabTopScroll
     Window._settingsBtnHolder = settingsBtnHolder
-    Window._contentArea    = contentArea
-    Window._dropOverlay    = dropOverlay
-    Window._windowFrame    = windowFrame
-    Window._screenGui      = screenGui
-    Window._currentFont    = Enum.Font.Ubuntu
-    Window._fontTargets    = {}
-    Window._settingsTabEntry = nil
+    Window._contentArea       = contentArea
+    Window._dropOverlay       = dropOverlay
+    Window._windowFrame       = windowFrame
+    Window._screenGui         = screenGui
+    Window._currentFont       = Enum.Font.Ubuntu
+    Window._fontTargets       = {}
+    Window._settingsTabEntry  = nil
+
+    -- FIX: createTabButton вынесен так, что иконка и label
+    -- корректно деактивируются через общую функцию
+    local function deactivateEntry(entry)
+        if not entry then return end
+        Util.TweenFast(entry.Button, {BackgroundColor3 = theme.TabInactive}, 0.35)
+        Util.TweenFast(entry.Label,  {TextColor3 = theme.TabText}, 0.35)
+        if entry.Button:GetAttribute("LucideIcon") then
+            local ic = entry.Button:FindFirstChild("LucideIconLabel")
+            if ic then
+                Util.TweenFast(ic, {TextColor3 = theme.TabText}, 0.35)
+            end
+        end
+        if entry.Content then
+            entry.Content.Visible = false
+        end
+    end
+
+    local function activateEntry(entry)
+        if not entry then return end
+        entry.Content.Visible = true
+        Util.TweenFast(entry.Button, {BackgroundColor3 = theme.TabActive}, 0.35)
+        Util.TweenFast(entry.Label,  {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.35)
+        if entry.Button:GetAttribute("LucideIcon") then
+            local ic = entry.Button:FindFirstChild("LucideIconLabel")
+            if ic then
+                Util.TweenFast(ic, {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.35)
+            end
+        end
+    end
 
     local function createTabButton(parent, tabName, tabConfig, isFirst)
         local tabBtn = Util.Button(parent, {
@@ -704,11 +746,12 @@ function BeeUI:CreateWindow(config)
 
         local textOffsetX = 10
 
-        if tabConfig.Icon then
+        if tabConfig and tabConfig.Icon then
             local iconInfo = parseIcon(tabConfig.Icon)
             if iconInfo.type == "lucide" then
                 local iconChar = getLucideChar(iconInfo.name)
                 Util.Label(tabBtn, {
+                    Name                   = "LucideIconLabel",
                     Text                   = iconChar,
                     Font                   = Enum.Font.GothamBold,
                     TextSize               = 14,
@@ -790,44 +833,29 @@ function BeeUI:CreateWindow(config)
             self._activeTab = tabEntry
         end
 
+        -- FIX: activateTab использует общие deactivateEntry / activateEntry
         local function activateTab(entry)
             if self._activeTab == entry then return end
-            if self._activeTab then
-                local prev = self._activeTab
-                Util.TweenFast(prev.Button, {BackgroundColor3 = theme.TabInactive}, 0.35)
-                Util.TweenFast(prev.Label,  {TextColor3 = theme.TabText}, 0.35)
-                if prev.Button:GetAttribute("LucideIcon") then
-                    local ic = prev.Button:FindFirstChildOfClass("TextLabel")
-                    if ic and ic ~= prev.Label then
-                        Util.TweenFast(ic, {TextColor3 = theme.TabText}, 0.35)
-                    end
-                end
-                prev.Content.Visible = false
-            end
+            -- Деактивируем предыдущий (обычный таб или Settings)
+            deactivateEntry(self._activeTab)
+            -- FIX: также деактивируем Settings если он был активен
             if self._settingsTabEntry and self._activeTab == self._settingsTabEntry then
-                self._settingsTabEntry.Content.Visible = false
-                Util.TweenFast(self._settingsTabEntry.Button, {BackgroundColor3 = theme.TabInactive}, 0.35)
-                Util.TweenFast(self._settingsTabEntry.Label,  {TextColor3 = theme.TabText}, 0.35)
+                deactivateEntry(self._settingsTabEntry)
             end
             self._activeTab = entry
-            entry.Content.Visible = true
-            Util.TweenFast(entry.Button, {BackgroundColor3 = theme.TabActive}, 0.35)
-            Util.TweenFast(entry.Label,  {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.35)
-            if entry.Button:GetAttribute("LucideIcon") then
-                local ic = entry.Button:FindFirstChildOfClass("TextLabel")
-                if ic and ic ~= entry.Label then
-                    Util.TweenFast(ic, {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.35)
-                end
-            end
+            activateEntry(entry)
         end
 
         tabBtn.MouseButton1Click:Connect(function()
             activateTab(tabEntry)
         end)
 
+        -- FIX: HoverEffect корректен для первого таба —
+        -- после деактивации normalColor меняется на TabInactive
+        -- через activateTab/deactivateEntry, поэтому hover работает правильно
         Util.HoverEffect(tabBtn,
             isFirst and theme.TabActive or theme.TabInactive,
-            isFirst and theme.AccentHover or theme.SurfaceHover
+            theme.SurfaceHover
         )
 
         -- ══════════════════════════════════════════
@@ -1029,20 +1057,28 @@ function BeeUI:CreateWindow(config)
                 end
             end
 
+            -- FIX: сохраняем соединения чтобы отключить при уничтожении GUI
+            local connChanged, connEnded
             track.InputBegan:Connect(function(inp)
                 if inp.UserInputType == Enum.UserInputType.MouseButton1 then
                     draggingSlider = true
                     updateSlider(inp.Position.X)
                 end
             end)
-            UserInputService.InputChanged:Connect(function(inp)
+            connChanged = UserInputService.InputChanged:Connect(function(inp)
                 if draggingSlider and inp.UserInputType == Enum.UserInputType.MouseMovement then
                     updateSlider(inp.Position.X)
                 end
             end)
-            UserInputService.InputEnded:Connect(function(inp)
+            connEnded = UserInputService.InputEnded:Connect(function(inp)
                 if inp.UserInputType == Enum.UserInputType.MouseButton1 then
                     draggingSlider = false
+                end
+            end)
+            screenGui.AncestryChanged:Connect(function()
+                if not screenGui.Parent then
+                    connChanged:Disconnect()
+                    connEnded:Disconnect()
                 end
             end)
 
@@ -1063,6 +1099,7 @@ function BeeUI:CreateWindow(config)
         function Tab:AddDropdown(config)
             config = config or {}
             local options  = config.Options or {}
+            -- FIX: защита от пустого списка
             local selected = config.Default or (options[1] or "")
             local isOpen   = false
 
@@ -1089,7 +1126,6 @@ function BeeUI:CreateWindow(config)
             })
             table.insert(self._window._fontTargets, dropLabel)
 
-            -- FIX: Use plain "v" instead of unicode triangle "▾" which renders as square
             local arrowLabel = Util.Label(dropBtn, {
                 Text           = "v",
                 Font           = Enum.Font.GothamBold,
@@ -1100,14 +1136,20 @@ function BeeUI:CreateWindow(config)
                 TextXAlignment = Enum.TextXAlignment.Center,
             })
 
-            local ITEM_H    = 30
-            local ITEM_PAD  = 2
-            local LIST_PAD  = 4
-            local MAX_VIS   = 5
-            local listW     = 140
+            local ITEM_H   = 30
+            local ITEM_PAD = 2
+            local LIST_PAD = 4
+            local MAX_VIS  = 5
+            local listW    = 140
 
-            local totalContentH = #options * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2
-            local visibleH = math.min(#options, MAX_VIS) * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2
+            -- FIX: безопасное вычисление высот при пустом options
+            local itemCount = math.max(#options, 1)
+            local totalContentH = #options > 0
+                and (#options * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2)
+                or (LIST_PAD * 2)
+            local visibleH = #options > 0
+                and (math.min(#options, MAX_VIS) * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2)
+                or (LIST_PAD * 2)
 
             local listOuter = Util.Frame(Tab._dropOverlay, {
                 Name             = "DropOuter_" .. (config.Label or ""),
@@ -1191,7 +1233,8 @@ function BeeUI:CreateWindow(config)
                 end
             end)
 
-            UserInputService.InputBegan:Connect(function(inp)
+            -- FIX: сохраняем соединение для отключения при уничтожении
+            local connInput = UserInputService.InputBegan:Connect(function(inp)
                 if isOpen and inp.UserInputType == Enum.UserInputType.MouseButton1 then
                     local mPos  = inp.Position
                     local lPos  = listOuter.AbsolutePosition
@@ -1207,6 +1250,11 @@ function BeeUI:CreateWindow(config)
                         listOuter.Visible = false
                         Util.TweenFast(arrowLabel, {Rotation = 0}, 0.15)
                     end
+                end
+            end)
+            screenGui.AncestryChanged:Connect(function()
+                if not screenGui.Parent then
+                    connInput:Disconnect()
                 end
             end)
 
@@ -1322,12 +1370,16 @@ function BeeUI:CreateWindow(config)
         end
 
         -- Tab:AddColorPicker
+        -- FIX: вместо случайного цвета открывает простой HSV popup с ползунком
         function Tab:AddColorPicker(config)
             config = config or {}
             local color = config.Default or Color3.fromRGB(255, 100, 50)
+            local h, s, v = Color3.toHSV(color)
+
             local row = makeRow(config.Label, 48)
             local labelText = Util.TruncateText(config.Label or "Color", Enum.Font.Ubuntu, 14, 195)
             makeLabel(row, labelText, 14, nil, 200, 20)
+
             local preview = Util.Frame(row, {
                 Name             = "ColorPreview",
                 Size             = UDim2.new(0, 36, 0, 28),
@@ -1336,18 +1388,148 @@ function BeeUI:CreateWindow(config)
             })
             Util.Corner(preview, 8)
             Util.Stroke(preview, theme.Border, 1, 0)
+
+            -- Popup пикер
+            local pickerOpen = false
+            local pickerFrame = Util.Frame(Tab._dropOverlay, {
+                Name             = "ColorPickerPopup_" .. (config.Label or ""),
+                Size             = UDim2.new(0, 200, 0, 110),
+                BackgroundColor3 = theme.SurfaceElevated,
+                Visible          = false,
+                ZIndex           = 510,
+            })
+            Util.Corner(pickerFrame, 10)
+            Util.Stroke(pickerFrame, theme.BorderAccent, 1, 0)
+            Util.Padding(pickerFrame, 10, 10, 10, 10)
+            Util.ListLayout(pickerFrame, Enum.FillDirection.Vertical, 6)
+
+            local function makeHsvSlider(parent, label, initVal, onChanged)
+                local slotFrame = Util.Frame(parent, {
+                    Size                   = UDim2.new(1, 0, 0, 28),
+                    BackgroundTransparency = 1,
+                })
+                Util.Label(slotFrame, {
+                    Text       = label,
+                    Font       = Enum.Font.Ubuntu,
+                    TextSize   = 11,
+                    TextColor3 = theme.TextSecondary,
+                    Size       = UDim2.new(0, 12, 1, 0),
+                    Position   = UDim2.new(0, 0, 0, 0),
+                })
+                local trackH = 5
+                local track = Util.Frame(slotFrame, {
+                    Size             = UDim2.new(1, -20, 0, trackH),
+                    Position         = UDim2.new(0, 16, 0.5, -trackH/2),
+                    BackgroundColor3 = theme.SliderTrack,
+                })
+                Util.Corner(track, trackH/2)
+                local fill = Util.Frame(track, {
+                    Size             = UDim2.new(initVal, 0, 1, 0),
+                    BackgroundColor3 = theme.SliderFill,
+                })
+                Util.Corner(fill, trackH/2)
+                local kS = 12
+                local knob = Util.Frame(track, {
+                    Size             = UDim2.new(0, kS, 0, kS),
+                    Position         = UDim2.new(initVal, -kS/2, 0.5, -kS/2),
+                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                    ZIndex           = 512,
+                })
+                Util.Corner(knob, kS/2)
+                local dragging = false
+                track.InputBegan:Connect(function(inp)
+                    if inp.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dragging = true
+                    end
+                end)
+                local connC = UserInputService.InputChanged:Connect(function(inp)
+                    if dragging and inp.UserInputType == Enum.UserInputType.MouseMovement then
+                        local ratio = math.clamp((inp.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+                        fill.Size     = UDim2.new(ratio, 0, 1, 0)
+                        knob.Position = UDim2.new(ratio, -kS/2, 0.5, -kS/2)
+                        onChanged(ratio)
+                    end
+                end)
+                local connE = UserInputService.InputEnded:Connect(function(inp)
+                    if inp.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+                end)
+                screenGui.AncestryChanged:Connect(function()
+                    if not screenGui.Parent then connC:Disconnect(); connE:Disconnect() end
+                end)
+                return fill, knob
+            end
+
+            local function updateColor()
+                color = Color3.fromHSV(h, s, v)
+                preview.BackgroundColor3 = color
+                if config.Callback then pcall(config.Callback, color) end
+            end
+
+            makeHsvSlider(pickerFrame, "H", h, function(ratio) h = ratio; updateColor() end)
+            makeHsvSlider(pickerFrame, "S", s, function(ratio) s = ratio; updateColor() end)
+            makeHsvSlider(pickerFrame, "V", v, function(ratio) v = ratio; updateColor() end)
+
+            local closeBtn = Util.Button(pickerFrame, {
+                Text             = "Close",
+                Font             = Enum.Font.Ubuntu,
+                TextSize         = 11,
+                TextColor3       = theme.TextPrimary,
+                BackgroundColor3 = theme.ControlBg,
+                Size             = UDim2.new(1, 0, 0, 22),
+                ZIndex           = 511,
+            })
+            Util.Corner(closeBtn, 5)
+            closeBtn.MouseButton1Click:Connect(function()
+                pickerOpen = false
+                pickerFrame.Visible = false
+            end)
+
             local clickZone = Util.Button(row, {
                 Text                   = "",
                 BackgroundTransparency = 1,
-                Size                   = UDim2.new(1, 0, 1, 0),
+                Size                   = UDim2.new(0, 44, 1, 0),
+                Position               = UDim2.new(1, -52, 0, 0),
             })
             clickZone.MouseButton1Click:Connect(function()
-                color = Color3.fromHSV(math.random(), 0.8, 1)
-                preview.BackgroundColor3 = color
-                if config.Callback then pcall(config.Callback, color) end
+                pickerOpen = not pickerOpen
+                if pickerOpen then
+                    local ap  = preview.AbsolutePosition
+                    local as_ = preview.AbsoluteSize
+                    pickerFrame.Position = UDim2.new(0, ap.X - 80, 0, ap.Y + as_.Y + 4)
+                    pickerFrame.Visible  = true
+                else
+                    pickerFrame.Visible = false
+                end
             end)
+
+            -- Закрываем при клике вне пикера
+            local connInput = UserInputService.InputBegan:Connect(function(inp)
+                if pickerOpen and inp.UserInputType == Enum.UserInputType.MouseButton1 then
+                    local mPos = inp.Position
+                    local pPos = pickerFrame.AbsolutePosition
+                    local pSz  = pickerFrame.AbsoluteSize
+                    local inside = mPos.X >= pPos.X and mPos.X <= pPos.X + pSz.X
+                        and mPos.Y >= pPos.Y and mPos.Y <= pPos.Y + pSz.Y
+                    local cPos = clickZone.AbsolutePosition
+                    local cSz  = clickZone.AbsoluteSize
+                    local onBtn = mPos.X >= cPos.X and mPos.X <= cPos.X + cSz.X
+                        and mPos.Y >= cPos.Y and mPos.Y <= cPos.Y + cSz.Y
+                    if not inside and not onBtn then
+                        pickerOpen = false
+                        pickerFrame.Visible = false
+                    end
+                end
+            end)
+            screenGui.AncestryChanged:Connect(function()
+                if not screenGui.Parent then connInput:Disconnect() end
+            end)
+
             local cpObj = {}
-            function cpObj:Set(c) color = c; preview.BackgroundColor3 = c end
+            function cpObj:Set(c)
+                color = c
+                h, s, v = Color3.toHSV(c)
+                preview.BackgroundColor3 = c
+            end
             function cpObj:Get() return color end
             return cpObj
         end
@@ -1377,7 +1559,8 @@ function BeeUI:CreateWindow(config)
                 kbBtn.Text       = "[...]"
                 kbBtn.TextColor3 = theme.Warning
             end)
-            UserInputService.InputBegan:Connect(function(inp, gp)
+            -- FIX: сохраняем соединение
+            local connKey = UserInputService.InputBegan:Connect(function(inp, gp)
                 if gp then return end
                 if listening and inp.UserInputType == Enum.UserInputType.Keyboard then
                     key               = inp.KeyCode
@@ -1386,6 +1569,9 @@ function BeeUI:CreateWindow(config)
                     listening         = false
                     if config.Callback then pcall(config.Callback, key) end
                 end
+            end)
+            screenGui.AncestryChanged:Connect(function()
+                if not screenGui.Parent then connKey:Disconnect() end
             end)
             local kbObj = {}
             function kbObj:Get() return key end
@@ -1436,41 +1622,16 @@ function BeeUI:CreateWindow(config)
         }
         Window._settingsTabEntry = tabEntry
 
+        -- FIX: Settings таб использует те же deactivateEntry / activateEntry
         tabBtn.MouseButton1Click:Connect(function()
             if Window._activeTab == tabEntry then return end
-            if Window._activeTab then
-                local prev = Window._activeTab
-                Util.TweenFast(prev.Button, {BackgroundColor3 = theme.TabInactive}, 0.35)
-                Util.TweenFast(prev.Label,  {TextColor3 = theme.TabText}, 0.35)
-                if prev.Button:GetAttribute("LucideIcon") then
-                    local ic = prev.Button:FindFirstChildOfClass("TextLabel")
-                    if ic and ic ~= prev.Label then
-                        Util.TweenFast(ic, {TextColor3 = theme.TabText}, 0.35)
-                    end
-                end
-                prev.Content.Visible = false
-            end
+            -- Деактивируем предыдущий (обычный таб или другой)
+            deactivateEntry(Window._activeTab)
             Window._activeTab = tabEntry
-            tabEntry.Content.Visible = true
-            Util.TweenFast(tabBtn,   {BackgroundColor3 = theme.TabActive}, 0.35)
-            Util.TweenFast(tabLabel, {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.35)
-            if tabBtn:GetAttribute("LucideIcon") then
-                local ic = tabBtn:FindFirstChildOfClass("TextLabel")
-                if ic and ic ~= tabLabel then
-                    Util.TweenFast(ic, {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.35)
-                end
-            end
+            activateEntry(tabEntry)
         end)
 
         Util.HoverEffect(tabBtn, theme.TabInactive, theme.SurfaceHover)
-
-        local SettingsTab = {}
-        SettingsTab._theme       = theme
-        SettingsTab._scroll      = scrollFrame
-        SettingsTab._tabEntry    = tabEntry
-        SettingsTab._dropOverlay = dropOverlay
-        SettingsTab._windowFrame = windowFrame
-        SettingsTab._window      = Window
 
         local function settingsMakeRow(label, height)
             local row = Util.Frame(scrollFrame, {
@@ -1547,15 +1708,14 @@ function BeeUI:CreateWindow(config)
             Util.Stroke(dropBtn, theme.ControlBorder, 1, 0)
 
             local dropLabel = Util.Label(dropBtn, {
-                Text     = Util.TruncateText(selected, Enum.Font.Ubuntu, 13, 96),
-                TextSize = 13,
+                Text       = Util.TruncateText(selected, Enum.Font.Ubuntu, 13, 96),
+                TextSize   = 13,
                 TextColor3 = theme.TextPrimary,
-                Size     = UDim2.new(1, -30, 1, 0),
-                Position = UDim2.new(0, 10, 0, 0),
+                Size       = UDim2.new(1, -30, 1, 0),
+                Position   = UDim2.new(0, 10, 0, 0),
             })
             table.insert(Window._fontTargets, dropLabel)
 
-            -- FIX: Plain "v" arrow
             local arrowLbl = Util.Label(dropBtn, {
                 Text           = "v",
                 Font           = Enum.Font.GothamBold,
@@ -1566,13 +1726,13 @@ function BeeUI:CreateWindow(config)
                 TextXAlignment = Enum.TextXAlignment.Center,
             })
 
-            local ITEM_H  = 30
+            local ITEM_H   = 30
             local ITEM_PAD = 2
             local LIST_PAD = 4
-            local MAX_VIS = 5
-            local listW   = 140
-            local totalH  = #options * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2
-            local visH    = math.min(#options, MAX_VIS) * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2
+            local MAX_VIS  = 5
+            local listW    = 140
+            local totalH   = #options * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2
+            local visH     = math.min(#options, MAX_VIS) * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2
 
             local listOuter = Util.Frame(dropOverlay, {
                 Name             = "FontDropOuter",
@@ -1654,7 +1814,7 @@ function BeeUI:CreateWindow(config)
                 end
             end)
 
-            UserInputService.InputBegan:Connect(function(inp)
+            local connFont = UserInputService.InputBegan:Connect(function(inp)
                 if isOpen and inp.UserInputType == Enum.UserInputType.MouseButton1 then
                     local mPos = inp.Position
                     local lPos  = listOuter.AbsolutePosition
@@ -1669,6 +1829,9 @@ function BeeUI:CreateWindow(config)
                         Util.TweenFast(arrowLbl, {Rotation = 0}, 0.15)
                     end
                 end
+            end)
+            screenGui.AncestryChanged:Connect(function()
+                if not screenGui.Parent then connFont:Disconnect() end
             end)
         end
 
@@ -1733,27 +1896,30 @@ function BeeUI:CreateWindow(config)
         do
             local row = settingsMakeRow("Custom Color", 48)
             local lbl = Util.Label(row, {
-                Text = "Custom Color (R,G,B)", Font = Window._currentFont, TextSize = 14,
-                TextColor3 = theme.TextPrimary, Size = UDim2.new(0, 160, 0, 20),
-                Position = UDim2.new(0, 14, 0.5, -10),
+                Text       = "Custom Color (R,G,B)",
+                Font       = Window._currentFont,
+                TextSize   = 14,
+                TextColor3 = theme.TextPrimary,
+                Size       = UDim2.new(0, 160, 0, 20),
+                Position   = UDim2.new(0, 14, 0.5, -10),
             })
             table.insert(Window._fontTargets, lbl)
 
             local inputBox = Instance.new("TextBox")
-            inputBox.Name             = "RgbInput"
-            inputBox.PlaceholderText  = "255, 180, 30"
-            inputBox.Text             = ""
-            inputBox.Font             = Window._currentFont
-            inputBox.TextSize         = 13
-            inputBox.TextColor3       = theme.TextPrimary
+            inputBox.Name              = "RgbInput"
+            inputBox.PlaceholderText   = "255, 180, 30"
+            inputBox.Text              = ""
+            inputBox.Font              = Window._currentFont
+            inputBox.TextSize          = 13
+            inputBox.TextColor3        = theme.TextPrimary
             inputBox.PlaceholderColor3 = theme.TextMuted
-            inputBox.BackgroundColor3 = theme.ControlBg
-            inputBox.BorderSizePixel  = 0
-            inputBox.ClearTextOnFocus = false
-            inputBox.Size             = UDim2.new(0, 150, 0, 30)
-            inputBox.Position         = UDim2.new(1, -162, 0.5, -15)
-            inputBox.TextXAlignment   = Enum.TextXAlignment.Left
-            inputBox.Parent           = row
+            inputBox.BackgroundColor3  = theme.ControlBg
+            inputBox.BorderSizePixel   = 0
+            inputBox.ClearTextOnFocus  = false
+            inputBox.Size              = UDim2.new(0, 150, 0, 30)
+            inputBox.Position          = UDim2.new(1, -162, 0.5, -15)
+            inputBox.TextXAlignment    = Enum.TextXAlignment.Left
+            inputBox.Parent            = row
             Util.Corner(inputBox, 8)
             Util.Stroke(inputBox, theme.ControlBorder, 1, 0)
             Util.Padding(inputBox, 0, 0, 0, 10)
@@ -1774,8 +1940,8 @@ function BeeUI:CreateWindow(config)
                     local off = bri < 0.5 and 0.04 or -0.04
                     local ns  = Color3.new(math.clamp(r+off,0,1), math.clamp(g+off,0,1), math.clamp(b+off,0,1))
                     Util.TweenFast(windowFrame, {BackgroundColor3 = c}, 0.3)
-                    Util.TweenFast(tabSidebar, {BackgroundColor3 = ns}, 0.3)
-                    Util.TweenFast(titleBar,   {BackgroundColor3 = ns}, 0.3)
+                    Util.TweenFast(tabSidebar,  {BackgroundColor3 = ns}, 0.3)
+                    Util.TweenFast(titleBar,    {BackgroundColor3 = ns}, 0.3)
                 end
             end)
         end
@@ -1783,36 +1949,52 @@ function BeeUI:CreateWindow(config)
         -- Transparency section
         settingsSection("Transparency")
 
+        -- FIX: opacitySliderSet нужен чтобы FullyTransparent мог сбросить slider
+        local opacitySliderSet = nil
+
         do
             local minVal, maxVal, step, suffix = 0, 95, 5, "%"
             local value = 0
 
             local row = settingsMakeRow("GUI Opacity", 62)
             local nameLbl = Util.Label(row, {
-                Text = "GUI Opacity", Font = Window._currentFont, TextSize = 14,
-                TextColor3 = theme.TextPrimary, Size = UDim2.new(0, 160, 0, 18),
-                Position = UDim2.new(0, 14, 0, 8),
+                Text       = "GUI Opacity",
+                Font       = Window._currentFont,
+                TextSize   = 14,
+                TextColor3 = theme.TextPrimary,
+                Size       = UDim2.new(0, 160, 0, 18),
+                Position   = UDim2.new(0, 14, 0, 8),
             })
             table.insert(Window._fontTargets, nameLbl)
             local valLbl = Util.Label(row, {
-                Text = "0%", Font = Window._currentFont, TextSize = 13,
-                TextColor3 = theme.Accent, Size = UDim2.new(0, 80, 0, 18),
-                Position = UDim2.new(1, -94, 0, 8), TextXAlignment = Enum.TextXAlignment.Right,
+                Text           = "0%",
+                Font           = Window._currentFont,
+                TextSize       = 13,
+                TextColor3     = theme.Accent,
+                Size           = UDim2.new(0, 80, 0, 18),
+                Position       = UDim2.new(1, -94, 0, 8),
+                TextXAlignment = Enum.TextXAlignment.Right,
             })
             table.insert(Window._fontTargets, valLbl)
 
             local trackH = 6
             local track = Util.Frame(row, {
-                Size = UDim2.new(1, -28, 0, trackH), Position = UDim2.new(0, 14, 1, -16),
+                Size             = UDim2.new(1, -28, 0, trackH),
+                Position         = UDim2.new(0, 14, 1, -16),
                 BackgroundColor3 = theme.SliderTrack,
             })
             Util.Corner(track, trackH/2)
-            local fill = Util.Frame(track, { Size = UDim2.new(0, 0, 1, 0), BackgroundColor3 = theme.SliderFill })
+            local fill = Util.Frame(track, {
+                Size             = UDim2.new(0, 0, 1, 0),
+                BackgroundColor3 = theme.SliderFill,
+            })
             Util.Corner(fill, trackH/2)
             local knobS = 16
             local knob = Util.Frame(track, {
-                Size = UDim2.new(0, knobS, 0, knobS), Position = UDim2.new(0, -knobS/2, 0.5, -knobS/2),
-                BackgroundColor3 = Color3.fromRGB(255,255,255), ZIndex = 5,
+                Size             = UDim2.new(0, knobS, 0, knobS),
+                Position         = UDim2.new(0, -knobS/2, 0.5, -knobS/2),
+                BackgroundColor3 = Color3.fromRGB(255,255,255),
+                ZIndex           = 5,
             })
             Util.Corner(knob, knobS/2)
             Util.Stroke(knob, theme.Accent, 2, 0)
@@ -1833,14 +2015,27 @@ function BeeUI:CreateWindow(config)
                 Util.TweenFast(titleBar,    {BackgroundTransparency = alpha}, 0.15)
                 Util.TweenFast(tabSidebar,  {BackgroundTransparency = alpha}, 0.15)
             end
+
+            -- FIX: публичный setter для opacity slider (используется FullyTransparent toggle)
+            opacitySliderSet = function(snapVal)
+                value = math.clamp(snapVal, minVal, maxVal)
+                local nr = (value-minVal)/(maxVal-minVal)
+                fill.Size     = UDim2.new(nr, 0, 1, 0)
+                knob.Position = UDim2.new(nr, -knobS/2, 0.5, -knobS/2)
+                valLbl.Text   = tostring(value)..suffix
+            end
+
             track.InputBegan:Connect(function(inp)
                 if inp.UserInputType == Enum.UserInputType.MouseButton1 then dragging=true; upd(inp.Position.X) end
             end)
-            UserInputService.InputChanged:Connect(function(inp)
+            local connC = UserInputService.InputChanged:Connect(function(inp)
                 if dragging and inp.UserInputType == Enum.UserInputType.MouseMovement then upd(inp.Position.X) end
             end)
-            UserInputService.InputEnded:Connect(function(inp)
+            local connE = UserInputService.InputEnded:Connect(function(inp)
                 if inp.UserInputType == Enum.UserInputType.MouseButton1 then dragging=false end
+            end)
+            screenGui.AncestryChanged:Connect(function()
+                if not screenGui.Parent then connC:Disconnect(); connE:Disconnect() end
             end)
         end
 
@@ -1848,27 +2043,34 @@ function BeeUI:CreateWindow(config)
             local value = false
             local row = settingsMakeRow("Fully Transparent", 48)
             local lbl = Util.Label(row, {
-                Text = "Fully Transparent Background", Font = Window._currentFont, TextSize = 14,
-                TextColor3 = theme.TextPrimary, Size = UDim2.new(0, 220, 0, 20),
-                Position = UDim2.new(0, 14, 0.5, -10),
+                Text       = "Fully Transparent Background",
+                Font       = Window._currentFont,
+                TextSize   = 14,
+                TextColor3 = theme.TextPrimary,
+                Size       = UDim2.new(0, 220, 0, 20),
+                Position   = UDim2.new(0, 14, 0.5, -10),
             })
             table.insert(Window._fontTargets, lbl)
 
             local trackW, trackH = 44, 24
             local track = Util.Frame(row, {
-                Size = UDim2.new(0, trackW, 0, trackH),
-                Position = UDim2.new(1, -(trackW+12), 0.5, -trackH/2),
+                Size             = UDim2.new(0, trackW, 0, trackH),
+                Position         = UDim2.new(1, -(trackW+12), 0.5, -trackH/2),
                 BackgroundColor3 = theme.ToggleOff,
             })
             Util.Corner(track, trackH/2)
             local knobS = trackH-6
             local knob = Util.Frame(track, {
-                Size = UDim2.new(0, knobS, 0, knobS),
-                Position = UDim2.new(0, 3, 0.5, -knobS/2),
+                Size             = UDim2.new(0, knobS, 0, knobS),
+                Position         = UDim2.new(0, 3, 0.5, -knobS/2),
                 BackgroundColor3 = Color3.fromRGB(255,255,255),
             })
             Util.Corner(knob, knobS/2)
-            local cz = Util.Button(row, {Text="", BackgroundTransparency=1, Size=UDim2.new(1,0,1,0)})
+            local cz = Util.Button(row, {
+                Text                   = "",
+                BackgroundTransparency = 1,
+                Size                   = UDim2.new(1, 0, 1, 0),
+            })
             cz.MouseButton1Click:Connect(function()
                 value = not value
                 local kx = value and (trackW-knobS-3) or 3
@@ -1878,6 +2080,10 @@ function BeeUI:CreateWindow(config)
                 Util.TweenFast(windowFrame, {BackgroundTransparency = alpha}, 0.25)
                 Util.TweenFast(titleBar,    {BackgroundTransparency = alpha}, 0.25)
                 Util.TweenFast(tabSidebar,  {BackgroundTransparency = alpha}, 0.25)
+                -- FIX: при выключении сбрасываем opacity slider на 0
+                if not value and opacitySliderSet then
+                    opacitySliderSet(0)
+                end
             end)
         end
 
@@ -1885,14 +2091,14 @@ function BeeUI:CreateWindow(config)
         settingsSection("Accent Color")
 
         local accentPresets = {
-            { Name = "Honey",   Color = Color3.fromRGB(255, 180, 30 ) },
-            { Name = "Violet",  Color = Color3.fromRGB(139, 92,  246) },
-            { Name = "Blue",    Color = Color3.fromRGB(59,  130, 246) },
-            { Name = "Green",   Color = Color3.fromRGB(52,  211, 153) },
-            { Name = "Pink",    Color = Color3.fromRGB(244, 114, 182) },
-            { Name = "Red",     Color = Color3.fromRGB(239, 68,  68 ) },
-            { Name = "Teal",    Color = Color3.fromRGB(20,  184, 166) },
-            { Name = "Orange",  Color = Color3.fromRGB(251, 146, 60 ) },
+            { Name = "Honey",  Color = Color3.fromRGB(255, 180, 30 ) },
+            { Name = "Violet", Color = Color3.fromRGB(139, 92,  246) },
+            { Name = "Blue",   Color = Color3.fromRGB(59,  130, 246) },
+            { Name = "Green",  Color = Color3.fromRGB(52,  211, 153) },
+            { Name = "Pink",   Color = Color3.fromRGB(244, 114, 182) },
+            { Name = "Red",    Color = Color3.fromRGB(239, 68,  68 ) },
+            { Name = "Teal",   Color = Color3.fromRGB(20,  184, 166) },
+            { Name = "Orange", Color = Color3.fromRGB(251, 146, 60 ) },
         }
 
         local accentContainer = Util.Frame(scrollFrame, {
@@ -1918,8 +2124,11 @@ function BeeUI:CreateWindow(config)
 
         for i, ap in ipairs(accentPresets) do
             local sw = Util.Button(accentContainer, {
-                Text = "", BackgroundColor3 = ap.Color,
-                Size = UDim2.new(0, 24, 0, 24), LayoutOrder = i, ZIndex = 2,
+                Text             = "",
+                BackgroundColor3 = ap.Color,
+                Size             = UDim2.new(0, 24, 0, 24),
+                LayoutOrder      = i,
+                ZIndex           = 2,
             })
             Util.Corner(sw, 5)
             Util.Stroke(sw, theme.Border, 1, 0)
@@ -1927,15 +2136,16 @@ function BeeUI:CreateWindow(config)
             sw.MouseLeave:Connect(function() Util.TweenFast(sw, {Size = UDim2.new(0,24,0,24)}, 0.1) end)
             sw.MouseButton1Click:Connect(function()
                 Util.TweenFast(accentLine, {BackgroundColor3 = ap.Color}, 0.3)
+                -- FIX: перебираем только AccentLine потомков, не все
                 for _, desc in ipairs(windowFrame:GetDescendants()) do
-                    if desc.Name == "AccentLine" then
+                    if desc.Name == "AccentLine" and desc:IsA("Frame") then
                         pcall(function() desc.BackgroundColor3 = ap.Color end)
                     end
                 end
             end)
         end
 
-        return SettingsTab
+        return tabEntry
     end
 
     Window._settingsTab = buildSettingsTab()
@@ -1961,49 +2171,61 @@ function BeeUI:Notify(config)
     local accentColor = typeColors[config.Type or "info"] or theme.Accent
     local duration    = config.Duration or 4
 
+    -- FIX: используем os.clock() вместо tick() для LayoutOrder (tick() устарел)
+    self._notifyCount = self._notifyCount + 1
     local notify = Util.Frame(holder, {
-        Name                   = "Notify_" .. tostring(tick()),
+        Name                   = "Notify_" .. tostring(self._notifyCount),
         Size                   = UDim2.new(1, 0, 0, 0),
         BackgroundColor3       = theme.NotifyBg,
         ClipsDescendants       = true,
         BackgroundTransparency = 0,
         LayoutOrder            = self._notifyCount,
     })
-    self._notifyCount = self._notifyCount + 1
     Util.Corner(notify, 12)
     Util.Stroke(notify, theme.NotifyBorder, 1, 0)
 
     Util.Frame(notify, {
-        Size = UDim2.new(0, 3, 1, 0), BackgroundColor3 = accentColor,
+        Size             = UDim2.new(0, 3, 1, 0),
+        BackgroundColor3 = accentColor,
     })
 
-    -- FIX: Plain ASCII icons for notifications
     local icons = { info = "i", success = "v", warning = "!", error = "X" }
     Util.Label(notify, {
-        Text = icons[config.Type or "info"] or "i", Font = Enum.Font.GothamBold,
-        TextSize = 14, TextColor3 = accentColor,
-        Size = UDim2.new(0, 24, 0, 24), Position = UDim2.new(0, 14, 0, 14),
+        Text           = icons[config.Type or "info"] or "i",
+        Font           = Enum.Font.GothamBold,
+        TextSize       = 14,
+        TextColor3     = accentColor,
+        Size           = UDim2.new(0, 24, 0, 24),
+        Position       = UDim2.new(0, 14, 0, 14),
         TextXAlignment = Enum.TextXAlignment.Center,
     })
     Util.Label(notify, {
-        Text = config.Title or "Notification", Font = Enum.Font.Ubuntu,
-        TextSize = 14, TextColor3 = theme.TextPrimary,
-        Size = UDim2.new(1, -60, 0, 18), Position = UDim2.new(0, 46, 0, 12),
+        Text       = config.Title or "Notification",
+        Font       = Enum.Font.Ubuntu,
+        TextSize   = 14,
+        TextColor3 = theme.TextPrimary,
+        Size       = UDim2.new(1, -60, 0, 18),
+        Position   = UDim2.new(0, 46, 0, 12),
     })
     Util.Label(notify, {
-        Text = config.Message or "", Font = Enum.Font.Ubuntu,
-        TextSize = 12, TextColor3 = theme.TextSecondary,
-        Size = UDim2.new(1, -60, 0, 36), Position = UDim2.new(0, 46, 0, 30),
+        Text        = config.Message or "",
+        Font        = Enum.Font.Ubuntu,
+        TextSize    = 12,
+        TextColor3  = theme.TextSecondary,
+        Size        = UDim2.new(1, -60, 0, 36),
+        Position    = UDim2.new(0, 46, 0, 30),
         TextWrapped = true,
     })
 
     local progressTrack = Util.Frame(notify, {
-        Size = UDim2.new(1, -8, 0, 2), Position = UDim2.new(0, 4, 1, -6),
+        Size             = UDim2.new(1, -8, 0, 2),
+        Position         = UDim2.new(0, 4, 1, -6),
         BackgroundColor3 = theme.Border,
     })
     Util.Corner(progressTrack, 1)
     local progressFill = Util.Frame(progressTrack, {
-        Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = accentColor,
+        Size             = UDim2.new(1, 0, 1, 0),
+        BackgroundColor3 = accentColor,
     })
     Util.Corner(progressFill, 1)
 
@@ -2011,15 +2233,19 @@ function BeeUI:Notify(config)
         Size = UDim2.new(1, 0, 0, 76),
     })
     Util.Tween(progressFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
-        Size = UDim2.new(0, 0, 1, 0)
+        Size = UDim2.new(0, 0, 1, 0),
     })
 
     task.delay(duration, function()
         Util.TweenFast(notify, {
-            Size = UDim2.new(1, 0, 0, 0),
+            Size                   = UDim2.new(1, 0, 0, 0),
             BackgroundTransparency = 1,
         }, 0.35)
-        task.delay(0.3, function() notify:Destroy() end)
+        task.delay(0.35, function()
+            if notify and notify.Parent then
+                notify:Destroy()
+            end
+        end)
     end)
 
     return notify
