@@ -1,26 +1,15 @@
 --[[
 ╔═══════════════════════════════════════════════════════════════════╗
-║                         BeeUI v1.2                                ║
+║                         BeeUI v1.3                                ║
 ║              Roblox GUI Library by BeeUI Me                       ║
 ║                                                                   ║
-║  ИЗМЕНЕНИЯ v1.2:                                                  ║
-║  • Кнопки: текст обрезается с "..." если не влезает               ║
-║  • Dropdown: список рендерится поверх всех элементов (ZIndex fix) ║
-║  • Слайдер: значение поднято выше, не перекрывает трек            ║
-║  • Lucide иконки: AddTab поддерживает Icon = "lucide:имя"         ║
-║    или Icon = "rbxassetid://..."                                  ║
+║  ИЗМЕНЕНИЯ v1.3:                                                  ║
+║  • Settings вкладка создаётся автоматически при CreateWindow      ║
+║    — Смена шрифта (все доступные в Roblox)                        ║
+║    — Изменение цвета фона GUI (цветовой пикер)                    ║
+║    — Изменение прозрачности GUI (слайдер 0–100%)                  ║
+║  • Все предыдущие фиксы v1.2 сохранены                            ║
 ╚═══════════════════════════════════════════════════════════════════╝
-
-ИСПОЛЬЗОВАНИЕ (иконки Lucide):
-    local Tab = Window:AddTab({ Name = "Main", Icon = "lucide:home" })
-    local Tab2 = Window:AddTab({ Name = "Settings", Icon = "lucide:settings" })
-
-    Список иконок: https://lucide.dev/icons/
-    Формат: "lucide:имя-иконки" (через дефис, как на сайте)
-    Например: "lucide:user", "lucide:shield", "lucide:zap", "lucide:star"
-
-    Также по-прежнему работает rbxassetid:
-    local Tab = Window:AddTab({ Name = "Main", Icon = "rbxassetid://123456" })
 ]]
 
 local BeeUI = {}
@@ -35,163 +24,203 @@ local RunService       = game:GetService("RunService")
 local Players          = game:GetService("Players")
 local CoreGui          = game:GetService("CoreGui")
 local HttpService      = game:GetService("HttpService")
+local TextService      = game:GetService("TextService")
 
 local LocalPlayer = Players.LocalPlayer
 local Mouse       = LocalPlayer:GetMouse()
 
 -- ══════════════════════════════════════════
---  LUCIDE ИКОНКИ
---  Загружаем SVG-иконки через Roblox Image API
---  (конвертируем SVG → ImageLabel через decal trick)
---
---  Поскольку Roblox не поддерживает SVG нативно,
---  используем заранее конвертированные rbxassetid
---  из публичного набора Lucide-to-Roblox.
---
---  Если иконка не найдена в кэше — рисуем текстовый
---  фоллбэк (символ Unicode).
+--  СПИСОК ДОСТУПНЫХ ШРИФТОВ В ROBLOX
 -- ══════════════════════════════════════════
+local AvailableFonts = {
+    { Name = "Ubuntu",          Font = Enum.Font.Ubuntu          },
+    { Name = "GothamBold",      Font = Enum.Font.GothamBold      },
+    { Name = "Gotham",          Font = Enum.Font.Gotham          },
+    { Name = "GothamMedium",    Font = Enum.Font.GothamMedium    },
+    { Name = "SourceSans",      Font = Enum.Font.SourceSans      },
+    { Name = "SourceSansBold",  Font = Enum.Font.SourceSansBold  },
+    { Name = "SourceSansLight", Font = Enum.Font.SourceSansLight },
+    { Name = "RobotoMono",      Font = Enum.Font.RobotoMono      },
+    { Name = "Code",            Font = Enum.Font.Code            },
+    { Name = "Cartoon",         Font = Enum.Font.Cartoon         },
+    { Name = "Fantasy",         Font = Enum.Font.Fantasy         },
+    { Name = "Arcade",          Font = Enum.Font.Arcade          },
+    { Name = "Bangers",         Font = Enum.Font.Bangers         },
+    { Name = "Creepster",       Font = Enum.Font.Creepster       },
+    { Name = "DenkOne",         Font = Enum.Font.DenkOne         },
+    { Name = "Fondamento",      Font = Enum.Font.Fondamento      },
+    { Name = "FredokaOne",      Font = Enum.Font.FredokaOne      },
+    { Name = "Michroma",        Font = Enum.Font.Michroma        },
+    { Name = "Nunito",          Font = Enum.Font.Nunito          },
+    { Name = "Oswald",          Font = Enum.Font.Oswald          },
+    { Name = "PatrickHand",     Font = Enum.Font.PatrickHand     },
+    { Name = "PermanentMarker", Font = Enum.Font.PermanentMarker },
+    { Name = "Sarpanch",        Font = Enum.Font.Sarpanch        },
+    { Name = "SpecialElite",    Font = Enum.Font.SpecialElite    },
+    { Name = "TitilliumWeb",    Font = Enum.Font.TitilliumWeb    },
+    { Name = "Ubuntu",          Font = Enum.Font.Ubuntu          },
+}
+-- Убираем дубликаты
+do
+    local seen = {}
+    local cleaned = {}
+    for _, f in ipairs(AvailableFonts) do
+        if not seen[f.Name] then
+            seen[f.Name] = true
+            table.insert(cleaned, f)
+        end
+    end
+    AvailableFonts = cleaned
+end
 
--- Кэш загруженных иконок (имя → assetId строка)
-local LucideCache = {}
-
--- Маппинг популярных Lucide иконок на Unicode-символы
--- (используется как фоллбэк если assetId недоступен)
-local LucideFallback = {
-    -- Навигация
-    ["home"]         = "⌂",
-    ["settings"]     = "⚙",
-    ["menu"]         = "≡",
-    ["search"]       = "🔍",
-    ["bell"]         = "🔔",
-    ["user"]         = "👤",
-    ["users"]        = "👥",
-    ["star"]         = "★",
-    ["heart"]        = "♥",
-    ["bookmark"]     = "🔖",
-    -- Действия
-    ["plus"]         = "+",
-    ["minus"]        = "−",
-    ["x"]            = "✕",
-    ["check"]        = "✓",
-    ["edit"]         = "✏",
-    ["trash"]        = "🗑",
-    ["copy"]         = "⧉",
-    ["download"]     = "↓",
-    ["upload"]       = "↑",
-    ["refresh-cw"]   = "↻",
-    ["rotate-ccw"]   = "↺",
-    -- Статус
-    ["shield"]       = "🛡",
-    ["lock"]         = "🔒",
-    ["unlock"]       = "🔓",
-    ["eye"]          = "👁",
-    ["eye-off"]      = "🚫",
-    ["alert-circle"] = "⚠",
-    ["info"]         = "ℹ",
-    ["zap"]          = "⚡",
-    ["flame"]        = "🔥",
-    -- Медиа
-    ["play"]         = "▶",
-    ["pause"]        = "⏸",
-    ["stop-circle"]  = "⏹",
-    ["volume-2"]     = "🔊",
-    ["volume-x"]     = "🔇",
-    -- Файлы
-    ["folder"]       = "📁",
-    ["file"]         = "📄",
-    ["image"]        = "🖼",
-    ["code"]         = "</>",
-    -- Стрелки
-    ["arrow-up"]     = "↑",
-    ["arrow-down"]   = "↓",
-    ["arrow-left"]   = "←",
-    ["arrow-right"]  = "→",
-    ["chevron-up"]   = "⌃",
-    ["chevron-down"] = "⌄",
-    -- Разное
-    ["globe"]        = "🌐",
-    ["map-pin"]      = "📍",
-    ["clock"]        = "🕐",
-    ["calendar"]     = "📅",
-    ["cpu"]          = "💾",
-    ["database"]     = "🗃",
-    ["wifi"]         = "📶",
-    ["bluetooth"]    = "⁋",
-    ["battery"]      = "🔋",
-    ["sun"]          = "☀",
-    ["moon"]         = "☽",
-    ["cloud"]        = "☁",
-    ["wind"]         = "💨",
-    ["layers"]       = "⊞",
-    ["layout"]       = "⊟",
-    ["grid"]         = "⊞",
-    ["list"]         = "≣",
-    ["tag"]          = "🏷",
-    ["hash"]         = "#",
-    ["at-sign"]      = "@",
-    ["percent"]      = "%",
-    ["sliders"]      = "⊟",
-    ["tool"]         = "🔧",
-    ["wrench"]       = "🔧",
-    ["sword"]        = "⚔",
-    ["shield-check"] = "🛡",
-    ["package"]      = "📦",
-    ["box"]          = "📦",
-    ["gift"]         = "🎁",
-    ["trophy"]       = "🏆",
-    ["target"]       = "🎯",
-    ["crosshair"]    = "✛",
-    ["compass"]      = "🧭",
-    ["map"]          = "🗺",
-    ["flag"]         = "🚩",
-    ["send"]         = "➤",
-    ["mail"]         = "✉",
-    ["message-circle"] = "💬",
-    ["message-square"] = "💬",
-    ["phone"]        = "📞",
-    ["video"]        = "📹",
-    ["camera"]       = "📷",
-    ["mic"]          = "🎤",
-    ["music"]        = "🎵",
-    ["headphones"]   = "🎧",
-    ["gamepad"]      = "🎮",
-    ["terminal"]     = "⌨",
-    ["monitor"]      = "🖥",
-    ["smartphone"]   = "📱",
-    ["tablet"]       = "📱",
-    ["printer"]      = "🖨",
-    ["mouse-pointer"] = "🖱",
-    ["key"]          = "🔑",
-    ["link"]         = "🔗",
-    ["external-link"] = "↗",
-    ["maximize"]     = "⛶",
-    ["minimize"]     = "⛶",
-    ["chevron-left"] = "‹",
-    ["chevron-right"] = "›",
-    ["more-horizontal"] = "···",
-    ["more-vertical"] = "⋮",
-    ["log-in"]       = "→",
-    ["log-out"]      = "←",
-    ["power"]        = "⏻",
-    ["activity"]     = "📈",
-    ["trending-up"]  = "📈",
-    ["trending-down"] = "📉",
-    ["bar-chart"]    = "📊",
-    ["pie-chart"]    = "🥧",
-    ["dollar-sign"]  = "$",
-    ["credit-card"]  = "💳",
-    ["shopping-cart"] = "🛒",
-    ["shopping-bag"] = "🛍",
+-- ══════════════════════════════════════════
+--  ЦВЕТОВЫЕ ПРЕСЕТЫ ДЛЯ ФОНА
+-- ══════════════════════════════════════════
+local BackgroundPresets = {
+    { Name = "Тёмный мёд",    Color = Color3.fromRGB(28,  18,  6  ) },
+    { Name = "Ночь",          Color = Color3.fromRGB(10,  10,  18 ) },
+    { Name = "Тёмно-серый",   Color = Color3.fromRGB(20,  20,  25 ) },
+    { Name = "Полночь",       Color = Color3.fromRGB(15,  12,  30 ) },
+    { Name = "Лесной",        Color = Color3.fromRGB(10,  22,  15 ) },
+    { Name = "Чёрный",        Color = Color3.fromRGB(5,   5,   8  ) },
+    { Name = "Светлый",       Color = Color3.fromRGB(248, 248, 252) },
+    { Name = "Белый",         Color = Color3.fromRGB(255, 255, 255) },
+    { Name = "Небо",          Color = Color3.fromRGB(220, 235, 255) },
+    { Name = "Мятный",        Color = Color3.fromRGB(210, 245, 230) },
+    { Name = "Розовый",       Color = Color3.fromRGB(255, 220, 235) },
+    { Name = "Жёлтый",        Color = Color3.fromRGB(255, 245, 200) },
+    { Name = "Фиолетовый",    Color = Color3.fromRGB(30,  15,  50 ) },
+    { Name = "Синий шторм",   Color = Color3.fromRGB(12,  18,  40 ) },
+    { Name = "Рубин",         Color = Color3.fromRGB(35,  8,   12 ) },
 }
 
--- Получить символ для Lucide иконки
+-- ══════════════════════════════════════════
+--  LUCIDE ИКОНКИ
+-- ══════════════════════════════════════════
+local LucideFallback = {
+    ["home"]            = "⌂",
+    ["settings"]        = "⚙",
+    ["menu"]            = "≡",
+    ["search"]          = "🔍",
+    ["bell"]            = "🔔",
+    ["user"]            = "👤",
+    ["users"]           = "👥",
+    ["star"]            = "★",
+    ["heart"]           = "♥",
+    ["bookmark"]        = "🔖",
+    ["plus"]            = "+",
+    ["minus"]           = "−",
+    ["x"]               = "✕",
+    ["check"]           = "✓",
+    ["edit"]            = "✏",
+    ["trash"]           = "🗑",
+    ["copy"]            = "⧉",
+    ["download"]        = "↓",
+    ["upload"]          = "↑",
+    ["refresh-cw"]      = "↻",
+    ["rotate-ccw"]      = "↺",
+    ["shield"]          = "🛡",
+    ["lock"]            = "🔒",
+    ["unlock"]          = "🔓",
+    ["eye"]             = "👁",
+    ["eye-off"]         = "🚫",
+    ["alert-circle"]    = "⚠",
+    ["info"]            = "ℹ",
+    ["zap"]             = "⚡",
+    ["flame"]           = "🔥",
+    ["play"]            = "▶",
+    ["pause"]           = "⏸",
+    ["stop-circle"]     = "⏹",
+    ["volume-2"]        = "🔊",
+    ["volume-x"]        = "🔇",
+    ["folder"]          = "📁",
+    ["file"]            = "📄",
+    ["image"]           = "🖼",
+    ["code"]            = "</>",
+    ["arrow-up"]        = "↑",
+    ["arrow-down"]      = "↓",
+    ["arrow-left"]      = "←",
+    ["arrow-right"]     = "→",
+    ["chevron-up"]      = "⌃",
+    ["chevron-down"]    = "⌄",
+    ["globe"]           = "🌐",
+    ["map-pin"]         = "📍",
+    ["clock"]           = "🕐",
+    ["calendar"]        = "📅",
+    ["cpu"]             = "💾",
+    ["database"]        = "🗃",
+    ["wifi"]            = "📶",
+    ["battery"]         = "🔋",
+    ["sun"]             = "☀",
+    ["moon"]            = "☽",
+    ["cloud"]           = "☁",
+    ["wind"]            = "💨",
+    ["layers"]          = "⊞",
+    ["layout"]          = "⊟",
+    ["grid"]            = "⊞",
+    ["list"]            = "≣",
+    ["tag"]             = "🏷",
+    ["hash"]            = "#",
+    ["at-sign"]         = "@",
+    ["percent"]         = "%",
+    ["sliders"]         = "⊟",
+    ["tool"]            = "🔧",
+    ["wrench"]          = "🔧",
+    ["sword"]           = "⚔",
+    ["shield-check"]    = "🛡",
+    ["package"]         = "📦",
+    ["box"]             = "📦",
+    ["gift"]            = "🎁",
+    ["trophy"]          = "🏆",
+    ["target"]          = "🎯",
+    ["crosshair"]       = "✛",
+    ["compass"]         = "🧭",
+    ["map"]             = "🗺",
+    ["flag"]            = "🚩",
+    ["send"]            = "➤",
+    ["mail"]            = "✉",
+    ["message-circle"]  = "💬",
+    ["message-square"]  = "💬",
+    ["phone"]           = "📞",
+    ["video"]           = "📹",
+    ["camera"]          = "📷",
+    ["mic"]             = "🎤",
+    ["music"]           = "🎵",
+    ["headphones"]      = "🎧",
+    ["gamepad"]         = "🎮",
+    ["terminal"]        = "⌨",
+    ["monitor"]         = "🖥",
+    ["smartphone"]      = "📱",
+    ["tablet"]          = "📱",
+    ["printer"]         = "🖨",
+    ["mouse-pointer"]   = "🖱",
+    ["key"]             = "🔑",
+    ["link"]            = "🔗",
+    ["external-link"]   = "↗",
+    ["maximize"]        = "⛶",
+    ["minimize"]        = "⛶",
+    ["chevron-left"]    = "‹",
+    ["chevron-right"]   = "›",
+    ["more-horizontal"] = "···",
+    ["more-vertical"]   = "⋮",
+    ["log-in"]          = "→",
+    ["log-out"]         = "←",
+    ["power"]           = "⏻",
+    ["activity"]        = "📈",
+    ["trending-up"]     = "📈",
+    ["trending-down"]   = "📉",
+    ["bar-chart"]       = "📊",
+    ["pie-chart"]       = "🥧",
+    ["dollar-sign"]     = "$",
+    ["credit-card"]     = "💳",
+    ["shopping-cart"]   = "🛒",
+    ["shopping-bag"]    = "🛍",
+}
+
 local function getLucideChar(iconName)
     return LucideFallback[iconName] or "•"
 end
 
--- Парсинг формата иконки: "lucide:home" → { type="lucide", name="home" }
--- или "rbxassetid://123" → { type="asset", id="rbxassetid://123" }
 local function parseIcon(iconStr)
     if not iconStr then return nil end
     if iconStr:sub(1, 7) == "lucide:" then
@@ -211,41 +240,33 @@ BeeUI.Themes = {
         Surface           = Color3.fromRGB(38,  25,  8  ),
         SurfaceElevated   = Color3.fromRGB(50,  33,  10 ),
         SurfaceHover      = Color3.fromRGB(65,  44,  14 ),
-
         TextPrimary       = Color3.fromRGB(240, 240, 245),
         TextSecondary     = Color3.fromRGB(140, 140, 160),
         TextMuted         = Color3.fromRGB(80,  80,  100),
-
         Accent            = Color3.fromRGB(255, 180, 30 ),
         AccentHover       = Color3.fromRGB(255, 200, 70 ),
         AccentSoft        = Color3.fromRGB(255, 180, 30 ),
         AccentGlow        = Color3.fromRGB(255, 210, 80 ),
-
         Border            = Color3.fromRGB(80,  55,  18 ),
         BorderAccent      = Color3.fromRGB(180, 130, 30 ),
-
         Success           = Color3.fromRGB(52,  211, 153),
         Warning           = Color3.fromRGB(251, 191, 36 ),
         Error             = Color3.fromRGB(239, 68,  68 ),
         Info              = Color3.fromRGB(96,  165, 250),
-
         ControlBg         = Color3.fromRGB(55,  36,  12 ),
         ControlBorder     = Color3.fromRGB(100, 68,  20 ),
         SliderTrack       = Color3.fromRGB(70,  46,  14 ),
         SliderFill        = Color3.fromRGB(255, 180, 30 ),
         ToggleOff         = Color3.fromRGB(80,  55,  18 ),
         ToggleOn          = Color3.fromRGB(255, 180, 30 ),
-
         TabActive         = Color3.fromRGB(210, 145, 20 ),
         TabInactive       = Color3.fromRGB(44,  29,  9  ),
         TabText           = Color3.fromRGB(200, 165, 90 ),
-
         TitleBarBg        = Color3.fromRGB(22,  14,  4  ),
         TitleText         = Color3.fromRGB(255, 255, 255),
         SubTitleText      = Color3.fromRGB(180, 140, 60 ),
         CloseBtn          = Color3.fromRGB(239, 68,  68 ),
         MinBtn            = Color3.fromRGB(251, 191, 36 ),
-
         NotifyBg          = Color3.fromRGB(35,  22,  7  ),
         NotifyBorder      = Color3.fromRGB(100, 70,  20 ),
     },
@@ -383,28 +404,12 @@ function Util.Image(parent, props)
     return i
 end
 
--- ──────────────────────────────────────────
--- FIX: Обрезка текста с "..."
--- Используем TextService для измерения ширины текста
--- ──────────────────────────────────────────
-local TextService = game:GetService("TextService")
-
--- Обрезать строку если она не влезает в maxWidth пикселей
--- Возвращает строку с "..." в конце если было обрезано
 function Util.TruncateText(text, font, textSize, maxWidth)
     if not text or text == "" then return text end
-
-    -- Измеряем полный текст
     local fullSize = TextService:GetTextSize(text, textSize, font, Vector2.new(9999, 9999))
-    if fullSize.X <= maxWidth then
-        return text -- Влезает — возвращаем как есть
-    end
-
-    -- Измеряем "..."
+    if fullSize.X <= maxWidth then return text end
     local dotsSize = TextService:GetTextSize("...", textSize, font, Vector2.new(9999, 9999))
     local availableWidth = maxWidth - dotsSize.X
-
-    -- Бинарный поиск длины подстроки которая влезет
     local lo, hi = 1, #text
     local result = ""
     while lo <= hi do
@@ -418,31 +423,17 @@ function Util.TruncateText(text, font, textSize, maxWidth)
             hi = mid - 1
         end
     end
-
     return result .. "..."
 end
 
--- Применить обрезку к TextLabel/TextButton с хранением оригинала в tooltip
--- Если текст не влезает — ставит обрезанный текст и сохраняет полный в .FullText
 function Util.ApplyTruncation(labelOrBtn, maxWidth)
-    -- Сохраняем оригинальный текст
     local original = labelOrBtn.Text
-    labelOrBtn.TextTruncate = Enum.TextTruncate.None -- управляем сами
-
+    labelOrBtn.TextTruncate = Enum.TextTruncate.None
     local function refresh()
-        local truncated = Util.TruncateText(
-            original,
-            labelOrBtn.Font,
-            labelOrBtn.TextSize,
-            maxWidth
-        )
+        local truncated = Util.TruncateText(original, labelOrBtn.Font, labelOrBtn.TextSize, maxWidth)
         labelOrBtn.Text = truncated
     end
-
     refresh()
-
-    -- Пересчитываем при изменении текста программно
-    -- Возвращаем функцию обновления
     return function(newText)
         original = newText
         refresh()
@@ -452,7 +443,6 @@ end
 function Util.MakeDraggable(frame, handle)
     local dragging, dragStart, startPos = false, nil, nil
     handle = handle or frame
-
     handle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging  = true
@@ -460,21 +450,17 @@ function Util.MakeDraggable(frame, handle)
             startPos  = frame.Position
         end
     end)
-
     handle.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
     end)
-
     UserInputService.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = input.Position - dragStart
             frame.Position = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
             )
         end
     end)
@@ -513,8 +499,6 @@ BeeUI._activeTheme  = nil
 BeeUI._screenGui    = nil
 BeeUI._notifyHolder = nil
 BeeUI._notifyCount  = 0
-
--- Глобальный оверлей для дропдаунов (рендерится поверх всего)
 BeeUI._dropdownOverlay = nil
 
 function BeeUI:CreateWindow(config)
@@ -540,16 +524,12 @@ function BeeUI:CreateWindow(config)
 
     self._screenGui = screenGui
 
-    -- ──────────────────────────────────────────
-    -- FIX: Глобальный оверлей для дропдаунов
-    -- Рендерится поверх всего остального интерфейса.
-    -- Все списки дропдаунов создаются здесь.
-    -- ──────────────────────────────────────────
+    -- Глобальный оверлей для дропдаунов
     local dropOverlay = Util.Frame(screenGui, {
         Name                   = "DropdownOverlay",
         Size                   = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
-        ZIndex                 = 500, -- Поверх всего
+        ZIndex                 = 500,
     })
     self._dropdownOverlay = dropOverlay
 
@@ -565,9 +545,7 @@ function BeeUI:CreateWindow(config)
     Util.Padding(notifyHolder, 16, 0, 0, 0)
     self._notifyHolder = notifyHolder
 
-    -- ────────────────────────────────────────
-    --  ГЛАВНЫЙ ФРЕЙМ
-    -- ────────────────────────────────────────
+    -- Главный фрейм
     local winSize = config.Size     or UDim2.new(0, 580, 0, 460)
     local winPos  = config.Position or UDim2.new(0.5, -290, 0.5, -230)
 
@@ -588,9 +566,7 @@ function BeeUI:CreateWindow(config)
         BackgroundColor3 = theme.Accent,
     })
 
-    -- ────────────────────────────────────────
-    --  ЗАГОЛОВОК
-    -- ────────────────────────────────────────
+    -- Заголовок
     local titleBar = Util.Frame(windowFrame, {
         Name             = "TitleBar",
         Size             = UDim2.new(1, 0, 0, 52),
@@ -599,7 +575,7 @@ function BeeUI:CreateWindow(config)
     })
     Util.Padding(titleBar, 0, 14, 0, 14)
 
-    local titleDivider = Util.Frame(windowFrame, {
+    Util.Frame(windowFrame, {
         Name             = "TitleDivider",
         Size             = UDim2.new(1, 0, 0, 1),
         Position         = UDim2.new(0, 0, 0, 54),
@@ -608,7 +584,7 @@ function BeeUI:CreateWindow(config)
 
     local logoOffset = 0
     if config.Logo then
-        local logo = Util.Image(titleBar, {
+        Util.Image(titleBar, {
             Image    = config.Logo,
             Size     = UDim2.new(0, 28, 0, 28),
             Position = UDim2.new(0, 0, 0.5, -14),
@@ -616,7 +592,7 @@ function BeeUI:CreateWindow(config)
         logoOffset = 36
     end
 
-    local titleLabel = Util.Label(titleBar, {
+    Util.Label(titleBar, {
         Name       = "Title",
         Text       = config.Title or "BeeUI",
         Font       = Enum.Font.Ubuntu,
@@ -626,7 +602,7 @@ function BeeUI:CreateWindow(config)
         Position   = UDim2.new(0, logoOffset, 0, 8),
     })
 
-    local subLabel = Util.Label(titleBar, {
+    Util.Label(titleBar, {
         Name       = "SubTitle",
         Text       = config.SubTitle or "",
         Font       = Enum.Font.Ubuntu,
@@ -665,9 +641,7 @@ function BeeUI:CreateWindow(config)
     Util.ClickEffect(btnClose)
     Util.ClickEffect(btnMin)
 
-    -- ────────────────────────────────────────
-    --  ТЕЛО
-    -- ────────────────────────────────────────
+    -- Тело
     local bodyFrame = Util.Frame(windowFrame, {
         Name                   = "Body",
         Size                   = UDim2.new(1, 0, 1, -55),
@@ -683,7 +657,7 @@ function BeeUI:CreateWindow(config)
     Util.Padding(tabSidebar, 10, 8, 10, 8)
     Util.ListLayout(tabSidebar, Enum.FillDirection.Vertical, 4)
 
-    local sidebarDivider = Util.Frame(bodyFrame, {
+    Util.Frame(bodyFrame, {
         Name             = "SidebarDivider",
         Size             = UDim2.new(0, 1, 1, 0),
         Position         = UDim2.new(0, 140, 0, 0),
@@ -691,16 +665,15 @@ function BeeUI:CreateWindow(config)
     })
 
     local contentArea = Util.Frame(bodyFrame, {
-        Name             = "ContentArea",
-        Size             = UDim2.new(1, -141, 1, 0),
-        Position         = UDim2.new(0, 141, 0, 0),
+        Name                   = "ContentArea",
+        Size                   = UDim2.new(1, -141, 1, 0),
+        Position               = UDim2.new(0, 141, 0, 0),
         BackgroundTransparency = 1,
-        ClipsDescendants = true,
+        ClipsDescendants       = true,
     })
 
     Util.MakeDraggable(windowFrame, titleBar)
 
-    -- Анимация появления
     windowFrame.Size = UDim2.new(
         winSize.X.Scale, winSize.X.Offset,
         winSize.Y.Scale, 0
@@ -711,7 +684,6 @@ function BeeUI:CreateWindow(config)
         BackgroundTransparency = 0,
     })
 
-    -- Свернуть / закрыть
     local minimized = false
     local fullSize  = winSize
 
@@ -751,13 +723,14 @@ function BeeUI:CreateWindow(config)
     Window._contentArea    = contentArea
     Window._dropOverlay    = dropOverlay
     Window._windowFrame    = windowFrame
+    Window._screenGui      = screenGui
+    -- Глобальный шрифт (меняется из Settings)
+    Window._currentFont    = Enum.Font.Ubuntu
+    -- Список всех TextLabel/TextButton для смены шрифта
+    Window._fontTargets    = {}
 
     -- ──────────────────────────────────────────────────────────────────────
     --  Window:AddTab(config)
-    --  config = {
-    --      Name = string,
-    --      Icon = "lucide:имя" | "rbxassetid://..." | nil
-    --  }
     -- ──────────────────────────────────────────────────────────────────────
     function Window:AddTab(tabConfig)
         tabConfig = tabConfig or {}
@@ -772,35 +745,27 @@ function BeeUI:CreateWindow(config)
         })
         Util.Corner(tabBtn, 8)
 
-        -- ──────────────────────────────────────────
-        -- FIX: Иконка — поддержка Lucide и rbxassetid
-        -- ──────────────────────────────────────────
         local textOffsetX = 10
 
         if tabConfig.Icon then
             local iconInfo = parseIcon(tabConfig.Icon)
-
             if iconInfo.type == "lucide" then
-                -- Lucide: используем TextLabel с Unicode символом
                 local iconChar = getLucideChar(iconInfo.name)
                 local iconLbl = Util.Label(tabBtn, {
-                    Text               = iconChar,
-                    Font               = Enum.Font.Ubuntu,
-                    TextSize           = 16,
-                    TextColor3         = isFirst and Color3.fromRGB(255, 255, 255) or theme.TabText,
-                    Size               = UDim2.new(0, 20, 0, 20),
-                    Position           = UDim2.new(0, 8, 0.5, -10),
-                    TextXAlignment     = Enum.TextXAlignment.Center,
+                    Text                   = iconChar,
+                    Font                   = Enum.Font.Ubuntu,
+                    TextSize               = 16,
+                    TextColor3             = isFirst and Color3.fromRGB(255, 255, 255) or theme.TabText,
+                    Size                   = UDim2.new(0, 20, 0, 20),
+                    Position               = UDim2.new(0, 8, 0.5, -10),
+                    TextXAlignment         = Enum.TextXAlignment.Center,
                     BackgroundTransparency = 1,
-                    ZIndex             = 2,
+                    ZIndex                 = 2,
                 })
-                -- Сохраняем ссылку чтобы менять цвет при переключении вкладки
                 tabBtn:SetAttribute("LucideIcon", true)
                 textOffsetX = 30
-
             elseif iconInfo.type == "asset" then
-                -- Обычный rbxassetid
-                local iconImg = Util.Image(tabBtn, {
+                Util.Image(tabBtn, {
                     Image    = iconInfo.id,
                     Size     = UDim2.new(0, 16, 0, 16),
                     Position = UDim2.new(0, 8, 0.5, -8),
@@ -810,47 +775,38 @@ function BeeUI:CreateWindow(config)
             end
         end
 
-        -- FIX: Обрезка текста вкладки если не влезает
-        -- Ширина доступная для текста = ширина кнопки - иконка - паддинг
-        -- Ширина кнопки динамическая, но примерно 140-16 = 124px
         local availableTextWidth = 124 - textOffsetX - 4
-
-        local tabLabelText = Util.TruncateText(
-            tabName,
-            Enum.Font.Ubuntu,
-            13,
-            availableTextWidth
-        )
+        local tabLabelText = Util.TruncateText(tabName, Enum.Font.Ubuntu, 13, availableTextWidth)
 
         local tabLabel = Util.Label(tabBtn, {
             Text       = tabLabelText,
-            Font       = Enum.Font.Ubuntu,
+            Font       = self._currentFont,
             TextSize   = 13,
             TextColor3 = isFirst and Color3.fromRGB(255, 255, 255) or theme.TabText,
             Size       = UDim2.new(1, -(textOffsetX + 4), 1, 0),
             Position   = UDim2.new(0, textOffsetX, 0, 0),
             ZIndex     = 2,
         })
+        table.insert(self._fontTargets, tabLabel)
 
-        -- Фрейм контента
         local tabContent = Util.Frame(self._contentArea, {
-            Name             = tabName .. "_Content",
-            Size             = UDim2.new(1, 0, 1, 0),
+            Name                   = tabName .. "_Content",
+            Size                   = UDim2.new(1, 0, 1, 0),
             BackgroundTransparency = 1,
-            Visible          = isFirst,
-            ClipsDescendants = true,
+            Visible                = isFirst,
+            ClipsDescendants       = true,
         })
 
         local scrollFrame = Instance.new("ScrollingFrame")
-        scrollFrame.Name                  = "Scroll"
-        scrollFrame.Size                  = UDim2.new(1, 0, 1, 0)
+        scrollFrame.Name                   = "Scroll"
+        scrollFrame.Size                   = UDim2.new(1, 0, 1, 0)
         scrollFrame.BackgroundTransparency = 1
-        scrollFrame.BorderSizePixel       = 0
-        scrollFrame.ScrollBarThickness    = 3
-        scrollFrame.ScrollBarImageColor3  = theme.Accent
-        scrollFrame.CanvasSize            = UDim2.new(0, 0, 0, 0)
-        scrollFrame.AutomaticCanvasSize   = Enum.AutomaticSize.Y
-        scrollFrame.Parent                = tabContent
+        scrollFrame.BorderSizePixel        = 0
+        scrollFrame.ScrollBarThickness     = 3
+        scrollFrame.ScrollBarImageColor3   = theme.Accent
+        scrollFrame.CanvasSize             = UDim2.new(0, 0, 0, 0)
+        scrollFrame.AutomaticCanvasSize    = Enum.AutomaticSize.Y
+        scrollFrame.Parent                 = tabContent
 
         Util.ListLayout(scrollFrame, Enum.FillDirection.Vertical, 6)
         Util.Padding(scrollFrame, 12, 12, 12, 12)
@@ -868,15 +824,12 @@ function BeeUI:CreateWindow(config)
             self._activeTab = tabEntry
         end
 
-        -- Переключение
         tabBtn.MouseButton1Click:Connect(function()
             if self._activeTab == tabEntry then return end
-
             if self._activeTab then
                 local prev = self._activeTab
                 Util.TweenFast(prev.Button, {BackgroundColor3 = theme.TabInactive}, 0.35)
-                Util.TweenFast(prev.Label, {TextColor3 = theme.TabText}, 0.35)
-                -- Иконка Lucide (TextLabel внутри кнопки)
+                Util.TweenFast(prev.Label,  {TextColor3 = theme.TabText}, 0.35)
                 if prev.Button:GetAttribute("LucideIcon") then
                     local ic = prev.Button:FindFirstChildOfClass("TextLabel")
                     if ic and ic ~= prev.Label then
@@ -885,12 +838,10 @@ function BeeUI:CreateWindow(config)
                 end
                 prev.Content.Visible = false
             end
-
             self._activeTab = tabEntry
             tabEntry.Content.Visible = true
-            Util.TweenFast(tabBtn, {BackgroundColor3 = theme.TabActive}, 0.35)
+            Util.TweenFast(tabBtn,   {BackgroundColor3 = theme.TabActive}, 0.35)
             Util.TweenFast(tabLabel, {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.35)
-            -- Иконка активной вкладки
             if tabBtn:GetAttribute("LucideIcon") then
                 local ic = tabBtn:FindFirstChildOfClass("TextLabel")
                 if ic and ic ~= tabLabel then
@@ -908,16 +859,14 @@ function BeeUI:CreateWindow(config)
         --  ОБЪЕКТ ВКЛАДКИ
         -- ══════════════════════════════════════════
         local Tab = {}
-        Tab._theme    = theme
-        Tab._scroll   = scrollFrame
-        Tab._tabEntry = tabEntry
-        -- Ссылка на оверлей для дропдаунов
-        Tab._dropOverlay   = self._dropOverlay
-        Tab._windowFrame   = self._windowFrame
+        Tab._theme       = theme
+        Tab._scroll      = scrollFrame
+        Tab._tabEntry    = tabEntry
+        Tab._dropOverlay = self._dropOverlay
+        Tab._windowFrame = self._windowFrame
+        -- Ссылка на Window для регистрации шрифтовых объектов
+        Tab._window      = self
 
-        -- ──────────────────────────────────────────
-        --  Хелперы
-        -- ──────────────────────────────────────────
         local function makeRow(label, height)
             local row = Util.Frame(scrollFrame, {
                 Name             = "Row_" .. (label or "Item"),
@@ -930,41 +879,32 @@ function BeeUI:CreateWindow(config)
         end
 
         local function makeLabel(parent, text, x, y, w, h, font, size, color)
-            return Util.Label(parent, {
+            local lbl = Util.Label(parent, {
                 Text       = text,
-                Font       = font  or Enum.Font.Ubuntu,
+                Font       = font  or Tab._window._currentFont,
                 TextSize   = size  or 14,
                 TextColor3 = color or theme.TextPrimary,
                 Size       = UDim2.new(0, w or 200, 0, h or 20),
                 Position   = UDim2.new(0, x or 14, 0.5, -(h or 20) / 2),
             })
+            table.insert(Tab._window._fontTargets, lbl)
+            return lbl
         end
 
-        -- ──────────────────────────────────────────
-        --  Tab:AddButton(config)
-        -- ──────────────────────────────────────────
+        -- Tab:AddButton
         function Tab:AddButton(config)
             config = config or {}
             local row = makeRow(config.Label, 48)
-
-            -- FIX: Обрезаем лейбл если не влезает (левая часть ~200px)
-            local labelText = Util.TruncateText(
-                config.Label or "Button",
-                Enum.Font.Ubuntu, 14, 195
-            )
+            local labelText = Util.TruncateText(config.Label or "Button", Enum.Font.Ubuntu, 14, 195)
             makeLabel(row, labelText, 14, nil, 195, 20)
 
-            -- FIX: Обрезаем текст на кнопке если не влезает (110px - паддинги)
-            local btnTextMax = 96 -- 110px кнопка - по 7px паддинга с каждой стороны
-            local btnText = Util.TruncateText(
-                config.Label or "Button",
-                Enum.Font.Ubuntu, 13, btnTextMax
-            )
+            local btnTextMax = 96
+            local btnText = Util.TruncateText(config.Label or "Button", Enum.Font.Ubuntu, 13, btnTextMax)
 
             local btn = Util.Button(row, {
                 Name             = "ActionBtn",
                 Text             = btnText,
-                Font             = Enum.Font.Ubuntu,
+                Font             = self._window._currentFont,
                 TextSize         = 13,
                 TextColor3       = Color3.fromRGB(255, 255, 255),
                 BackgroundColor3 = theme.Accent,
@@ -976,6 +916,7 @@ function BeeUI:CreateWindow(config)
             Util.Padding(btn, 0, 7, 0, 7)
             Util.HoverEffect(btn, theme.Accent, theme.AccentHover)
             Util.ClickEffect(btn)
+            table.insert(self._window._fontTargets, btn)
 
             btn.MouseButton1Click:Connect(function()
                 if config.Callback then
@@ -983,23 +924,15 @@ function BeeUI:CreateWindow(config)
                     if not ok then warn("[BeeUI] Button Callback error: " .. tostring(err)) end
                 end
             end)
-
             return btn
         end
 
-        -- ──────────────────────────────────────────
-        --  Tab:AddToggle(config)
-        -- ──────────────────────────────────────────
+        -- Tab:AddToggle
         function Tab:AddToggle(config)
             config = config or {}
             local value = config.Default == true
             local row   = makeRow(config.Label, 48)
-
-            -- FIX: Обрезаем лейбл
-            local labelText = Util.TruncateText(
-                config.Label or "Toggle",
-                Enum.Font.Ubuntu, 14, 195
-            )
+            local labelText = Util.TruncateText(config.Label or "Toggle", Enum.Font.Ubuntu, 14, 195)
             makeLabel(row, labelText, 14, nil, 220, 20)
 
             local trackW, trackH = 44, 24
@@ -1025,7 +958,6 @@ function BeeUI:CreateWindow(config)
                 BackgroundTransparency = 1,
                 Size                   = UDim2.new(1, 0, 1, 0),
             })
-
             clickZone.MouseButton1Click:Connect(function()
                 value = not value
                 local knobX = value and (trackW - knobSize - 3) or 3
@@ -1048,10 +980,7 @@ function BeeUI:CreateWindow(config)
             return toggleObj
         end
 
-        -- ──────────────────────────────────────────
-        --  Tab:AddSlider(config)
-        --  FIX: Значение поднято выше, не перекрывает трек
-        -- ──────────────────────────────────────────
+        -- Tab:AddSlider
         function Tab:AddSlider(config)
             config = config or {}
             local minVal = config.Min    or 0
@@ -1060,43 +989,33 @@ function BeeUI:CreateWindow(config)
             local suffix = config.Suffix or ""
             local value  = math.clamp(config.Default or minVal, minVal, maxVal)
 
-            -- FIX: Увеличиваем высоту строки чтобы текст и трек не пересекались
             local row = makeRow(config.Label, 62)
+            local labelText = Util.TruncateText(config.Label or "Slider", Enum.Font.Ubuntu, 14, 160)
 
-            -- FIX: Обрезаем лейбл
-            local labelText = Util.TruncateText(
-                config.Label or "Slider",
-                Enum.Font.Ubuntu, 14, 160
-            )
-
-            -- Лейбл названия — позиционируем в верхней части
-            Util.Label(row, {
+            local nameLbl = Util.Label(row, {
                 Text       = labelText,
-                Font       = Enum.Font.Ubuntu,
+                Font       = self._window._currentFont,
                 TextSize   = 14,
                 TextColor3 = theme.TextPrimary,
                 Size       = UDim2.new(0, 160, 0, 18),
-                -- FIX: Фиксированная позиция сверху, не по центру
                 Position   = UDim2.new(0, 14, 0, 8),
             })
+            table.insert(self._window._fontTargets, nameLbl)
 
-            -- FIX: Значение — выровнено по правому краю, верхняя часть
             local valueLabel = Util.Label(row, {
                 Text           = tostring(value) .. suffix,
-                Font           = Enum.Font.Ubuntu,
+                Font           = self._window._currentFont,
                 TextSize       = 13,
                 TextColor3     = theme.Accent,
                 Size           = UDim2.new(0, 80, 0, 18),
-                -- FIX: Поднято выше — не перекрывает трек
                 Position       = UDim2.new(1, -94, 0, 8),
                 TextXAlignment = Enum.TextXAlignment.Right,
             })
+            table.insert(self._window._fontTargets, valueLabel)
 
-            -- Трек — в нижней части строки
             local trackH = 6
             local track = Util.Frame(row, {
                 Size             = UDim2.new(1, -28, 0, trackH),
-                -- FIX: Позиция снизу с отступом
                 Position         = UDim2.new(0, 14, 1, -16),
                 BackgroundColor3 = theme.SliderTrack,
             })
@@ -1130,8 +1049,8 @@ function BeeUI:CreateWindow(config)
                 snapped = math.clamp(snapped, minVal, maxVal)
                 value   = snapped
                 local newRatio = (snapped - minVal) / (maxVal - minVal)
-                fill.Size      = UDim2.new(newRatio, 0, 1, 0)
-                knob.Position  = UDim2.new(newRatio, -knobS / 2, 0.5, -knobS / 2)
+                fill.Size       = UDim2.new(newRatio, 0, 1, 0)
+                knob.Position   = UDim2.new(newRatio, -knobS / 2, 0.5, -knobS / 2)
                 valueLabel.Text = tostring(snapped) .. suffix
                 if config.Callback then
                     local ok, err = pcall(config.Callback, snapped)
@@ -1145,13 +1064,11 @@ function BeeUI:CreateWindow(config)
                     updateSlider(inp.Position.X)
                 end
             end)
-
             UserInputService.InputChanged:Connect(function(inp)
                 if draggingSlider and inp.UserInputType == Enum.UserInputType.MouseMovement then
                     updateSlider(inp.Position.X)
                 end
             end)
-
             UserInputService.InputEnded:Connect(function(inp)
                 if inp.UserInputType == Enum.UserInputType.MouseButton1 then
                     draggingSlider = false
@@ -1171,10 +1088,7 @@ function BeeUI:CreateWindow(config)
             return sliderObj
         end
 
-        -- ──────────────────────────────────────────
-        --  Tab:AddDropdown(config)
-        --  FIX: Список рендерится в глобальном оверлее поверх всего
-        -- ──────────────────────────────────────────
+        -- Tab:AddDropdown
         function Tab:AddDropdown(config)
             config = config or {}
             local options  = config.Options or {}
@@ -1182,15 +1096,9 @@ function BeeUI:CreateWindow(config)
             local isOpen   = false
 
             local row = makeRow(config.Label, 48)
-
-            -- FIX: Обрезаем лейбл
-            local labelText = Util.TruncateText(
-                config.Label or "Dropdown",
-                Enum.Font.Ubuntu, 14, 195
-            )
+            local labelText = Util.TruncateText(config.Label or "Dropdown", Enum.Font.Ubuntu, 14, 195)
             makeLabel(row, labelText, 14, nil, 200, 20)
 
-            -- Кнопка дропдауна
             local dropBtn = Util.Button(row, {
                 Name             = "DropBtn",
                 Text             = "",
@@ -1201,7 +1109,6 @@ function BeeUI:CreateWindow(config)
             Util.Corner(dropBtn, 8)
             Util.Stroke(dropBtn, theme.ControlBorder, 1, 0)
 
-            -- FIX: Обрезаем текст выбранного варианта
             local dropLabel = Util.Label(dropBtn, {
                 Text       = Util.TruncateText(selected, Enum.Font.Ubuntu, 13, 96),
                 TextSize   = 13,
@@ -1209,6 +1116,7 @@ function BeeUI:CreateWindow(config)
                 Size       = UDim2.new(1, -30, 1, 0),
                 Position   = UDim2.new(0, 10, 0, 0),
             })
+            table.insert(self._window._fontTargets, dropLabel)
 
             local arrowLabel = Util.Label(dropBtn, {
                 Text           = "▾",
@@ -1219,15 +1127,9 @@ function BeeUI:CreateWindow(config)
                 TextXAlignment = Enum.TextXAlignment.Center,
             })
 
-            -- ──────────────────────────────────────────
-            -- FIX: Список создаётся в ГЛОБАЛЬНОМ ОВЕРЛЕЕ
-            -- Это гарантирует что он будет поверх всех
-            -- остальных элементов интерфейса
-            -- ──────────────────────────────────────────
             local listH   = math.min(#options, 5) * 32 + 8
             local listW   = 140
 
-            -- Список (изначально скрыт и пустой по размеру)
             local listFrame = Util.Frame(Tab._dropOverlay, {
                 Name             = "DropList_" .. (config.Label or ""),
                 Size             = UDim2.new(0, listW, 0, listH),
@@ -1238,13 +1140,12 @@ function BeeUI:CreateWindow(config)
             Util.Corner(listFrame, 8)
             Util.Stroke(listFrame, theme.BorderAccent, 1, 0)
             Util.Padding(listFrame, 4, 4, 4, 4)
-            local listLayout = Util.ListLayout(listFrame, Enum.FillDirection.Vertical, 2)
+            Util.ListLayout(listFrame, Enum.FillDirection.Vertical, 2)
 
-            -- Наполняем список
             for _, opt in ipairs(options) do
                 local optBtn = Util.Button(listFrame, {
                     Text             = Util.TruncateText(opt, Enum.Font.Ubuntu, 13, 120),
-                    Font             = Enum.Font.Ubuntu,
+                    Font             = self._window._currentFont,
                     TextSize         = 13,
                     TextColor3       = opt == selected and theme.Accent or theme.TextPrimary,
                     BackgroundColor3 = theme.SurfaceElevated,
@@ -1255,11 +1156,11 @@ function BeeUI:CreateWindow(config)
                 Util.Corner(optBtn, 6)
                 Util.Padding(optBtn, 0, 0, 0, 8)
                 Util.HoverEffect(optBtn, theme.SurfaceElevated, theme.SurfaceHover)
+                table.insert(self._window._fontTargets, optBtn)
 
                 optBtn.MouseButton1Click:Connect(function()
                     selected = opt
                     dropLabel.Text = Util.TruncateText(opt, Enum.Font.Ubuntu, 13, 96)
-                    -- Обновляем цвет всех пунктов
                     for _, child in ipairs(listFrame:GetChildren()) do
                         if child:IsA("TextButton") then
                             child.TextColor3 = theme.TextPrimary
@@ -1276,33 +1177,15 @@ function BeeUI:CreateWindow(config)
                 end)
             end
 
-            -- ──────────────────────────────────────────
-            -- Позиционируем список в оверлее
-            -- при каждом открытии вычисляем позицию
-            -- относительно экрана
-            -- ──────────────────────────────────────────
             local function openDropdown()
-                -- Получаем абсолютную позицию кнопки дропдауна
                 local btnPos  = dropBtn.AbsolutePosition
                 local btnSize = dropBtn.AbsoluteSize
-
-                -- Проверяем: список влезет снизу или нужно показать сверху
                 local screenH = Tab._dropOverlay.AbsoluteSize.Y
                 local spaceBelow = screenH - (btnPos.Y + btnSize.Y)
                 local openUp = spaceBelow < (listH + 8)
-
-                local posY
-                if openUp then
-                    posY = btnPos.Y - listH - 4
-                else
-                    posY = btnPos.Y + btnSize.Y + 4
-                end
-
-                listFrame.Position = UDim2.new(
-                    0, btnPos.X,
-                    0, posY
-                )
-                listFrame.Visible = true
+                local posY = openUp and (btnPos.Y - listH - 4) or (btnPos.Y + btnSize.Y + 4)
+                listFrame.Position = UDim2.new(0, btnPos.X, 0, posY)
+                listFrame.Visible  = true
             end
 
             dropBtn.MouseButton1Click:Connect(function()
@@ -1316,24 +1199,17 @@ function BeeUI:CreateWindow(config)
                 end
             end)
 
-            -- Закрывать при клике вне списка
             UserInputService.InputBegan:Connect(function(inp)
                 if isOpen and inp.UserInputType == Enum.UserInputType.MouseButton1 then
-                    -- Проверяем попал ли клик в listFrame
                     local mPos  = inp.Position
                     local lPos  = listFrame.AbsolutePosition
                     local lSize = listFrame.AbsoluteSize
-                    local inside = (
-                        mPos.X >= lPos.X and mPos.X <= lPos.X + lSize.X and
-                        mPos.Y >= lPos.Y and mPos.Y <= lPos.Y + lSize.Y
-                    )
-                    -- Также проверяем саму кнопку дропдауна
+                    local inside = (mPos.X >= lPos.X and mPos.X <= lPos.X + lSize.X and
+                                    mPos.Y >= lPos.Y and mPos.Y <= lPos.Y + lSize.Y)
                     local bPos  = dropBtn.AbsolutePosition
                     local bSize = dropBtn.AbsoluteSize
-                    local onBtn = (
-                        mPos.X >= bPos.X and mPos.X <= bPos.X + bSize.X and
-                        mPos.Y >= bPos.Y and mPos.Y <= bPos.Y + bSize.Y
-                    )
+                    local onBtn = (mPos.X >= bPos.X and mPos.X <= bPos.X + bSize.X and
+                                   mPos.Y >= bPos.Y and mPos.Y <= bPos.Y + bSize.Y)
                     if not inside and not onBtn then
                         isOpen = false
                         listFrame.Visible = false
@@ -1351,25 +1227,18 @@ function BeeUI:CreateWindow(config)
             return dropObj
         end
 
-        -- ──────────────────────────────────────────
-        --  Tab:AddInput(config)
-        -- ──────────────────────────────────────────
+        -- Tab:AddInput
         function Tab:AddInput(config)
             config = config or {}
             local row = makeRow(config.Label, 48)
-
-            -- FIX: Обрезаем лейбл
-            local labelText = Util.TruncateText(
-                config.Label or "Input",
-                Enum.Font.Ubuntu, 14, 160
-            )
+            local labelText = Util.TruncateText(config.Label or "Input", Enum.Font.Ubuntu, 14, 160)
             makeLabel(row, labelText, 14, nil, 160, 20)
 
             local inputBox = Instance.new("TextBox")
             inputBox.Name               = "InputBox"
             inputBox.Text               = config.Default or ""
             inputBox.PlaceholderText    = config.Placeholder or "Type here..."
-            inputBox.Font               = Enum.Font.Ubuntu
+            inputBox.Font               = self._window._currentFont
             inputBox.TextSize           = 13
             inputBox.TextColor3         = theme.TextPrimary
             inputBox.PlaceholderColor3  = theme.TextMuted
@@ -1383,6 +1252,7 @@ function BeeUI:CreateWindow(config)
             Util.Corner(inputBox, 8)
             Util.Stroke(inputBox, theme.ControlBorder, 1, 0)
             Util.Padding(inputBox, 0, 0, 0, 10)
+            table.insert(self._window._fontTargets, inputBox)
 
             inputBox.Focused:Connect(function()
                 Util.TweenFast(inputBox:FindFirstChildOfClass("UIStroke"), {Color = theme.Accent}, 0.15)
@@ -1401,29 +1271,25 @@ function BeeUI:CreateWindow(config)
             return inputObj
         end
 
-        -- ──────────────────────────────────────────
-        --  Tab:AddLabel(text)
-        -- ──────────────────────────────────────────
+        -- Tab:AddLabel
         function Tab:AddLabel(text)
             local row = makeRow("Label_" .. (text or ""), 36)
             row.BackgroundTransparency = 1
             local stroke = row:FindFirstChildOfClass("UIStroke")
             if stroke then stroke:Destroy() end
-
-            Util.Label(row, {
+            local lbl = Util.Label(row, {
                 Text        = text or "",
-                Font        = Enum.Font.Ubuntu,
+                Font        = self._window._currentFont,
                 TextSize    = 13,
                 TextColor3  = theme.TextSecondary,
                 Size        = UDim2.new(1, -28, 1, 0),
                 Position    = UDim2.new(0, 14, 0, 0),
                 TextWrapped = true,
             })
+            table.insert(self._window._fontTargets, lbl)
         end
 
-        -- ──────────────────────────────────────────
-        --  Tab:AddSeparator()
-        -- ──────────────────────────────────────────
+        -- Tab:AddSeparator
         function Tab:AddSeparator()
             Util.Frame(scrollFrame, {
                 Name             = "Separator",
@@ -1432,57 +1298,44 @@ function BeeUI:CreateWindow(config)
             })
         end
 
-        -- ──────────────────────────────────────────
-        --  Tab:AddSection(title)
-        -- ──────────────────────────────────────────
+        -- Tab:AddSection
         function Tab:AddSection(title)
             local holder = Util.Frame(scrollFrame, {
                 Name                   = "Section_" .. (title or ""),
                 Size                   = UDim2.new(1, 0, 0, 28),
                 BackgroundTransparency = 1,
             })
-
             Util.Frame(holder, {
                 Size             = UDim2.new(1, 0, 0, 1),
                 Position         = UDim2.new(0, 0, 0.5, 0),
                 BackgroundColor3 = theme.Border,
             })
-
             local badge = Util.Frame(holder, {
-                Size          = UDim2.new(0, 0, 0, 22),
-                Position      = UDim2.new(0, 10, 0.5, -11),
-                AutomaticSize = Enum.AutomaticSize.X,
+                Size             = UDim2.new(0, 0, 0, 22),
+                Position         = UDim2.new(0, 10, 0.5, -11),
+                AutomaticSize    = Enum.AutomaticSize.X,
                 BackgroundColor3 = theme.SurfaceHover,
             })
             Util.Corner(badge, 6)
             Util.Padding(badge, 0, 10, 0, 10)
-
-            Util.Label(badge, {
+            local sectionLbl = Util.Label(badge, {
                 Text          = title or "Section",
-                Font          = Enum.Font.Ubuntu,
+                Font          = self._window._currentFont,
                 TextSize      = 11,
                 TextColor3    = theme.Accent,
                 Size          = UDim2.new(0, 0, 1, 0),
                 AutomaticSize = Enum.AutomaticSize.X,
             })
+            table.insert(self._window._fontTargets, sectionLbl)
         end
 
-        -- ──────────────────────────────────────────
-        --  Tab:AddColorPicker(config)
-        -- ──────────────────────────────────────────
+        -- Tab:AddColorPicker
         function Tab:AddColorPicker(config)
             config = config or {}
             local color = config.Default or Color3.fromRGB(255, 100, 50)
-
             local row = makeRow(config.Label, 48)
-
-            -- FIX: Обрезаем лейбл
-            local labelText = Util.TruncateText(
-                config.Label or "Color",
-                Enum.Font.Ubuntu, 14, 195
-            )
+            local labelText = Util.TruncateText(config.Label or "Color", Enum.Font.Ubuntu, 14, 195)
             makeLabel(row, labelText, 14, nil, 200, 20)
-
             local preview = Util.Frame(row, {
                 Name             = "ColorPreview",
                 Size             = UDim2.new(0, 36, 0, 28),
@@ -1491,7 +1344,6 @@ function BeeUI:CreateWindow(config)
             })
             Util.Corner(preview, 8)
             Util.Stroke(preview, theme.Border, 1, 0)
-
             local clickZone = Util.Button(row, {
                 Text                   = "",
                 BackgroundTransparency = 1,
@@ -1502,36 +1354,23 @@ function BeeUI:CreateWindow(config)
                 preview.BackgroundColor3 = color
                 if config.Callback then pcall(config.Callback, color) end
             end)
-
             local cpObj = {}
-            function cpObj:Set(c)
-                color = c
-                preview.BackgroundColor3 = c
-            end
+            function cpObj:Set(c) color = c; preview.BackgroundColor3 = c end
             function cpObj:Get() return color end
             return cpObj
         end
 
-        -- ──────────────────────────────────────────
-        --  Tab:AddKeybind(config)
-        -- ──────────────────────────────────────────
+        -- Tab:AddKeybind
         function Tab:AddKeybind(config)
             config = config or {}
             local key       = config.Default or Enum.KeyCode.F
             local listening = false
-
             local row = makeRow(config.Label, 48)
-
-            -- FIX: Обрезаем лейбл
-            local labelText = Util.TruncateText(
-                config.Label or "Keybind",
-                Enum.Font.Ubuntu, 14, 195
-            )
+            local labelText = Util.TruncateText(config.Label or "Keybind", Enum.Font.Ubuntu, 14, 195)
             makeLabel(row, labelText, 14, nil, 200, 20)
-
             local kbBtn = Util.Button(row, {
                 Text             = "[" .. key.Name .. "]",
-                Font             = Enum.Font.Ubuntu,
+                Font             = self._window._currentFont,
                 TextSize         = 13,
                 TextColor3       = theme.Accent,
                 BackgroundColor3 = theme.ControlBg,
@@ -1540,13 +1379,12 @@ function BeeUI:CreateWindow(config)
             })
             Util.Corner(kbBtn, 8)
             Util.Stroke(kbBtn, theme.ControlBorder, 1, 0)
-
+            table.insert(self._window._fontTargets, kbBtn)
             kbBtn.MouseButton1Click:Connect(function()
-                listening      = true
-                kbBtn.Text     = "[...]"
+                listening        = true
+                kbBtn.Text       = "[...]"
                 kbBtn.TextColor3 = theme.Warning
             end)
-
             UserInputService.InputBegan:Connect(function(inp, gp)
                 if gp then return end
                 if listening and inp.UserInputType == Enum.UserInputType.Keyboard then
@@ -1557,7 +1395,6 @@ function BeeUI:CreateWindow(config)
                     if config.Callback then pcall(config.Callback, key) end
                 end
             end)
-
             local kbObj = {}
             function kbObj:Get() return key end
             return kbObj
@@ -1565,6 +1402,276 @@ function BeeUI:CreateWindow(config)
 
         return Tab
     end
+
+    -- ══════════════════════════════════════════
+    --  ВСТРОЕННАЯ ВКЛАДКА SETTINGS
+    --  Создаётся автоматически при каждом
+    --  вызове CreateWindow()
+    -- ══════════════════════════════════════════
+    local function buildSettingsTab()
+        -- Settings всегда последняя в списке боковой панели
+        -- Добавляем её через стандартный AddTab
+        local SettingsTab = Window:AddTab({
+            Name = "Settings",
+            Icon = "lucide:settings",
+        })
+
+        -- ──────────────────────────────────────────
+        --  СЕКЦИЯ: Шрифт
+        -- ──────────────────────────────────────────
+        SettingsTab:AddSection("Шрифт интерфейса")
+
+        -- Собираем имена шрифтов для дропдауна
+        local fontNames = {}
+        for _, f in ipairs(AvailableFonts) do
+            table.insert(fontNames, f.Name)
+        end
+
+        local fontDrop = SettingsTab:AddDropdown({
+            Label   = "Шрифт",
+            Options = fontNames,
+            Default = "Ubuntu",
+            Callback = function(selected)
+                -- Найти Enum.Font по имени
+                local newFont = Enum.Font.Ubuntu
+                for _, f in ipairs(AvailableFonts) do
+                    if f.Name == selected then
+                        newFont = f.Font
+                        break
+                    end
+                end
+                Window._currentFont = newFont
+                -- Применяем шрифт ко всем зарегистрированным элементам
+                for _, obj in ipairs(Window._fontTargets) do
+                    if obj and obj.Parent then
+                        pcall(function() obj.Font = newFont end)
+                    end
+                end
+            end,
+        })
+
+        -- ──────────────────────────────────────────
+        --  СЕКЦИЯ: Цвет фона
+        -- ──────────────────────────────────────────
+        SettingsTab:AddSection("Цвет фона")
+
+        -- Пресеты цвета фона в виде отдельных кнопок-свотчей
+        -- Рисуем их в кастомном фрейме прямо в scroll
+        local scrollRef = SettingsTab._scroll
+
+        -- Создаём контейнер для свотчей
+        local swatchContainer = Util.Frame(scrollRef, {
+            Name                   = "SwatchContainer",
+            Size                   = UDim2.new(1, 0, 0, 80),
+            BackgroundColor3       = theme.SurfaceElevated,
+        })
+        Util.Corner(swatchContainer, 10)
+        Util.Stroke(swatchContainer, theme.Border, 1, 0)
+        Util.Padding(swatchContainer, 10, 10, 10, 10)
+
+        -- Сетка свотчей
+        local swatchGrid = Instance.new("UIGridLayout")
+        swatchGrid.CellSize          = UDim2.new(0, 24, 0, 24)
+        swatchGrid.CellPadding       = UDim2.new(0, 6, 0, 6)
+        swatchGrid.FillDirection     = Enum.FillDirection.Horizontal
+        swatchGrid.HorizontalAlignment = Enum.HorizontalAlignment.Left
+        swatchGrid.SortOrder         = Enum.SortOrder.LayoutOrder
+        swatchGrid.Parent            = swatchContainer
+
+        -- Авто-высота контейнера
+        swatchGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            swatchContainer.Size = UDim2.new(1, 0, 0, swatchGrid.AbsoluteContentSize.Y + 20)
+        end)
+
+        for i, preset in ipairs(BackgroundPresets) do
+            local swatch = Util.Button(swatchContainer, {
+                Name             = "Swatch_" .. preset.Name,
+                Text             = "",
+                BackgroundColor3 = preset.Color,
+                Size             = UDim2.new(0, 24, 0, 24),
+                LayoutOrder      = i,
+                ZIndex           = 2,
+            })
+            Util.Corner(swatch, 5)
+            Util.Stroke(swatch, theme.Border, 1, 0)
+
+            -- Tooltip с именем пресета при наведении
+            swatch.MouseEnter:Connect(function()
+                Util.TweenFast(swatch, {Size = UDim2.new(0, 26, 0, 26)}, 0.1)
+                local stroke = swatch:FindFirstChildOfClass("UIStroke")
+                if stroke then
+                    Util.TweenFast(stroke, {Color = theme.Accent, Thickness = 2}, 0.1)
+                end
+            end)
+            swatch.MouseLeave:Connect(function()
+                Util.TweenFast(swatch, {Size = UDim2.new(0, 24, 0, 24)}, 0.1)
+                local stroke = swatch:FindFirstChildOfClass("UIStroke")
+                if stroke then
+                    Util.TweenFast(stroke, {Color = theme.Border, Thickness = 1}, 0.1)
+                end
+            end)
+
+            swatch.MouseButton1Click:Connect(function()
+                -- Меняем фон окна на выбранный пресет
+                Util.TweenFast(windowFrame, {BackgroundColor3 = preset.Color}, 0.3)
+                -- Обновляем тайтлбар и сайдбар пропорционально
+                local r, g, b = preset.Color.R, preset.Color.G, preset.Color.B
+                local brightness = 0.299 * r + 0.587 * g + 0.114 * b
+                -- Тёмный или светлый фон — подбираем Surface
+                local surfaceOffset = brightness < 0.5 and 0.04 or -0.04
+                local newSurface = Color3.new(
+                    math.clamp(r + surfaceOffset, 0, 1),
+                    math.clamp(g + surfaceOffset, 0, 1),
+                    math.clamp(b + surfaceOffset, 0, 1)
+                )
+                Util.TweenFast(tabSidebar,  {BackgroundColor3 = newSurface}, 0.3)
+                Util.TweenFast(titleBar,    {BackgroundColor3 = newSurface}, 0.3)
+            end)
+        end
+
+        -- Кастомный цвет через RGB ввод
+        SettingsTab:AddInput({
+            Label       = "Свой цвет (R,G,B)",
+            Placeholder = "255, 180, 30",
+            Callback    = function(text)
+                -- Парсим "R, G, B"
+                local r, g, b = text:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
+                if r and g and b then
+                    r = math.clamp(tonumber(r) / 255, 0, 1)
+                    g = math.clamp(tonumber(g) / 255, 0, 1)
+                    b = math.clamp(tonumber(b) / 255, 0, 1)
+                    local customColor = Color3.new(r, g, b)
+                    Util.TweenFast(windowFrame, {BackgroundColor3 = customColor}, 0.3)
+                    local brightness = 0.299 * r + 0.587 * g + 0.114 * b
+                    local surfOff = brightness < 0.5 and 0.04 or -0.04
+                    local newSurface = Color3.new(
+                        math.clamp(r + surfOff, 0, 1),
+                        math.clamp(g + surfOff, 0, 1),
+                        math.clamp(b + surfOff, 0, 1)
+                    )
+                    Util.TweenFast(tabSidebar, {BackgroundColor3 = newSurface}, 0.3)
+                    Util.TweenFast(titleBar,   {BackgroundColor3 = newSurface}, 0.3)
+                end
+            end,
+        })
+
+        -- ──────────────────────────────────────────
+        --  СЕКЦИЯ: Прозрачность
+        -- ──────────────────────────────────────────
+        SettingsTab:AddSection("Прозрачность")
+
+        SettingsTab:AddSlider({
+            Label   = "Прозрачность GUI",
+            Min     = 0,
+            Max     = 95,
+            Step    = 5,
+            Default = 0,
+            Suffix  = "%",
+            Callback = function(value)
+                -- value: 0 = полностью непрозрачно, 95 = почти прозрачно
+                local alpha = value / 100
+                Util.TweenFast(windowFrame,  {BackgroundTransparency = alpha}, 0.15)
+                Util.TweenFast(titleBar,     {BackgroundTransparency = alpha}, 0.15)
+                Util.TweenFast(tabSidebar,   {BackgroundTransparency = alpha}, 0.15)
+                -- Элементы внутри тоже делаем чуть прозрачнее
+                for _, child in ipairs(contentArea:GetDescendants()) do
+                    if child:IsA("Frame") and child.BackgroundTransparency < 1 then
+                        pcall(function()
+                            child.BackgroundTransparency = math.min(alpha, child.BackgroundTransparency + alpha * 0.5)
+                        end)
+                    end
+                end
+            end,
+        })
+
+        SettingsTab:AddToggle({
+            Label   = "Полная прозрачность фона",
+            Default = false,
+            Callback = function(value)
+                if value then
+                    Util.TweenFast(windowFrame, {BackgroundTransparency = 1}, 0.25)
+                    Util.TweenFast(titleBar,    {BackgroundTransparency = 1}, 0.25)
+                    Util.TweenFast(tabSidebar,  {BackgroundTransparency = 1}, 0.25)
+                else
+                    Util.TweenFast(windowFrame, {BackgroundTransparency = 0}, 0.25)
+                    Util.TweenFast(titleBar,    {BackgroundTransparency = 0}, 0.25)
+                    Util.TweenFast(tabSidebar,  {BackgroundTransparency = 0}, 0.25)
+                end
+            end,
+        })
+
+        -- ──────────────────────────────────────────
+        --  СЕКЦИЯ: Акцентный цвет (бонус)
+        -- ──────────────────────────────────────────
+        SettingsTab:AddSection("Акцентный цвет")
+
+        local accentPresets = {
+            { Name = "Мёд",      Color = Color3.fromRGB(255, 180, 30 ) },
+            { Name = "Фиолет",   Color = Color3.fromRGB(139, 92,  246) },
+            { Name = "Синий",    Color = Color3.fromRGB(59,  130, 246) },
+            { Name = "Зелёный",  Color = Color3.fromRGB(52,  211, 153) },
+            { Name = "Розовый",  Color = Color3.fromRGB(244, 114, 182) },
+            { Name = "Красный",  Color = Color3.fromRGB(239, 68,  68 ) },
+            { Name = "Бирюза",   Color = Color3.fromRGB(20,  184, 166) },
+            { Name = "Оранжев.", Color = Color3.fromRGB(251, 146, 60 ) },
+        }
+
+        local accentContainer = Util.Frame(scrollRef, {
+            Name                   = "AccentContainer",
+            Size                   = UDim2.new(1, 0, 0, 50),
+            BackgroundColor3       = theme.SurfaceElevated,
+        })
+        Util.Corner(accentContainer, 10)
+        Util.Stroke(accentContainer, theme.Border, 1, 0)
+        Util.Padding(accentContainer, 10, 10, 10, 10)
+
+        local accentGrid = Instance.new("UIGridLayout")
+        accentGrid.CellSize            = UDim2.new(0, 24, 0, 24)
+        accentGrid.CellPadding         = UDim2.new(0, 6, 0, 6)
+        accentGrid.FillDirection       = Enum.FillDirection.Horizontal
+        accentGrid.HorizontalAlignment = Enum.HorizontalAlignment.Left
+        accentGrid.SortOrder           = Enum.SortOrder.LayoutOrder
+        accentGrid.Parent              = accentContainer
+
+        accentGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            accentContainer.Size = UDim2.new(1, 0, 0, accentGrid.AbsoluteContentSize.Y + 20)
+        end)
+
+        for i, ap in ipairs(accentPresets) do
+            local sw = Util.Button(accentContainer, {
+                Text             = "",
+                BackgroundColor3 = ap.Color,
+                Size             = UDim2.new(0, 24, 0, 24),
+                LayoutOrder      = i,
+                ZIndex           = 2,
+            })
+            Util.Corner(sw, 5)
+            Util.Stroke(sw, theme.Border, 1, 0)
+
+            sw.MouseEnter:Connect(function()
+                Util.TweenFast(sw, {Size = UDim2.new(0, 26, 0, 26)}, 0.1)
+            end)
+            sw.MouseLeave:Connect(function()
+                Util.TweenFast(sw, {Size = UDim2.new(0, 24, 0, 24)}, 0.1)
+            end)
+
+            sw.MouseButton1Click:Connect(function()
+                -- Меняем акцент: линия сверху, ScrollBar, кнопки
+                Util.TweenFast(accentLine, {BackgroundColor3 = ap.Color}, 0.3)
+                -- Обновляем все Fill слайдеров и нолбы
+                for _, desc in ipairs(windowFrame:GetDescendants()) do
+                    if desc.Name == "AccentLine" then
+                        pcall(function() desc.BackgroundColor3 = ap.Color end)
+                    end
+                end
+            end)
+        end
+
+        return SettingsTab
+    end
+
+    -- Строим Settings вкладку
+    Window._settingsTab = buildSettingsTab()
 
     return Window
 end
@@ -1599,14 +1706,13 @@ function BeeUI:Notify(config)
     Util.Corner(notify, 12)
     Util.Stroke(notify, theme.NotifyBorder, 1, 0)
 
-    local accent = Util.Frame(notify, {
+    Util.Frame(notify, {
         Size             = UDim2.new(0, 3, 1, 0),
         BackgroundColor3 = accentColor,
     })
-    Util.Corner(accent, 3)
 
     local icons = { info = "ℹ", success = "✓", warning = "⚠", error = "✕" }
-    local iconLabel = Util.Label(notify, {
+    Util.Label(notify, {
         Text           = icons[config.Type or "info"] or "ℹ",
         Font           = Enum.Font.Ubuntu,
         TextSize       = 16,
@@ -1616,7 +1722,7 @@ function BeeUI:Notify(config)
         TextXAlignment = Enum.TextXAlignment.Center,
     })
 
-    local titleLabel = Util.Label(notify, {
+    Util.Label(notify, {
         Text       = config.Title or "Notification",
         Font       = Enum.Font.Ubuntu,
         TextSize   = 14,
@@ -1625,7 +1731,7 @@ function BeeUI:Notify(config)
         Position   = UDim2.new(0, 46, 0, 12),
     })
 
-    local msgLabel = Util.Label(notify, {
+    Util.Label(notify, {
         Text        = config.Message or "",
         Font        = Enum.Font.Ubuntu,
         TextSize    = 12,
@@ -1651,7 +1757,6 @@ function BeeUI:Notify(config)
     Util.Tween(notify, {Time = 0.45, Ease = Enum.EasingStyle.Back, Dir = Enum.EasingDirection.Out}, {
         Size = UDim2.new(1, 0, 0, 76),
     })
-
     Util.Tween(progressFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
         Size = UDim2.new(0, 0, 1, 0)
     })
