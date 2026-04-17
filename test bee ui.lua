@@ -1,7 +1,7 @@
 --[[
 ╔═══════════════════════════════════════════════════════════════════╗
-║                         BeeUI v1.4                                ║
-║              Roblox GUI Library by Me                             ║
+║                         BeeUI v1.5                                ║
+║                  Roblox GUI Library by Me                         ║
 ║                                                                   ║
 ║  CHANGES v1.4:                                                    ║
 ║  • Dropdown is now scrollable when options exceed visible area    ║
@@ -103,69 +103,69 @@ local BackgroundPresets = {
 --  LUCIDE ICON FALLBACKS
 -- ══════════════════════════════════════════
 local LucideFallback = {
-    ["home"]            = "⌂",  ["settings"]        = "⚙",
-    ["menu"]            = "≡",  ["search"]          = "🔍",
-    ["bell"]            = "🔔", ["user"]            = "👤",
-    ["users"]           = "👥", ["star"]            = "★",
-    ["heart"]           = "♥",  ["bookmark"]        = "🔖",
-    ["plus"]            = "+",  ["minus"]           = "−",
-    ["x"]               = "✕",  ["check"]           = "✓",
-    ["edit"]            = "✏",  ["trash"]           = "🗑",
-    ["copy"]            = "⧉",  ["download"]        = "↓",
-    ["upload"]          = "↑",  ["refresh-cw"]      = "↻",
-    ["rotate-ccw"]      = "↺",  ["shield"]          = "🛡",
-    ["lock"]            = "🔒", ["unlock"]          = "🔓",
-    ["eye"]             = "👁",  ["eye-off"]         = "🚫",
-    ["alert-circle"]    = "⚠",  ["info"]            = "ℹ",
-    ["zap"]             = "⚡",  ["flame"]           = "🔥",
-    ["play"]            = "▶",  ["pause"]           = "⏸",
-    ["stop-circle"]     = "⏹",  ["volume-2"]        = "🔊",
-    ["volume-x"]        = "🔇", ["folder"]          = "📁",
-    ["file"]            = "📄", ["image"]           = "🖼",
-    ["code"]            = "</>",["arrow-up"]        = "↑",
-    ["arrow-down"]      = "↓",  ["arrow-left"]      = "←",
-    ["arrow-right"]     = "→",  ["chevron-up"]      = "⌃",
-    ["chevron-down"]    = "⌄",  ["globe"]           = "🌐",
-    ["map-pin"]         = "📍", ["clock"]           = "🕐",
-    ["calendar"]        = "📅", ["cpu"]             = "💾",
-    ["database"]        = "🗃", ["wifi"]            = "📶",
-    ["battery"]         = "🔋", ["sun"]             = "☀",
-    ["moon"]            = "☽",  ["cloud"]           = "☁",
-    ["wind"]            = "💨", ["layers"]          = "⊞",
-    ["layout"]          = "⊟",  ["grid"]            = "⊞",
-    ["list"]            = "≣",  ["tag"]             = "🏷",
+    ["home"]            = "H",  ["settings"]        = "S",
+    ["menu"]            = "=",  ["search"]          = "?",
+    ["bell"]            = "B",  ["user"]            = "U",
+    ["users"]           = "Us", ["star"]            = "*",
+    ["heart"]           = "v",  ["bookmark"]        = "bm",
+    ["plus"]            = "+",  ["minus"]           = "-",
+    ["x"]               = "X",  ["check"]           = "v",
+    ["edit"]            = "E",  ["trash"]           = "T",
+    ["copy"]            = "C",  ["download"]        = "D",
+    ["upload"]          = "U",  ["refresh-cw"]      = "R",
+    ["rotate-ccw"]      = "R",  ["shield"]          = "Sh",
+    ["lock"]            = "L",  ["unlock"]          = "Ul",
+    ["eye"]             = "Ey", ["eye-off"]         = "No",
+    ["alert-circle"]    = "!",  ["info"]            = "i",
+    ["zap"]             = "Z",  ["flame"]           = "F",
+    ["play"]            = ">",  ["pause"]           = "||",
+    ["stop-circle"]     = "[]", ["volume-2"]        = "V",
+    ["volume-x"]        = "Vx", ["folder"]          = "Fd",
+    ["file"]            = "Fi", ["image"]           = "Img",
+    ["code"]            = "<>", ["arrow-up"]        = "^",
+    ["arrow-down"]      = "v",  ["arrow-left"]      = "<",
+    ["arrow-right"]     = ">",  ["chevron-up"]      = "^",
+    ["chevron-down"]    = "v",  ["globe"]           = "G",
+    ["map-pin"]         = "P",  ["clock"]           = "Cl",
+    ["calendar"]        = "Ca", ["cpu"]             = "Cp",
+    ["database"]        = "Db", ["wifi"]            = "W",
+    ["battery"]         = "Bt", ["sun"]             = "Su",
+    ["moon"]            = "Mo", ["cloud"]           = "Cd",
+    ["wind"]            = "Wn", ["layers"]          = "Ly",
+    ["layout"]          = "Lt", ["grid"]            = "Gr",
+    ["list"]            = "Li", ["tag"]             = "Tg",
     ["hash"]            = "#",  ["at-sign"]         = "@",
-    ["percent"]         = "%",  ["sliders"]         = "⊟",
-    ["tool"]            = "🔧", ["wrench"]          = "🔧",
-    ["sword"]           = "⚔",  ["shield-check"]    = "🛡",
-    ["package"]         = "📦", ["box"]             = "📦",
-    ["gift"]            = "🎁", ["trophy"]          = "🏆",
-    ["target"]          = "🎯", ["crosshair"]       = "✛",
-    ["compass"]         = "🧭", ["map"]             = "🗺",
-    ["flag"]            = "🚩", ["send"]            = "➤",
-    ["mail"]            = "✉",  ["message-circle"]  = "💬",
-    ["message-square"]  = "💬", ["phone"]           = "📞",
-    ["video"]           = "📹", ["camera"]          = "📷",
-    ["mic"]             = "🎤", ["music"]           = "🎵",
-    ["headphones"]      = "🎧", ["gamepad"]         = "🎮",
-    ["terminal"]        = "⌨",  ["monitor"]         = "🖥",
-    ["smartphone"]      = "📱", ["tablet"]          = "📱",
-    ["printer"]         = "🖨", ["mouse-pointer"]   = "🖱",
-    ["key"]             = "🔑", ["link"]            = "🔗",
-    ["external-link"]   = "↗",  ["maximize"]        = "⛶",
-    ["minimize"]        = "⛶",  ["chevron-left"]    = "‹",
-    ["chevron-right"]   = "›",  ["more-horizontal"] = "···",
-    ["more-vertical"]   = "⋮",  ["log-in"]          = "→",
-    ["log-out"]         = "←",  ["power"]           = "⏻",
-    ["activity"]        = "📈", ["trending-up"]     = "📈",
-    ["trending-down"]   = "📉", ["bar-chart"]       = "📊",
-    ["pie-chart"]       = "🥧", ["dollar-sign"]     = "$",
-    ["credit-card"]     = "💳", ["shopping-cart"]   = "🛒",
-    ["shopping-bag"]    = "🛍",
+    ["percent"]         = "%",  ["sliders"]         = "Sl",
+    ["tool"]            = "To", ["wrench"]          = "Wr",
+    ["sword"]           = "Sw", ["shield-check"]    = "Sc",
+    ["package"]         = "Pk", ["box"]             = "Bx",
+    ["gift"]            = "Gf", ["trophy"]          = "Tr",
+    ["target"]          = "Tg", ["crosshair"]       = "+",
+    ["compass"]         = "Co", ["map"]             = "Mp",
+    ["flag"]            = "Fl", ["send"]            = ">",
+    ["mail"]            = "Ma", ["message-circle"]  = "Mc",
+    ["message-square"]  = "Ms", ["phone"]           = "Ph",
+    ["video"]           = "Vi", ["camera"]          = "Cm",
+    ["mic"]             = "Mi", ["music"]           = "Mu",
+    ["headphones"]      = "Hp", ["gamepad"]         = "Gp",
+    ["terminal"]        = "Tm", ["monitor"]         = "Mn",
+    ["smartphone"]      = "Sp", ["tablet"]          = "Tb",
+    ["printer"]         = "Pr", ["mouse-pointer"]   = "Ms",
+    ["key"]             = "Ky", ["link"]            = "Lk",
+    ["external-link"]   = "->", ["maximize"]        = "Mx",
+    ["minimize"]        = "Mn", ["chevron-left"]    = "<",
+    ["chevron-right"]   = ">",  ["more-horizontal"] = "...",
+    ["more-vertical"]   = "..", ["log-in"]          = "->",
+    ["log-out"]         = "<-", ["power"]           = "O",
+    ["activity"]        = "Ac", ["trending-up"]     = "/^",
+    ["trending-down"]   = "v/", ["bar-chart"]       = "Bc",
+    ["pie-chart"]       = "Pc", ["dollar-sign"]     = "$",
+    ["credit-card"]     = "Cc", ["shopping-cart"]   = "Sc",
+    ["shopping-bag"]    = "Sb",
 }
 
 local function getLucideChar(iconName)
-    return LucideFallback[iconName] or "•"
+    return LucideFallback[iconName] or "."
 end
 
 local function parseIcon(iconStr)
@@ -545,11 +545,13 @@ function BeeUI:CreateWindow(config)
         Position   = UDim2.new(0, logoOffset, 0, 28),
     })
 
+    -- FIX: Use plain ASCII "X" for close button — special unicode symbols
+    -- render as squares in many Roblox fonts
     local btnClose = Util.Button(titleBar, {
         Name             = "CloseBtn",
-        Text             = "✕",
-        Font             = Enum.Font.Ubuntu,
-        TextSize         = 12,
+        Text             = "X",
+        Font             = Enum.Font.GothamBold,
+        TextSize         = 13,
         TextColor3       = Color3.fromRGB(255, 255, 255),
         BackgroundColor3 = theme.CloseBtn,
         Size             = UDim2.new(0, 28, 0, 28),
@@ -559,9 +561,9 @@ function BeeUI:CreateWindow(config)
 
     local btnMin = Util.Button(titleBar, {
         Name             = "MinBtn",
-        Text             = "–",
-        Font             = Enum.Font.Ubuntu,
-        TextSize         = 14,
+        Text             = "-",
+        Font             = Enum.Font.GothamBold,
+        TextSize         = 16,
         TextColor3       = Color3.fromRGB(30, 20, 0),
         BackgroundColor3 = theme.MinBtn,
         Size             = UDim2.new(0, 28, 0, 28),
@@ -583,10 +585,7 @@ function BeeUI:CreateWindow(config)
     })
 
     -- ══════════════════════════════════════════
-    --  SIDEBAR — uses a ScrollingFrame so we can
-    --  pin Settings at the very bottom.
-    --  Regular tabs fill from top; Settings sits
-    --  at the bottom via a spacer.
+    --  SIDEBAR
     -- ══════════════════════════════════════════
     local tabSidebar = Util.Frame(bodyFrame, {
         Name             = "TabSidebar",
@@ -595,10 +594,9 @@ function BeeUI:CreateWindow(config)
         ClipsDescendants = true,
     })
 
-    -- Top section (regular tabs) — scrolls if many tabs
     local tabTopScroll = Instance.new("ScrollingFrame")
     tabTopScroll.Name                   = "TabTopScroll"
-    tabTopScroll.Size                   = UDim2.new(1, 0, 1, -46) -- leave 46px for settings btn
+    tabTopScroll.Size                   = UDim2.new(1, 0, 1, -46)
     tabTopScroll.Position               = UDim2.new(0, 0, 0, 0)
     tabTopScroll.BackgroundTransparency = 1
     tabTopScroll.BorderSizePixel        = 0
@@ -610,7 +608,6 @@ function BeeUI:CreateWindow(config)
     Util.Padding(tabTopScroll, 10, 8, 4, 8)
     Util.ListLayout(tabTopScroll, Enum.FillDirection.Vertical, 4)
 
-    -- Divider above Settings
     Util.Frame(tabSidebar, {
         Name             = "SettingsDivider",
         Size             = UDim2.new(1, 0, 0, 1),
@@ -618,7 +615,6 @@ function BeeUI:CreateWindow(config)
         BackgroundColor3 = theme.Border,
     })
 
-    -- Settings button container — always pinned at bottom
     local settingsBtnHolder = Util.Frame(tabSidebar, {
         Name             = "SettingsBtnHolder",
         Size             = UDim2.new(1, 0, 0, 46),
@@ -695,12 +691,8 @@ function BeeUI:CreateWindow(config)
     Window._screenGui      = screenGui
     Window._currentFont    = Enum.Font.Ubuntu
     Window._fontTargets    = {}
-    -- Will hold the Settings tab entry once built
     Window._settingsTabEntry = nil
 
-    -- ──────────────────────────────────────────
-    --  Internal: create a tab button in a given parent
-    -- ──────────────────────────────────────────
     local function createTabButton(parent, tabName, tabConfig, isFirst)
         local tabBtn = Util.Button(parent, {
             Name             = tabName .. "_Btn",
@@ -718,8 +710,8 @@ function BeeUI:CreateWindow(config)
                 local iconChar = getLucideChar(iconInfo.name)
                 Util.Label(tabBtn, {
                     Text                   = iconChar,
-                    Font                   = Enum.Font.Ubuntu,
-                    TextSize               = 16,
+                    Font                   = Enum.Font.GothamBold,
+                    TextSize               = 14,
                     TextColor3             = isFirst and Color3.fromRGB(255, 255, 255) or theme.TabText,
                     Size                   = UDim2.new(0, 20, 0, 20),
                     Position               = UDim2.new(0, 8, 0.5, -10),
@@ -757,9 +749,6 @@ function BeeUI:CreateWindow(config)
         return tabBtn, tabLabel
     end
 
-    -- ──────────────────────────────────────────
-    --  Window:AddTab(config)
-    -- ──────────────────────────────────────────
     function Window:AddTab(tabConfig)
         tabConfig = tabConfig or {}
         local tabName = tabConfig.Name or ("Tab " .. (#self._tabs + 1))
@@ -815,7 +804,6 @@ function BeeUI:CreateWindow(config)
                 end
                 prev.Content.Visible = false
             end
-            -- Also deactivate Settings tab if it was active
             if self._settingsTabEntry and self._activeTab == self._settingsTabEntry then
                 self._settingsTabEntry.Content.Visible = false
                 Util.TweenFast(self._settingsTabEntry.Button, {BackgroundColor3 = theme.TabInactive}, 0.35)
@@ -1071,9 +1059,7 @@ function BeeUI:CreateWindow(config)
             return sliderObj
         end
 
-        -- ══════════════════════════════════════════
-        --  Tab:AddDropdown  — FIXED: scrollable list
-        -- ══════════════════════════════════════════
+        -- Tab:AddDropdown
         function Tab:AddDropdown(config)
             config = config or {}
             local options  = config.Options or {}
@@ -1103,28 +1089,26 @@ function BeeUI:CreateWindow(config)
             })
             table.insert(self._window._fontTargets, dropLabel)
 
+            -- FIX: Use plain "v" instead of unicode triangle "▾" which renders as square
             local arrowLabel = Util.Label(dropBtn, {
-                Text           = "▾",
-                TextSize       = 13,
+                Text           = "v",
+                Font           = Enum.Font.GothamBold,
+                TextSize       = 11,
                 TextColor3     = theme.TextSecondary,
                 Size           = UDim2.new(0, 20, 1, 0),
                 Position       = UDim2.new(1, -24, 0, 0),
                 TextXAlignment = Enum.TextXAlignment.Center,
             })
 
-            -- ── Scrollable dropdown list ───────────────────────────────
-            local ITEM_H    = 30   -- height per option row
-            local ITEM_PAD  = 2    -- gap between items
-            local LIST_PAD  = 4    -- top+bottom padding inside list
-            local MAX_VIS   = 5    -- max visible items before scrolling
+            local ITEM_H    = 30
+            local ITEM_PAD  = 2
+            local LIST_PAD  = 4
+            local MAX_VIS   = 5
             local listW     = 140
 
-            -- Total content height (all items)
             local totalContentH = #options * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2
-            -- Visible window height (capped at MAX_VIS items)
             local visibleH = math.min(#options, MAX_VIS) * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2
 
-            -- Outer container (clips the scrolling frame)
             local listOuter = Util.Frame(Tab._dropOverlay, {
                 Name             = "DropOuter_" .. (config.Label or ""),
                 Size             = UDim2.new(0, listW, 0, visibleH),
@@ -1136,7 +1120,6 @@ function BeeUI:CreateWindow(config)
             Util.Corner(listOuter, 8)
             Util.Stroke(listOuter, theme.BorderAccent, 1, 0)
 
-            -- Inner ScrollingFrame
             local listScroll = Instance.new("ScrollingFrame")
             listScroll.Name                   = "DropScroll"
             listScroll.Size                   = UDim2.new(1, 0, 1, 0)
@@ -1413,14 +1396,11 @@ function BeeUI:CreateWindow(config)
     end
 
     -- ══════════════════════════════════════════
-    --  SETTINGS TAB — pinned to sidebar bottom
-    --  Created via a special path that places
-    --  its button inside settingsBtnHolder
+    --  SETTINGS TAB
     -- ══════════════════════════════════════════
     local function buildSettingsTab()
         local tabName = "Settings"
 
-        -- Create content area (same as normal tabs)
         local tabContent = Util.Frame(contentArea, {
             Name                   = tabName .. "_Content",
             Size                   = UDim2.new(1, 0, 1, 0),
@@ -1442,7 +1422,6 @@ function BeeUI:CreateWindow(config)
         Util.ListLayout(scrollFrame, Enum.FillDirection.Vertical, 6)
         Util.Padding(scrollFrame, 12, 12, 12, 12)
 
-        -- Settings button in the pinned bottom holder
         local tabBtn, tabLabel = createTabButton(settingsBtnHolder, tabName, {
             Name = tabName,
             Icon = "lucide:settings",
@@ -1457,10 +1436,8 @@ function BeeUI:CreateWindow(config)
         }
         Window._settingsTabEntry = tabEntry
 
-        -- Switch to / from Settings
         tabBtn.MouseButton1Click:Connect(function()
             if Window._activeTab == tabEntry then return end
-            -- Deactivate current tab
             if Window._activeTab then
                 local prev = Window._activeTab
                 Util.TweenFast(prev.Button, {BackgroundColor3 = theme.TabInactive}, 0.35)
@@ -1487,7 +1464,6 @@ function BeeUI:CreateWindow(config)
 
         Util.HoverEffect(tabBtn, theme.TabInactive, theme.SurfaceHover)
 
-        -- Build a pseudo-Tab object for the Settings content
         local SettingsTab = {}
         SettingsTab._theme       = theme
         SettingsTab._scroll      = scrollFrame
@@ -1496,8 +1472,6 @@ function BeeUI:CreateWindow(config)
         SettingsTab._windowFrame = windowFrame
         SettingsTab._window      = Window
 
-        -- Reuse Window:AddTab's inner helpers by creating a throwaway tab object
-        -- We'll use a minimal closure approach:
         local function settingsMakeRow(label, height)
             local row = Util.Frame(scrollFrame, {
                 Name             = "Row_" .. (label or "Item"),
@@ -1539,7 +1513,7 @@ function BeeUI:CreateWindow(config)
             table.insert(Window._fontTargets, sLbl)
         end
 
-        -- ── Font section ──────────────────────────────────────────────
+        -- Font section
         settingsSection("Font")
 
         local fontNames = {}
@@ -1547,15 +1521,12 @@ function BeeUI:CreateWindow(config)
             table.insert(fontNames, f.Name)
         end
 
-        -- Font dropdown (uses the standard AddTab's dropdown via Window:AddTab trick)
-        -- We build it manually here using the same pattern:
         do
-            local config   = { Label = "Interface Font", Options = fontNames, Default = "Ubuntu" }
             local options  = fontNames
             local selected = "Ubuntu"
             local isOpen   = false
 
-            local row = settingsMakeRow(config.Label, 48)
+            local row = settingsMakeRow("Interface Font", 48)
             local lbl = Util.Label(row, {
                 Text       = "Interface Font",
                 Font       = Window._currentFont,
@@ -1584,9 +1555,11 @@ function BeeUI:CreateWindow(config)
             })
             table.insert(Window._fontTargets, dropLabel)
 
+            -- FIX: Plain "v" arrow
             local arrowLbl = Util.Label(dropBtn, {
-                Text           = "▾",
-                TextSize       = 13,
+                Text           = "v",
+                Font           = Enum.Font.GothamBold,
+                TextSize       = 11,
                 TextColor3     = theme.TextSecondary,
                 Size           = UDim2.new(0, 20, 1, 0),
                 Position       = UDim2.new(1, -24, 0, 0),
@@ -1651,7 +1624,6 @@ function BeeUI:CreateWindow(config)
                     isOpen = false
                     listOuter.Visible = false
                     Util.TweenFast(arrowLbl, {Rotation = 0}, 0.15)
-                    -- Apply font
                     local newFont = Enum.Font.Ubuntu
                     for _, f in ipairs(AvailableFonts) do
                         if f.Name == opt then newFont = f.Font; break end
@@ -1700,7 +1672,7 @@ function BeeUI:CreateWindow(config)
             end)
         end
 
-        -- ── Background Color section ──────────────────────────────────
+        -- Background Color section
         settingsSection("Background Color")
 
         local swatchContainer = Util.Frame(scrollFrame, {
@@ -1758,7 +1730,6 @@ function BeeUI:CreateWindow(config)
             end)
         end
 
-        -- Custom RGB input
         do
             local row = settingsMakeRow("Custom Color", 48)
             local lbl = Util.Label(row, {
@@ -1809,24 +1780,22 @@ function BeeUI:CreateWindow(config)
             end)
         end
 
-        -- ── Transparency section ──────────────────────────────────────
+        -- Transparency section
         settingsSection("Transparency")
 
         do
-            -- Slider
-            local config = { Label = "GUI Opacity", Min = 0, Max = 95, Step = 5, Default = 0, Suffix = "%" }
-            local minVal, maxVal, step, suffix = config.Min, config.Max, config.Step, config.Suffix
-            local value = config.Default
+            local minVal, maxVal, step, suffix = 0, 95, 5, "%"
+            local value = 0
 
-            local row = settingsMakeRow(config.Label, 62)
+            local row = settingsMakeRow("GUI Opacity", 62)
             local nameLbl = Util.Label(row, {
-                Text = config.Label, Font = Window._currentFont, TextSize = 14,
+                Text = "GUI Opacity", Font = Window._currentFont, TextSize = 14,
                 TextColor3 = theme.TextPrimary, Size = UDim2.new(0, 160, 0, 18),
                 Position = UDim2.new(0, 14, 0, 8),
             })
             table.insert(Window._fontTargets, nameLbl)
             local valLbl = Util.Label(row, {
-                Text = tostring(value)..suffix, Font = Window._currentFont, TextSize = 13,
+                Text = "0%", Font = Window._currentFont, TextSize = 13,
                 TextColor3 = theme.Accent, Size = UDim2.new(0, 80, 0, 18),
                 Position = UDim2.new(1, -94, 0, 8), TextXAlignment = Enum.TextXAlignment.Right,
             })
@@ -1876,7 +1845,6 @@ function BeeUI:CreateWindow(config)
         end
 
         do
-            -- Full transparency toggle
             local value = false
             local row = settingsMakeRow("Fully Transparent", 48)
             local lbl = Util.Label(row, {
@@ -1913,7 +1881,7 @@ function BeeUI:CreateWindow(config)
             end)
         end
 
-        -- ── Accent Color section ──────────────────────────────────────
+        -- Accent Color section
         settingsSection("Accent Color")
 
         local accentPresets = {
@@ -1970,7 +1938,6 @@ function BeeUI:CreateWindow(config)
         return SettingsTab
     end
 
-    -- Build the pinned Settings tab
     Window._settingsTab = buildSettingsTab()
 
     return Window
@@ -2010,10 +1977,11 @@ function BeeUI:Notify(config)
         Size = UDim2.new(0, 3, 1, 0), BackgroundColor3 = accentColor,
     })
 
-    local icons = { info = "ℹ", success = "✓", warning = "⚠", error = "✕" }
+    -- FIX: Plain ASCII icons for notifications
+    local icons = { info = "i", success = "v", warning = "!", error = "X" }
     Util.Label(notify, {
-        Text = icons[config.Type or "info"] or "ℹ", Font = Enum.Font.Ubuntu,
-        TextSize = 16, TextColor3 = accentColor,
+        Text = icons[config.Type or "info"] or "i", Font = Enum.Font.GothamBold,
+        TextSize = 14, TextColor3 = accentColor,
         Size = UDim2.new(0, 24, 0, 24), Position = UDim2.new(0, 14, 0, 14),
         TextXAlignment = Enum.TextXAlignment.Center,
     })
