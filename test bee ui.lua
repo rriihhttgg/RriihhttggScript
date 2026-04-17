@@ -1,26 +1,9 @@
 --[[
-╔═══════════════════════════════════════════════════════════════════╗
-║                         BeeUI v1.6 (Fixed)                        ║
-║                  Roblox GUI Library                               ║
-║                                                                   ║
-║  FIXES:                                                           ║
-║  • activateTab: иконка деактивированного таба теперь правильно   ║
-║    возвращает цвет theme.TabText, а не белый                      ║
-║  • ClickEffect: размер кнопки теперь запоминается в момент нажа- ║
-║    тия, не накапливается при быстрых кликах                       ║
-║  • HoverEffect на табах: цвет hover корректен после смены акт.   ║
-║    таба (теперь обновляется через activateTab)                    ║
-║  • UserInputService connections в AddDropdown и AddSlider теперь  ║
-║    отключаются при уничтожении GUI через :Disconnect()            ║
-║  • Dropdown: защита от пустого списка options (visibleH / total) ║
-║  • Settings tab: deactivation корректно обрабатывает иконку      ║
-║  • FullyTransparent toggle теперь сбрасывает opacity slider      ║
-║  • AddColorPicker: заменена заглушка — открывает простой HSV-     ║
-║    пикер в виде popup вместо random color                         ║
-║  • buildSettingsTab: кнопка Settings деактивируется при нажатии  ║
-║    на обычный таб (двунаправленная синхронизация)                 ║
-║  • Notify: корректный LayoutOrder через os.clock()               ║
-╚═══════════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════╗
+║                    BeeUI v1.7                            ║
+║                Roblox GUI Library                        ║
+║                                                          ║
+╚══════════════════════════════════════════════════════════╝
 ]]
 
 local BeeUI = {}
@@ -31,7 +14,6 @@ BeeUI.__index = BeeUI
 -- ══════════════════════════════════════════
 local TweenService     = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local RunService       = game:GetService("RunService")
 local Players          = game:GetService("Players")
 local CoreGui          = game:GetService("CoreGui")
 local TextService      = game:GetService("TextService")
@@ -40,7 +22,201 @@ local LocalPlayer = Players.LocalPlayer
 local Mouse       = LocalPlayer:GetMouse()
 
 -- ══════════════════════════════════════════
---  AVAILABLE ROBLOX FONTS
+--  MATERIAL ICONS — Unicode кодпоинты
+--  Шрифт: rbxasset://fonts/families/MaterialIcons.json
+-- ══════════════════════════════════════════
+local MaterialIcons = {
+    -- Навигация
+    ["home"]            = "\u{E88A}",
+    ["menu"]            = "\u{E5D2}",
+    ["arrow-back"]      = "\u{E5C4}",
+    ["arrow-forward"]   = "\u{E5C8}",
+    ["arrow-up"]        = "\u{E5D8}",
+    ["arrow-down"]      = "\u{E5DB}",
+    ["chevron-up"]      = "\u{E5CE}",
+    ["chevron-down"]    = "\u{E5CF}",
+    ["chevron-left"]    = "\u{E5CB}",
+    ["chevron-right"]   = "\u{E5CC}",
+    ["expand-more"]     = "\u{E5CF}",
+    ["close"]           = "\u{E5CD}",
+    ["check"]           = "\u{E876}",
+    ["more-horizontal"] = "\u{E5D3}",
+    ["more-vertical"]   = "\u{E5D4}",
+    -- Действия
+    ["search"]          = "\u{E8B6}",
+    ["settings"]        = "\u{E8B8}",
+    ["edit"]            = "\u{E3C9}",
+    ["delete"]          = "\u{E872}",
+    ["trash"]           = "\u{E872}",
+    ["add"]             = "\u{E145}",
+    ["plus"]            = "\u{E145}",
+    ["minus"]           = "\u{E15B}",
+    ["remove"]          = "\u{E15B}",
+    ["refresh-cw"]      = "\u{E5D5}",
+    ["rotate-ccw"]      = "\u{E8B4}",
+    ["copy"]            = "\u{E14D}",
+    ["download"]        = "\u{E2C4}",
+    ["upload"]          = "\u{E2C6}",
+    ["share"]           = "\u{E80D}",
+    ["send"]            = "\u{E163}",
+    ["filter"]          = "\u{EF4F}",
+    ["sort"]            = "\u{E164}",
+    ["x"]               = "\u{E5CD}",
+    -- Пользователи
+    ["user"]            = "\u{E7FD}",
+    ["users"]           = "\u{E7EF}",
+    ["person"]          = "\u{E7FD}",
+    ["account"]         = "\u{E853}",
+    ["group"]           = "\u{E7EF}",
+    -- Медиа
+    ["play"]            = "\u{E037}",
+    ["pause"]           = "\u{E034}",
+    ["stop-circle"]     = "\u{E047}",
+    ["volume-2"]        = "\u{E050}",
+    ["volume-x"]        = "\u{E04F}",
+    ["music"]           = "\u{E405}",
+    ["headphones"]      = "\u{E310}",
+    ["mic"]             = "\u{E029}",
+    ["camera"]          = "\u{E3AF}",
+    ["video"]           = "\u{E63A}",
+    ["image"]           = "\u{E3F4}",
+    -- Файлы
+    ["file"]            = "\u{E24D}",
+    ["folder"]          = "\u{E2C7}",
+    ["save"]            = "\u{E161}",
+    ["print"]           = "\u{E8AD}",
+    ["printer"]         = "\u{E8AD}",
+    ["attachment"]      = "\u{E226}",
+    -- Связь
+    ["mail"]            = "\u{E158}",
+    ["phone"]           = "\u{E0CD}",
+    ["message-circle"]  = "\u{E0CA}",
+    ["message-square"]  = "\u{E0C8}",
+    ["bell"]            = "\u{E7F4}",
+    ["notifications"]   = "\u{E7F4}",
+    -- Безопасность
+    ["lock"]            = "\u{E897}",
+    ["unlock"]          = "\u{E898}",
+    ["shield"]          = "\u{E9E0}",
+    ["shield-check"]    = "\u{E9E0}",
+    ["eye"]             = "\u{E8F4}",
+    ["eye-off"]         = "\u{E8F5}",
+    ["key"]             = "\u{E73C}",
+    -- Данные / Аналитика
+    ["bar-chart"]       = "\u{E26B}",
+    ["pie-chart"]       = "\u{E6C4}",
+    ["trending-up"]     = "\u{E8E5}",
+    ["trending-down"]   = "\u{E8E3}",
+    ["activity"]        = "\u{E8A4}",
+    ["database"]        = "\u{E1D0}",
+    -- Устройства
+    ["monitor"]         = "\u{E30A}",
+    ["smartphone"]      = "\u{E32C}",
+    ["tablet"]          = "\u{E32F}",
+    ["cpu"]             = "\u{E322}",
+    ["wifi"]            = "\u{E63E}",
+    ["battery"]         = "\u{E19C}",
+    ["bluetooth"]       = "\u{E1AA}",
+    ["usb"]             = "\u{E1E0}",
+    -- Интерфейс
+    ["layers"]          = "\u{E53B}",
+    ["layout"]          = "\u{E8F1}",
+    ["grid"]            = "\u{E3EC}",
+    ["list"]            = "\u{E896}",
+    ["sliders"]         = "\u{E9F2}",
+    ["terminal"]        = "\u{EB8E}",
+    ["code"]            = "\u{E86F}",
+    ["link"]            = "\u{E157}",
+    ["external-link"]   = "\u{E895}",
+    ["maximize"]        = "\u{E931}",
+    ["minimize"]        = "\u{E931}",
+    -- Погода / Природа
+    ["sun"]             = "\u{E430}",
+    ["moon"]            = "\u{E638}",
+    ["cloud"]           = "\u{E2BD}",
+    ["wind"]            = "\u{EFD8}",
+    ["flame"]           = "\u{E8EF}",
+    ["zap"]             = "\u{E315}",
+    -- Локация
+    ["map-pin"]         = "\u{E55F}",
+    ["map"]             = "\u{E55B}",
+    ["compass"]         = "\u{E87A}",
+    ["globe"]           = "\u{E80B}",
+    ["flag"]            = "\u{E153}",
+    -- Время
+    ["clock"]           = "\u{E8B5}",
+    ["calendar"]        = "\u{E935}",
+    ["timer"]           = "\u{E425}",
+    ["alarm"]           = "\u{E855}",
+    -- Коммерция
+    ["dollar-sign"]     = "\u{E227}",
+    ["credit-card"]     = "\u{E870}",
+    ["shopping-cart"]   = "\u{E8CC}",
+    ["shopping-bag"]    = "\u{E8CB}",
+    ["gift"]            = "\u{E8F6}",
+    ["tag"]             = "\u{E867}",
+    -- Игры / Специальные
+    ["gamepad"]         = "\u{E30F}",
+    ["games"]           = "\u{E021}",
+    ["sports"]          = "\u{EA30}",
+    ["casino"]          = "\u{EB40}",
+    ["sports-esports"]  = "\u{EA38}",
+    ["sword"]           = "\u{E875}",  -- используем 'build' как замену
+    ["tool"]            = "\u{E869}",
+    ["wrench"]          = "\u{E869}",
+    ["target"]          = "\u{E87C}",
+    ["crosshair"]       = "\u{E879}",
+    ["trophy"]          = "\u{EAC4}",
+    ["star"]            = "\u{E838}",
+    ["star-border"]     = "\u{E83A}",
+    ["heart"]           = "\u{E87D}",
+    ["favorite"]        = "\u{E87D}",
+    ["bookmark"]        = "\u{E866}",
+    ["thumb-up"]        = "\u{E8DC}",
+    -- Разное
+    ["power"]           = "\u{E8AC}",
+    ["log-in"]          = "\u{E9BB}",
+    ["log-out"]         = "\u{E9BA}",
+    ["info"]            = "\u{E88E}",
+    ["alert-circle"]    = "\u{E002}",
+    ["help"]            = "\u{E887}",
+    ["package"]         = "\u{E179}",
+    ["box"]             = "\u{E179}",
+    ["at-sign"]         = "\u{E0BE}",
+    ["hash"]            = "\u{E9C3}",
+    ["percent"]         = "\u{EB58}",
+    ["palette"]         = "\u{E40A}",
+    ["format-font"]     = "\u{E165}",
+    ["opacity"]         = "\u{E91C}",
+    ["color-lens"]      = "\u{E43B}",
+    ["brush"]           = "\u{E3AE}",
+}
+
+-- Шрифт Material Icons
+local MATERIAL_FONT = Font.new(
+    "rbxasset://fonts/families/MaterialIcons.json",
+    Enum.FontWeight.Regular,
+    Enum.FontStyle.Normal
+)
+
+local function getMaterialIcon(iconName)
+    return MaterialIcons[iconName] or MaterialIcons["help"] or "\u{E887}"
+end
+
+local function parseIcon(iconStr)
+    if not iconStr then return nil end
+    if iconStr:sub(1, 7) == "lucide:" then
+        return { type = "material", name = iconStr:sub(8) }
+    elseif iconStr:sub(1, 9) == "material:" then
+        return { type = "material", name = iconStr:sub(10) }
+    elseif iconStr:sub(1, 13) == "rbxassetid://" then
+        return { type = "asset", id = iconStr }
+    end
+    return { type = "asset", id = iconStr }
+end
+
+-- ══════════════════════════════════════════
+--  ДОСТУПНЫЕ ШРИФТЫ
 -- ══════════════════════════════════════════
 local AvailableFonts = {
     { Name = "Ubuntu",          Font = Enum.Font.Ubuntu          },
@@ -52,37 +228,19 @@ local AvailableFonts = {
     { Name = "SourceSansLight", Font = Enum.Font.SourceSansLight },
     { Name = "RobotoMono",      Font = Enum.Font.RobotoMono      },
     { Name = "Code",            Font = Enum.Font.Code            },
-    { Name = "Cartoon",         Font = Enum.Font.Cartoon         },
-    { Name = "Fantasy",         Font = Enum.Font.Fantasy         },
-    { Name = "Arcade",          Font = Enum.Font.Arcade          },
-    { Name = "Bangers",         Font = Enum.Font.Bangers         },
-    { Name = "Creepster",       Font = Enum.Font.Creepster       },
-    { Name = "DenkOne",         Font = Enum.Font.DenkOne         },
-    { Name = "Fondamento",      Font = Enum.Font.Fondamento      },
-    { Name = "FredokaOne",      Font = Enum.Font.FredokaOne      },
-    { Name = "Michroma",        Font = Enum.Font.Michroma        },
     { Name = "Nunito",          Font = Enum.Font.Nunito          },
     { Name = "Oswald",          Font = Enum.Font.Oswald          },
-    { Name = "PatrickHand",     Font = Enum.Font.PatrickHand     },
-    { Name = "PermanentMarker", Font = Enum.Font.PermanentMarker },
-    { Name = "Sarpanch",        Font = Enum.Font.Sarpanch        },
-    { Name = "SpecialElite",    Font = Enum.Font.SpecialElite    },
     { Name = "TitilliumWeb",    Font = Enum.Font.TitilliumWeb    },
+    { Name = "Michroma",        Font = Enum.Font.Michroma        },
+    { Name = "FredokaOne",      Font = Enum.Font.FredokaOne      },
+    { Name = "Cartoon",         Font = Enum.Font.Cartoon         },
+    { Name = "Arcade",          Font = Enum.Font.Arcade          },
+    { Name = "Bangers",         Font = Enum.Font.Bangers         },
+    { Name = "PermanentMarker", Font = Enum.Font.PermanentMarker },
 }
--- Удаляем дубликаты
-do
-    local seen, cleaned = {}, {}
-    for _, f in ipairs(AvailableFonts) do
-        if not seen[f.Name] then
-            seen[f.Name] = true
-            table.insert(cleaned, f)
-        end
-    end
-    AvailableFonts = cleaned
-end
 
 -- ══════════════════════════════════════════
---  BACKGROUND COLOR PRESETS
+--  ПРЕСЕТЫ ФОНА
 -- ══════════════════════════════════════════
 local BackgroundPresets = {
     { Name = "Dark Honey",  Color = Color3.fromRGB(28,  18,  6  ) },
@@ -91,98 +249,19 @@ local BackgroundPresets = {
     { Name = "Midnight",    Color = Color3.fromRGB(15,  12,  30 ) },
     { Name = "Forest",      Color = Color3.fromRGB(10,  22,  15 ) },
     { Name = "Black",       Color = Color3.fromRGB(5,   5,   8  ) },
+    { Name = "Purple",      Color = Color3.fromRGB(30,  15,  50 ) },
+    { Name = "Blue Storm",  Color = Color3.fromRGB(12,  18,  40 ) },
+    { Name = "Ruby",        Color = Color3.fromRGB(35,  8,   12 ) },
     { Name = "Light",       Color = Color3.fromRGB(248, 248, 252) },
     { Name = "White",       Color = Color3.fromRGB(255, 255, 255) },
     { Name = "Sky",         Color = Color3.fromRGB(220, 235, 255) },
     { Name = "Mint",        Color = Color3.fromRGB(210, 245, 230) },
     { Name = "Pink",        Color = Color3.fromRGB(255, 220, 235) },
     { Name = "Yellow",      Color = Color3.fromRGB(255, 245, 200) },
-    { Name = "Purple",      Color = Color3.fromRGB(30,  15,  50 ) },
-    { Name = "Blue Storm",  Color = Color3.fromRGB(12,  18,  40 ) },
-    { Name = "Ruby",        Color = Color3.fromRGB(35,  8,   12 ) },
 }
 
 -- ══════════════════════════════════════════
---  LUCIDE ICON FALLBACKS
--- ══════════════════════════════════════════
-local LucideFallback = {
-    ["home"]            = "H",  ["settings"]        = "S",
-    ["menu"]            = "=",  ["search"]          = "?",
-    ["bell"]            = "B",  ["user"]            = "U",
-    ["users"]           = "Us", ["star"]            = "*",
-    ["heart"]           = "v",  ["bookmark"]        = "bm",
-    ["plus"]            = "+",  ["minus"]           = "-",
-    ["x"]               = "X",  ["check"]           = "v",
-    ["edit"]            = "E",  ["trash"]           = "T",
-    ["copy"]            = "C",  ["download"]        = "D",
-    ["upload"]          = "U",  ["refresh-cw"]      = "R",
-    ["rotate-ccw"]      = "R",  ["shield"]          = "Sh",
-    ["lock"]            = "L",  ["unlock"]          = "Ul",
-    ["eye"]             = "Ey", ["eye-off"]         = "No",
-    ["alert-circle"]    = "!",  ["info"]            = "i",
-    ["zap"]             = "Z",  ["flame"]           = "F",
-    ["play"]            = ">",  ["pause"]           = "||",
-    ["stop-circle"]     = "[]", ["volume-2"]        = "V",
-    ["volume-x"]        = "Vx", ["folder"]          = "Fd",
-    ["file"]            = "Fi", ["image"]           = "Img",
-    ["code"]            = "<>", ["arrow-up"]        = "^",
-    ["arrow-down"]      = "v",  ["arrow-left"]      = "<",
-    ["arrow-right"]     = ">",  ["chevron-up"]      = "^",
-    ["chevron-down"]    = "v",  ["globe"]           = "G",
-    ["map-pin"]         = "P",  ["clock"]           = "Cl",
-    ["calendar"]        = "Ca", ["cpu"]             = "Cp",
-    ["database"]        = "Db", ["wifi"]            = "W",
-    ["battery"]         = "Bt", ["sun"]             = "Su",
-    ["moon"]            = "Mo", ["cloud"]           = "Cd",
-    ["wind"]            = "Wn", ["layers"]          = "Ly",
-    ["layout"]          = "Lt", ["grid"]            = "Gr",
-    ["list"]            = "Li", ["tag"]             = "Tg",
-    ["hash"]            = "#",  ["at-sign"]         = "@",
-    ["percent"]         = "%",  ["sliders"]         = "Sl",
-    ["tool"]            = "To", ["wrench"]          = "Wr",
-    ["sword"]           = "Sw", ["shield-check"]    = "Sc",
-    ["package"]         = "Pk", ["box"]             = "Bx",
-    ["gift"]            = "Gf", ["trophy"]          = "Tr",
-    ["target"]          = "Tg", ["crosshair"]       = "+",
-    ["compass"]         = "Co", ["map"]             = "Mp",
-    ["flag"]            = "Fl", ["send"]            = ">",
-    ["mail"]            = "Ma", ["message-circle"]  = "Mc",
-    ["message-square"]  = "Ms", ["phone"]           = "Ph",
-    ["video"]           = "Vi", ["camera"]          = "Cm",
-    ["mic"]             = "Mi", ["music"]           = "Mu",
-    ["headphones"]      = "Hp", ["gamepad"]         = "Gp",
-    ["terminal"]        = "Tm", ["monitor"]         = "Mn",
-    ["smartphone"]      = "Sp", ["tablet"]          = "Tb",
-    ["printer"]         = "Pr", ["mouse-pointer"]   = "Ms",
-    ["key"]             = "Ky", ["link"]            = "Lk",
-    ["external-link"]   = "->", ["maximize"]        = "Mx",
-    ["minimize"]        = "Mn", ["chevron-left"]    = "<",
-    ["chevron-right"]   = ">",  ["more-horizontal"] = "...",
-    ["more-vertical"]   = "..", ["log-in"]          = "->",
-    ["log-out"]         = "<-", ["power"]           = "O",
-    ["activity"]        = "Ac", ["trending-up"]     = "/^",
-    ["trending-down"]   = "v/", ["bar-chart"]       = "Bc",
-    ["pie-chart"]       = "Pc", ["dollar-sign"]     = "$",
-    ["credit-card"]     = "Cc", ["shopping-cart"]   = "Sc",
-    ["shopping-bag"]    = "Sb",
-}
-
-local function getLucideChar(iconName)
-    return LucideFallback[iconName] or "."
-end
-
-local function parseIcon(iconStr)
-    if not iconStr then return nil end
-    if iconStr:sub(1, 7) == "lucide:" then
-        return { type = "lucide", name = iconStr:sub(8) }
-    elseif iconStr:sub(1, 13) == "rbxassetid://" then
-        return { type = "asset", id = iconStr }
-    end
-    return { type = "asset", id = iconStr }
-end
-
--- ══════════════════════════════════════════
---  THEMES
+--  ТЕМЫ
 -- ══════════════════════════════════════════
 BeeUI.Themes = {
     Dark = {
@@ -195,8 +274,6 @@ BeeUI.Themes = {
         TextMuted         = Color3.fromRGB(80,  80,  100),
         Accent            = Color3.fromRGB(255, 180, 30 ),
         AccentHover       = Color3.fromRGB(255, 200, 70 ),
-        AccentSoft        = Color3.fromRGB(255, 180, 30 ),
-        AccentGlow        = Color3.fromRGB(255, 210, 80 ),
         Border            = Color3.fromRGB(80,  55,  18 ),
         BorderAccent      = Color3.fromRGB(180, 130, 30 ),
         Success           = Color3.fromRGB(52,  211, 153),
@@ -230,8 +307,6 @@ BeeUI.Themes = {
         TextMuted         = Color3.fromRGB(160, 160, 180),
         Accent            = Color3.fromRGB(99,  70,  240),
         AccentHover       = Color3.fromRGB(120, 95,  255),
-        AccentSoft        = Color3.fromRGB(99,  70,  240),
-        AccentGlow        = Color3.fromRGB(99,  70,  240),
         Border            = Color3.fromRGB(220, 220, 235),
         BorderAccent      = Color3.fromRGB(180, 160, 240),
         Success           = Color3.fromRGB(16,  185, 129),
@@ -258,7 +333,7 @@ BeeUI.Themes = {
 }
 
 -- ══════════════════════════════════════════
---  UTILITIES
+--  УТИЛИТЫ
 -- ══════════════════════════════════════════
 local Util = {}
 
@@ -280,7 +355,7 @@ end
 function Util.Corner(parent, radius)
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, radius or 8)
-    c.Parent       = parent
+    c.Parent = parent
     return c
 end
 
@@ -290,7 +365,7 @@ function Util.Padding(parent, top, right, bottom, left)
     p.PaddingRight  = UDim.new(0, right  or 0)
     p.PaddingBottom = UDim.new(0, bottom or 0)
     p.PaddingLeft   = UDim.new(0, left   or 0)
-    p.Parent        = parent
+    p.Parent = parent
     return p
 end
 
@@ -300,7 +375,7 @@ function Util.Stroke(parent, color, thickness, transparency)
     s.Thickness       = thickness or 1
     s.Transparency    = transparency or 0
     s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    s.Parent          = parent
+    s.Parent = parent
     return s
 end
 
@@ -310,7 +385,7 @@ function Util.ListLayout(parent, dir, padding, align)
     l.Padding             = UDim.new(0, padding or 6)
     l.HorizontalAlignment = align or Enum.HorizontalAlignment.Left
     l.SortOrder           = Enum.SortOrder.LayoutOrder
-    l.Parent              = parent
+    l.Parent = parent
     return l
 end
 
@@ -412,8 +487,6 @@ function Util.HoverEffect(btn, normalColor, hoverColor, speed)
     end)
 end
 
--- FIX: ClickEffect теперь запоминает размер в момент нажатия,
--- не накапливает смещение при быстрых кликах
 function Util.ClickEffect(btn)
     local pressedSize = nil
     btn.MouseButton1Down:Connect(function()
@@ -429,7 +502,6 @@ function Util.ClickEffect(btn)
             pressedSize = nil
         end
     end)
-    -- Также восстанавливаем при уходе курсора во время нажатия
     btn.MouseLeave:Connect(function()
         if pressedSize then
             Util.TweenFast(btn, {Size = pressedSize}, 0.1)
@@ -438,10 +510,22 @@ function Util.ClickEffect(btn)
     end)
 end
 
--- ══════════════════════════════════════════
---  MAIN CLASS — BeeUI
--- ══════════════════════════════════════════
+-- Создать Label с Material Icons шрифтом
+local function makeMaterialLabel(parent, props)
+    local l = Instance.new("TextLabel")
+    l.BorderSizePixel        = 0
+    l.BackgroundTransparency = 1
+    l.FontFace               = MATERIAL_FONT
+    l.TextSize               = 18
+    l.TextXAlignment         = Enum.TextXAlignment.Center
+    for k, v in pairs(props or {}) do l[k] = v end
+    l.Parent = parent
+    return l
+end
 
+-- ══════════════════════════════════════════
+--  ОСНОВНОЙ КЛАСС — BeeUI
+-- ══════════════════════════════════════════
 BeeUI._activeTheme     = nil
 BeeUI._screenGui       = nil
 BeeUI._notifyHolder    = nil
@@ -462,16 +546,14 @@ function BeeUI:CreateWindow(config)
     screenGui.ResetOnSpawn    = false
     screenGui.DisplayOrder    = 999
 
-    local ok = pcall(function()
-        screenGui.Parent = CoreGui
-    end)
+    local ok = pcall(function() screenGui.Parent = CoreGui end)
     if not ok then
         screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
     end
 
     self._screenGui = screenGui
 
-    -- Глобальный оверлей для дропдаунов (поверх всего)
+    -- Глобальный оверлей для дропдаунов
     local dropOverlay = Util.Frame(screenGui, {
         Name                   = "DropdownOverlay",
         Size                   = UDim2.new(1, 0, 1, 0),
@@ -486,13 +568,12 @@ function BeeUI:CreateWindow(config)
         BackgroundTransparency = 1,
         Size                   = UDim2.new(0, 320, 1, 0),
         Position               = UDim2.new(1, -330, 0, 0),
-        AnchorPoint            = Vector2.new(0, 0),
     })
     Util.ListLayout(notifyHolder, Enum.FillDirection.Vertical, 8)
     Util.Padding(notifyHolder, 16, 0, 0, 0)
     self._notifyHolder = notifyHolder
 
-    -- Основной фрейм окна
+    -- Основной фрейм
     local winSize = config.Size     or UDim2.new(0, 580, 0, 460)
     local winPos  = config.Position or UDim2.new(0.5, -290, 0.5, -230)
 
@@ -561,7 +642,7 @@ function BeeUI:CreateWindow(config)
 
     local btnClose = Util.Button(titleBar, {
         Name             = "CloseBtn",
-        Text             = "X",
+        Text             = "✕",
         Font             = Enum.Font.GothamBold,
         TextSize         = 13,
         TextColor3       = Color3.fromRGB(255, 255, 255),
@@ -573,7 +654,7 @@ function BeeUI:CreateWindow(config)
 
     local btnMin = Util.Button(titleBar, {
         Name             = "MinBtn",
-        Text             = "-",
+        Text             = "−",
         Font             = Enum.Font.GothamBold,
         TextSize         = 16,
         TextColor3       = Color3.fromRGB(30, 20, 0),
@@ -584,7 +665,7 @@ function BeeUI:CreateWindow(config)
     Util.Corner(btnMin, 7)
 
     Util.HoverEffect(btnClose, theme.CloseBtn, Color3.fromRGB(220, 30, 30))
-    Util.HoverEffect(btnMin,   theme.MinBtn,   Color3.fromRGB(220, 160, 10))
+    Util.HoverEffect(btnMin, theme.MinBtn, Color3.fromRGB(220, 160, 10))
     Util.ClickEffect(btnClose)
     Util.ClickEffect(btnMin)
 
@@ -596,9 +677,7 @@ function BeeUI:CreateWindow(config)
         BackgroundTransparency = 1,
     })
 
-    -- ══════════════════════════════════════════
-    --  SIDEBAR
-    -- ══════════════════════════════════════════
+    -- Sidebar
     local tabSidebar = Util.Frame(bodyFrame, {
         Name             = "TabSidebar",
         Size             = UDim2.new(0, 140, 1, 0),
@@ -653,7 +732,7 @@ function BeeUI:CreateWindow(config)
     Util.MakeDraggable(windowFrame, titleBar)
 
     -- Анимация открытия
-    windowFrame.Size = UDim2.new(winSize.X.Scale, winSize.X.Offset, winSize.Y.Scale, 0)
+    windowFrame.Size                   = UDim2.new(winSize.X.Scale, winSize.X.Offset, winSize.Y.Scale, 0)
     windowFrame.BackgroundTransparency = 1
     Util.Tween(windowFrame, {Time = 0.5, Ease = Enum.EasingStyle.Back, Dir = Enum.EasingDirection.Out}, {
         Size                   = winSize,
@@ -705,17 +784,15 @@ function BeeUI:CreateWindow(config)
     Window._fontTargets       = {}
     Window._settingsTabEntry  = nil
 
-    -- FIX: createTabButton вынесен так, что иконка и label
-    -- корректно деактивируются через общую функцию
+    -- Деактивация таба
     local function deactivateEntry(entry)
         if not entry then return end
         Util.TweenFast(entry.Button, {BackgroundColor3 = theme.TabInactive}, 0.35)
         Util.TweenFast(entry.Label,  {TextColor3 = theme.TabText}, 0.35)
-        if entry.Button:GetAttribute("LucideIcon") then
-            local ic = entry.Button:FindFirstChild("LucideIconLabel")
-            if ic then
-                Util.TweenFast(ic, {TextColor3 = theme.TabText}, 0.35)
-            end
+        -- Обновляем иконку Material Icons
+        local ic = entry.Button:FindFirstChild("TabIcon")
+        if ic then
+            Util.TweenFast(ic, {TextColor3 = theme.TabText}, 0.35)
         end
         if entry.Content then
             entry.Content.Visible = false
@@ -727,14 +804,13 @@ function BeeUI:CreateWindow(config)
         entry.Content.Visible = true
         Util.TweenFast(entry.Button, {BackgroundColor3 = theme.TabActive}, 0.35)
         Util.TweenFast(entry.Label,  {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.35)
-        if entry.Button:GetAttribute("LucideIcon") then
-            local ic = entry.Button:FindFirstChild("LucideIconLabel")
-            if ic then
-                Util.TweenFast(ic, {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.35)
-            end
+        local ic = entry.Button:FindFirstChild("TabIcon")
+        if ic then
+            Util.TweenFast(ic, {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.35)
         end
     end
 
+    -- Создание кнопки таба с Material Icons
     local function createTabButton(parent, tabName, tabConfig, isFirst)
         local tabBtn = Util.Button(parent, {
             Name             = tabName .. "_Btn",
@@ -748,24 +824,25 @@ function BeeUI:CreateWindow(config)
 
         if tabConfig and tabConfig.Icon then
             local iconInfo = parseIcon(tabConfig.Icon)
-            if iconInfo.type == "lucide" then
-                local iconChar = getLucideChar(iconInfo.name)
-                Util.Label(tabBtn, {
-                    Name                   = "LucideIconLabel",
-                    Text                   = iconChar,
-                    Font                   = Enum.Font.GothamBold,
-                    TextSize               = 14,
-                    TextColor3             = isFirst and Color3.fromRGB(255, 255, 255) or theme.TabText,
-                    Size                   = UDim2.new(0, 20, 0, 20),
-                    Position               = UDim2.new(0, 8, 0.5, -10),
-                    TextXAlignment         = Enum.TextXAlignment.Center,
-                    BackgroundTransparency = 1,
-                    ZIndex                 = 2,
-                })
-                tabBtn:SetAttribute("LucideIcon", true)
-                textOffsetX = 30
+            if iconInfo.type == "material" then
+                -- Настоящая иконка через Material Icons шрифт
+                local iconChar = getMaterialIcon(iconInfo.name)
+                local iconLbl = Instance.new("TextLabel")
+                iconLbl.Name                   = "TabIcon"
+                iconLbl.Text                   = iconChar
+                iconLbl.FontFace               = MATERIAL_FONT
+                iconLbl.TextSize               = 18
+                iconLbl.TextColor3             = isFirst and Color3.fromRGB(255,255,255) or theme.TabText
+                iconLbl.Size                   = UDim2.new(0, 22, 0, 22)
+                iconLbl.Position               = UDim2.new(0, 7, 0.5, -11)
+                iconLbl.TextXAlignment         = Enum.TextXAlignment.Center
+                iconLbl.BackgroundTransparency = 1
+                iconLbl.ZIndex                 = 2
+                iconLbl.Parent                 = tabBtn
+                textOffsetX = 31
             elseif iconInfo.type == "asset" then
                 Util.Image(tabBtn, {
+                    Name     = "TabIcon",
                     Image    = iconInfo.id,
                     Size     = UDim2.new(0, 16, 0, 16),
                     Position = UDim2.new(0, 8, 0.5, -8),
@@ -792,6 +869,9 @@ function BeeUI:CreateWindow(config)
         return tabBtn, tabLabel
     end
 
+    -- ══════════════════════════════════════════
+    --  Window:AddTab
+    -- ══════════════════════════════════════════
     function Window:AddTab(tabConfig)
         tabConfig = tabConfig or {}
         local tabName = tabConfig.Name or ("Tab " .. (#self._tabs + 1))
@@ -833,15 +913,9 @@ function BeeUI:CreateWindow(config)
             self._activeTab = tabEntry
         end
 
-        -- FIX: activateTab использует общие deactivateEntry / activateEntry
         local function activateTab(entry)
             if self._activeTab == entry then return end
-            -- Деактивируем предыдущий (обычный таб или Settings)
             deactivateEntry(self._activeTab)
-            -- FIX: также деактивируем Settings если он был активен
-            if self._settingsTabEntry and self._activeTab == self._settingsTabEntry then
-                deactivateEntry(self._settingsTabEntry)
-            end
             self._activeTab = entry
             activateEntry(entry)
         end
@@ -850,9 +924,6 @@ function BeeUI:CreateWindow(config)
             activateTab(tabEntry)
         end)
 
-        -- FIX: HoverEffect корректен для первого таба —
-        -- после деактивации normalColor меняется на TabInactive
-        -- через activateTab/deactivateEntry, поэтому hover работает правильно
         Util.HoverEffect(tabBtn,
             isFirst and theme.TabActive or theme.TabInactive,
             theme.SurfaceHover
@@ -1057,7 +1128,6 @@ function BeeUI:CreateWindow(config)
                 end
             end
 
-            -- FIX: сохраняем соединения чтобы отключить при уничтожении GUI
             local connChanged, connEnded
             track.InputBegan:Connect(function(inp)
                 if inp.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -1099,7 +1169,6 @@ function BeeUI:CreateWindow(config)
         function Tab:AddDropdown(config)
             config = config or {}
             local options  = config.Options or {}
-            -- FIX: защита от пустого списка
             local selected = config.Default or (options[1] or "")
             local isOpen   = false
 
@@ -1126,15 +1195,17 @@ function BeeUI:CreateWindow(config)
             })
             table.insert(self._window._fontTargets, dropLabel)
 
-            local arrowLabel = Util.Label(dropBtn, {
-                Text           = "v",
-                Font           = Enum.Font.GothamBold,
-                TextSize       = 11,
-                TextColor3     = theme.TextSecondary,
-                Size           = UDim2.new(0, 20, 1, 0),
-                Position       = UDim2.new(1, -24, 0, 0),
-                TextXAlignment = Enum.TextXAlignment.Center,
-            })
+            -- Стрелка через Material Icons
+            local arrowLabel = Instance.new("TextLabel")
+            arrowLabel.Text                   = getMaterialIcon("expand-more")
+            arrowLabel.FontFace               = MATERIAL_FONT
+            arrowLabel.TextSize               = 18
+            arrowLabel.TextColor3             = theme.TextSecondary
+            arrowLabel.Size                   = UDim2.new(0, 22, 1, 0)
+            arrowLabel.Position               = UDim2.new(1, -24, 0, 0)
+            arrowLabel.TextXAlignment         = Enum.TextXAlignment.Center
+            arrowLabel.BackgroundTransparency = 1
+            arrowLabel.Parent                 = dropBtn
 
             local ITEM_H   = 30
             local ITEM_PAD = 2
@@ -1142,8 +1213,6 @@ function BeeUI:CreateWindow(config)
             local MAX_VIS  = 5
             local listW    = 140
 
-            -- FIX: безопасное вычисление высот при пустом options
-            local itemCount = math.max(#options, 1)
             local totalContentH = #options > 0
                 and (#options * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2)
                 or (LIST_PAD * 2)
@@ -1233,7 +1302,6 @@ function BeeUI:CreateWindow(config)
                 end
             end)
 
-            -- FIX: сохраняем соединение для отключения при уничтожении
             local connInput = UserInputService.InputBegan:Connect(function(inp)
                 if isOpen and inp.UserInputType == Enum.UserInputType.MouseButton1 then
                     local mPos  = inp.Position
@@ -1253,9 +1321,7 @@ function BeeUI:CreateWindow(config)
                 end
             end)
             screenGui.AncestryChanged:Connect(function()
-                if not screenGui.Parent then
-                    connInput:Disconnect()
-                end
+                if not screenGui.Parent then connInput:Disconnect() end
             end)
 
             local dropObj = {}
@@ -1327,6 +1393,7 @@ function BeeUI:CreateWindow(config)
                 TextWrapped = true,
             })
             table.insert(self._window._fontTargets, lbl)
+            return lbl
         end
 
         -- Tab:AddSeparator
@@ -1370,7 +1437,6 @@ function BeeUI:CreateWindow(config)
         end
 
         -- Tab:AddColorPicker
-        -- FIX: вместо случайного цвета открывает простой HSV popup с ползунком
         function Tab:AddColorPicker(config)
             config = config or {}
             local color = config.Default or Color3.fromRGB(255, 100, 50)
@@ -1389,7 +1455,6 @@ function BeeUI:CreateWindow(config)
             Util.Corner(preview, 8)
             Util.Stroke(preview, theme.Border, 1, 0)
 
-            -- Popup пикер
             local pickerOpen = false
             local pickerFrame = Util.Frame(Tab._dropOverlay, {
                 Name             = "ColorPickerPopup_" .. (config.Label or ""),
@@ -1438,9 +1503,7 @@ function BeeUI:CreateWindow(config)
                 Util.Corner(knob, kS/2)
                 local dragging = false
                 track.InputBegan:Connect(function(inp)
-                    if inp.UserInputType == Enum.UserInputType.MouseButton1 then
-                        dragging = true
-                    end
+                    if inp.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
                 end)
                 local connC = UserInputService.InputChanged:Connect(function(inp)
                     if dragging and inp.UserInputType == Enum.UserInputType.MouseMovement then
@@ -1456,7 +1519,6 @@ function BeeUI:CreateWindow(config)
                 screenGui.AncestryChanged:Connect(function()
                     if not screenGui.Parent then connC:Disconnect(); connE:Disconnect() end
                 end)
-                return fill, knob
             end
 
             local function updateColor()
@@ -1502,7 +1564,6 @@ function BeeUI:CreateWindow(config)
                 end
             end)
 
-            -- Закрываем при клике вне пикера
             local connInput = UserInputService.InputBegan:Connect(function(inp)
                 if pickerOpen and inp.UserInputType == Enum.UserInputType.MouseButton1 then
                     local mPos = inp.Position
@@ -1559,7 +1620,6 @@ function BeeUI:CreateWindow(config)
                 kbBtn.Text       = "[...]"
                 kbBtn.TextColor3 = theme.Warning
             end)
-            -- FIX: сохраняем соединение
             local connKey = UserInputService.InputBegan:Connect(function(inp, gp)
                 if gp then return end
                 if listening and inp.UserInputType == Enum.UserInputType.Keyboard then
@@ -1610,7 +1670,7 @@ function BeeUI:CreateWindow(config)
 
         local tabBtn, tabLabel = createTabButton(settingsBtnHolder, tabName, {
             Name = tabName,
-            Icon = "lucide:settings",
+            Icon = "material:settings",
         }, false)
 
         local tabEntry = {
@@ -1622,10 +1682,8 @@ function BeeUI:CreateWindow(config)
         }
         Window._settingsTabEntry = tabEntry
 
-        -- FIX: Settings таб использует те же deactivateEntry / activateEntry
         tabBtn.MouseButton1Click:Connect(function()
             if Window._activeTab == tabEntry then return end
-            -- Деактивируем предыдущий (обычный таб или другой)
             deactivateEntry(Window._activeTab)
             Window._activeTab = tabEntry
             activateEntry(tabEntry)
@@ -1674,16 +1732,12 @@ function BeeUI:CreateWindow(config)
             table.insert(Window._fontTargets, sLbl)
         end
 
-        -- Font section
+        -- Шрифт
         settingsSection("Font")
 
-        local fontNames = {}
-        for _, f in ipairs(AvailableFonts) do
-            table.insert(fontNames, f.Name)
-        end
-
         do
-            local options  = fontNames
+            local options  = {}
+            for _, f in ipairs(AvailableFonts) do table.insert(options, f.Name) end
             local selected = "Ubuntu"
             local isOpen   = false
 
@@ -1716,23 +1770,20 @@ function BeeUI:CreateWindow(config)
             })
             table.insert(Window._fontTargets, dropLabel)
 
-            local arrowLbl = Util.Label(dropBtn, {
-                Text           = "v",
-                Font           = Enum.Font.GothamBold,
-                TextSize       = 11,
-                TextColor3     = theme.TextSecondary,
-                Size           = UDim2.new(0, 20, 1, 0),
-                Position       = UDim2.new(1, -24, 0, 0),
-                TextXAlignment = Enum.TextXAlignment.Center,
-            })
+            local arrowLbl = Instance.new("TextLabel")
+            arrowLbl.Text                   = getMaterialIcon("expand-more")
+            arrowLbl.FontFace               = MATERIAL_FONT
+            arrowLbl.TextSize               = 18
+            arrowLbl.TextColor3             = theme.TextSecondary
+            arrowLbl.Size                   = UDim2.new(0, 22, 1, 0)
+            arrowLbl.Position               = UDim2.new(1, -24, 0, 0)
+            arrowLbl.TextXAlignment         = Enum.TextXAlignment.Center
+            arrowLbl.BackgroundTransparency = 1
+            arrowLbl.Parent                 = dropBtn
 
-            local ITEM_H   = 30
-            local ITEM_PAD = 2
-            local LIST_PAD = 4
-            local MAX_VIS  = 5
-            local listW    = 140
-            local totalH   = #options * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2
-            local visH     = math.min(#options, MAX_VIS) * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2
+            local ITEM_H, ITEM_PAD, LIST_PAD, MAX_VIS, listW = 30, 2, 4, 5, 140
+            local totalH = #options * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2
+            local visH   = math.min(#options, MAX_VIS) * (ITEM_H + ITEM_PAD) - ITEM_PAD + LIST_PAD * 2
 
             local listOuter = Util.Frame(dropOverlay, {
                 Name             = "FontDropOuter",
@@ -1803,8 +1854,8 @@ function BeeUI:CreateWindow(config)
                     local btnPos  = dropBtn.AbsolutePosition
                     local btnSize = dropBtn.AbsoluteSize
                     local screenH = dropOverlay.AbsoluteSize.Y
-                    local spaceBelow = screenH - (btnPos.Y + btnSize.Y)
-                    local posY = (spaceBelow < visH + 8) and (btnPos.Y - visH - 4) or (btnPos.Y + btnSize.Y + 4)
+                    local posY = (screenH - (btnPos.Y + btnSize.Y) < visH + 8)
+                        and (btnPos.Y - visH - 4) or (btnPos.Y + btnSize.Y + 4)
                     listOuter.Position = UDim2.new(0, btnPos.X, 0, posY)
                     listOuter.Visible  = true
                     Util.TweenFast(arrowLbl, {Rotation = 180}, 0.15)
@@ -1817,10 +1868,8 @@ function BeeUI:CreateWindow(config)
             local connFont = UserInputService.InputBegan:Connect(function(inp)
                 if isOpen and inp.UserInputType == Enum.UserInputType.MouseButton1 then
                     local mPos = inp.Position
-                    local lPos  = listOuter.AbsolutePosition
-                    local lSize = listOuter.AbsoluteSize
-                    local bPos  = dropBtn.AbsolutePosition
-                    local bSize = dropBtn.AbsoluteSize
+                    local lPos, lSize = listOuter.AbsolutePosition, listOuter.AbsoluteSize
+                    local bPos, bSize = dropBtn.AbsolutePosition, dropBtn.AbsoluteSize
                     local inside = mPos.X >= lPos.X and mPos.X <= lPos.X + lSize.X and mPos.Y >= lPos.Y and mPos.Y <= lPos.Y + lSize.Y
                     local onBtn  = mPos.X >= bPos.X and mPos.X <= bPos.X + bSize.X and mPos.Y >= bPos.Y and mPos.Y <= bPos.Y + bSize.Y
                     if not inside and not onBtn then
@@ -1835,7 +1884,7 @@ function BeeUI:CreateWindow(config)
             end)
         end
 
-        -- Background Color section
+        -- Цвет фона
         settingsSection("Background Color")
 
         local swatchContainer = Util.Frame(scrollFrame, {
@@ -1870,7 +1919,6 @@ function BeeUI:CreateWindow(config)
             })
             Util.Corner(swatch, 5)
             Util.Stroke(swatch, theme.Border, 1, 0)
-
             swatch.MouseEnter:Connect(function()
                 Util.TweenFast(swatch, {Size = UDim2.new(0, 26, 0, 26)}, 0.1)
                 local stroke = swatch:FindFirstChildOfClass("UIStroke")
@@ -1881,13 +1929,12 @@ function BeeUI:CreateWindow(config)
                 local stroke = swatch:FindFirstChildOfClass("UIStroke")
                 if stroke then Util.TweenFast(stroke, {Color = theme.Border, Thickness = 1}, 0.1) end
             end)
-
             swatch.MouseButton1Click:Connect(function()
                 Util.TweenFast(windowFrame, {BackgroundColor3 = preset.Color}, 0.3)
-                local r, g, b  = preset.Color.R, preset.Color.G, preset.Color.B
-                local bright   = 0.299 * r + 0.587 * g + 0.114 * b
-                local off      = bright < 0.5 and 0.04 or -0.04
-                local newSurf  = Color3.new(math.clamp(r+off,0,1), math.clamp(g+off,0,1), math.clamp(b+off,0,1))
+                local r, g, b = preset.Color.R, preset.Color.G, preset.Color.B
+                local bright  = 0.299*r + 0.587*g + 0.114*b
+                local off     = bright < 0.5 and 0.04 or -0.04
+                local newSurf = Color3.new(math.clamp(r+off,0,1), math.clamp(g+off,0,1), math.clamp(b+off,0,1))
                 Util.TweenFast(tabSidebar, {BackgroundColor3 = newSurf}, 0.3)
                 Util.TweenFast(titleBar,   {BackgroundColor3 = newSurf}, 0.3)
             end)
@@ -1906,7 +1953,6 @@ function BeeUI:CreateWindow(config)
             table.insert(Window._fontTargets, lbl)
 
             local inputBox = Instance.new("TextBox")
-            inputBox.Name              = "RgbInput"
             inputBox.PlaceholderText   = "255, 180, 30"
             inputBox.Text              = ""
             inputBox.Font              = Window._currentFont
@@ -1946,10 +1992,9 @@ function BeeUI:CreateWindow(config)
             end)
         end
 
-        -- Transparency section
+        -- Прозрачность
         settingsSection("Transparency")
 
-        -- FIX: opacitySliderSet нужен чтобы FullyTransparent мог сбросить slider
         local opacitySliderSet = nil
 
         do
@@ -2016,7 +2061,6 @@ function BeeUI:CreateWindow(config)
                 Util.TweenFast(tabSidebar,  {BackgroundTransparency = alpha}, 0.15)
             end
 
-            -- FIX: публичный setter для opacity slider (используется FullyTransparent toggle)
             opacitySliderSet = function(snapVal)
                 value = math.clamp(snapVal, minVal, maxVal)
                 local nr = (value-minVal)/(maxVal-minVal)
@@ -2042,7 +2086,7 @@ function BeeUI:CreateWindow(config)
         do
             local value = false
             local row = settingsMakeRow("Fully Transparent", 48)
-            local lbl = Util.Label(row, {
+            Util.Label(row, {
                 Text       = "Fully Transparent Background",
                 Font       = Window._currentFont,
                 TextSize   = 14,
@@ -2050,8 +2094,6 @@ function BeeUI:CreateWindow(config)
                 Size       = UDim2.new(0, 220, 0, 20),
                 Position   = UDim2.new(0, 14, 0.5, -10),
             })
-            table.insert(Window._fontTargets, lbl)
-
             local trackW, trackH = 44, 24
             local track = Util.Frame(row, {
                 Size             = UDim2.new(0, trackW, 0, trackH),
@@ -2080,14 +2122,11 @@ function BeeUI:CreateWindow(config)
                 Util.TweenFast(windowFrame, {BackgroundTransparency = alpha}, 0.25)
                 Util.TweenFast(titleBar,    {BackgroundTransparency = alpha}, 0.25)
                 Util.TweenFast(tabSidebar,  {BackgroundTransparency = alpha}, 0.25)
-                -- FIX: при выключении сбрасываем opacity slider на 0
-                if not value and opacitySliderSet then
-                    opacitySliderSet(0)
-                end
+                if not value and opacitySliderSet then opacitySliderSet(0) end
             end)
         end
 
-        -- Accent Color section
+        -- Акцентный цвет
         settingsSection("Accent Color")
 
         local accentPresets = {
@@ -2136,12 +2175,6 @@ function BeeUI:CreateWindow(config)
             sw.MouseLeave:Connect(function() Util.TweenFast(sw, {Size = UDim2.new(0,24,0,24)}, 0.1) end)
             sw.MouseButton1Click:Connect(function()
                 Util.TweenFast(accentLine, {BackgroundColor3 = ap.Color}, 0.3)
-                -- FIX: перебираем только AccentLine потомков, не все
-                for _, desc in ipairs(windowFrame:GetDescendants()) do
-                    if desc.Name == "AccentLine" and desc:IsA("Frame") then
-                        pcall(function() desc.BackgroundColor3 = ap.Color end)
-                    end
-                end
             end)
         end
 
@@ -2171,8 +2204,8 @@ function BeeUI:Notify(config)
     local accentColor = typeColors[config.Type or "info"] or theme.Accent
     local duration    = config.Duration or 4
 
-    -- FIX: используем os.clock() вместо tick() для LayoutOrder (tick() устарел)
     self._notifyCount = self._notifyCount + 1
+
     local notify = Util.Frame(holder, {
         Name                   = "Notify_" .. tostring(self._notifyCount),
         Size                   = UDim2.new(1, 0, 0, 0),
@@ -2189,16 +2222,24 @@ function BeeUI:Notify(config)
         BackgroundColor3 = accentColor,
     })
 
-    local icons = { info = "i", success = "v", warning = "!", error = "X" }
-    Util.Label(notify, {
-        Text           = icons[config.Type or "info"] or "i",
-        Font           = Enum.Font.GothamBold,
-        TextSize       = 14,
-        TextColor3     = accentColor,
-        Size           = UDim2.new(0, 24, 0, 24),
-        Position       = UDim2.new(0, 14, 0, 14),
-        TextXAlignment = Enum.TextXAlignment.Center,
-    })
+    -- Иконка через Material Icons
+    local typeIcons = {
+        info    = "info",
+        success = "check",
+        warning = "alert-circle",
+        error   = "x",
+    }
+    local iconLbl = Instance.new("TextLabel")
+    iconLbl.Text                   = getMaterialIcon(typeIcons[config.Type or "info"] or "info")
+    iconLbl.FontFace               = MATERIAL_FONT
+    iconLbl.TextSize               = 20
+    iconLbl.TextColor3             = accentColor
+    iconLbl.Size                   = UDim2.new(0, 24, 0, 24)
+    iconLbl.Position               = UDim2.new(0, 14, 0, 14)
+    iconLbl.TextXAlignment         = Enum.TextXAlignment.Center
+    iconLbl.BackgroundTransparency = 1
+    iconLbl.Parent                 = notify
+
     Util.Label(notify, {
         Text       = config.Title or "Notification",
         Font       = Enum.Font.Ubuntu,
@@ -2242,23 +2283,15 @@ function BeeUI:Notify(config)
             BackgroundTransparency = 1,
         }, 0.35)
         task.delay(0.35, function()
-            if notify and notify.Parent then
-                notify:Destroy()
-            end
+            if notify and notify.Parent then notify:Destroy() end
         end)
     end)
 
     return notify
 end
 
--- ══════════════════════════════════════════
---  BeeUI:GetTheme()
--- ══════════════════════════════════════════
 function BeeUI:GetTheme()
     return self._activeTheme
 end
 
--- ══════════════════════════════════════════
---  RETURN LIBRARY
--- ══════════════════════════════════════════
 return BeeUI
