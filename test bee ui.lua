@@ -25,190 +25,44 @@ local Mouse       = LocalPlayer:GetMouse()
 --  MATERIAL ICONS — Unicode кодпоинты
 --  Шрифт: rbxasset://fonts/families/MaterialIcons.json
 -- ══════════════════════════════════════════
-local MaterialIcons = {
-    -- Навигация
-    ["home"]            = "\u{E88A}",
-    ["menu"]            = "\u{E5D2}",
-    ["arrow-back"]      = "\u{E5C4}",
-    ["arrow-forward"]   = "\u{E5C8}",
-    ["arrow-up"]        = "\u{E5D8}",
-    ["arrow-down"]      = "\u{E5DB}",
-    ["chevron-up"]      = "\u{E5CE}",
-    ["chevron-down"]    = "\u{E5CF}",
-    ["chevron-left"]    = "\u{E5CB}",
-    ["chevron-right"]   = "\u{E5CC}",
-    ["expand-more"]     = "\u{E5CF}",
-    ["close"]           = "\u{E5CD}",
-    ["check"]           = "\u{E876}",
-    ["more-horizontal"] = "\u{E5D3}",
-    ["more-vertical"]   = "\u{E5D4}",
-    -- Действия
-    ["search"]          = "\u{E8B6}",
-    ["settings"]        = "\u{E8B8}",
-    ["edit"]            = "\u{E3C9}",
-    ["delete"]          = "\u{E872}",
-    ["trash"]           = "\u{E872}",
-    ["add"]             = "\u{E145}",
-    ["plus"]            = "\u{E145}",
-    ["minus"]           = "\u{E15B}",
-    ["remove"]          = "\u{E15B}",
-    ["refresh-cw"]      = "\u{E5D5}",
-    ["rotate-ccw"]      = "\u{E8B4}",
-    ["copy"]            = "\u{E14D}",
-    ["download"]        = "\u{E2C4}",
-    ["upload"]          = "\u{E2C6}",
-    ["share"]           = "\u{E80D}",
-    ["send"]            = "\u{E163}",
-    ["filter"]          = "\u{EF4F}",
-    ["sort"]            = "\u{E164}",
-    ["x"]               = "\u{E5CD}",
-    -- Пользователи
-    ["user"]            = "\u{E7FD}",
-    ["users"]           = "\u{E7EF}",
-    ["person"]          = "\u{E7FD}",
-    ["account"]         = "\u{E853}",
-    ["group"]           = "\u{E7EF}",
-    -- Медиа
-    ["play"]            = "\u{E037}",
-    ["pause"]           = "\u{E034}",
-    ["stop-circle"]     = "\u{E047}",
-    ["volume-2"]        = "\u{E050}",
-    ["volume-x"]        = "\u{E04F}",
-    ["music"]           = "\u{E405}",
-    ["headphones"]      = "\u{E310}",
-    ["mic"]             = "\u{E029}",
-    ["camera"]          = "\u{E3AF}",
-    ["video"]           = "\u{E63A}",
-    ["image"]           = "\u{E3F4}",
-    -- Файлы
-    ["file"]            = "\u{E24D}",
-    ["folder"]          = "\u{E2C7}",
-    ["save"]            = "\u{E161}",
-    ["print"]           = "\u{E8AD}",
-    ["printer"]         = "\u{E8AD}",
-    ["attachment"]      = "\u{E226}",
-    -- Связь
-    ["mail"]            = "\u{E158}",
-    ["phone"]           = "\u{E0CD}",
-    ["message-circle"]  = "\u{E0CA}",
-    ["message-square"]  = "\u{E0C8}",
-    ["bell"]            = "\u{E7F4}",
-    ["notifications"]   = "\u{E7F4}",
-    -- Безопасность
-    ["lock"]            = "\u{E897}",
-    ["unlock"]          = "\u{E898}",
-    ["shield"]          = "\u{E9E0}",
-    ["shield-check"]    = "\u{E9E0}",
-    ["eye"]             = "\u{E8F4}",
-    ["eye-off"]         = "\u{E8F5}",
-    ["key"]             = "\u{E73C}",
-    -- Данные / Аналитика
-    ["bar-chart"]       = "\u{E26B}",
-    ["pie-chart"]       = "\u{E6C4}",
-    ["trending-up"]     = "\u{E8E5}",
-    ["trending-down"]   = "\u{E8E3}",
-    ["activity"]        = "\u{E8A4}",
-    ["database"]        = "\u{E1D0}",
-    -- Устройства
-    ["monitor"]         = "\u{E30A}",
-    ["smartphone"]      = "\u{E32C}",
-    ["tablet"]          = "\u{E32F}",
-    ["cpu"]             = "\u{E322}",
-    ["wifi"]            = "\u{E63E}",
-    ["battery"]         = "\u{E19C}",
-    ["bluetooth"]       = "\u{E1AA}",
-    ["usb"]             = "\u{E1E0}",
-    -- Интерфейс
-    ["layers"]          = "\u{E53B}",
-    ["layout"]          = "\u{E8F1}",
-    ["grid"]            = "\u{E3EC}",
-    ["list"]            = "\u{E896}",
-    ["sliders"]         = "\u{E9F2}",
-    ["terminal"]        = "\u{EB8E}",
-    ["code"]            = "\u{E86F}",
-    ["link"]            = "\u{E157}",
-    ["external-link"]   = "\u{E895}",
-    ["maximize"]        = "\u{E931}",
-    ["minimize"]        = "\u{E931}",
-    -- Погода / Природа
-    ["sun"]             = "\u{E430}",
-    ["moon"]            = "\u{E638}",
-    ["cloud"]           = "\u{E2BD}",
-    ["wind"]            = "\u{EFD8}",
-    ["flame"]           = "\u{E8EF}",
-    ["zap"]             = "\u{E315}",
-    -- Локация
-    ["map-pin"]         = "\u{E55F}",
-    ["map"]             = "\u{E55B}",
-    ["compass"]         = "\u{E87A}",
-    ["globe"]           = "\u{E80B}",
-    ["flag"]            = "\u{E153}",
-    -- Время
-    ["clock"]           = "\u{E8B5}",
-    ["calendar"]        = "\u{E935}",
-    ["timer"]           = "\u{E425}",
-    ["alarm"]           = "\u{E855}",
-    -- Коммерция
-    ["dollar-sign"]     = "\u{E227}",
-    ["credit-card"]     = "\u{E870}",
-    ["shopping-cart"]   = "\u{E8CC}",
-    ["shopping-bag"]    = "\u{E8CB}",
-    ["gift"]            = "\u{E8F6}",
-    ["tag"]             = "\u{E867}",
-    -- Игры / Специальные
-    ["gamepad"]         = "\u{E30F}",
-    ["games"]           = "\u{E021}",
-    ["sports"]          = "\u{EA30}",
-    ["casino"]          = "\u{EB40}",
-    ["sports-esports"]  = "\u{EA38}",
-    ["sword"]           = "\u{E875}",  -- используем 'build' как замену
-    ["tool"]            = "\u{E869}",
-    ["wrench"]          = "\u{E869}",
-    ["target"]          = "\u{E87C}",
-    ["crosshair"]       = "\u{E879}",
-    ["trophy"]          = "\u{EAC4}",
-    ["star"]            = "\u{E838}",
-    ["star-border"]     = "\u{E83A}",
-    ["heart"]           = "\u{E87D}",
-    ["favorite"]        = "\u{E87D}",
-    ["bookmark"]        = "\u{E866}",
-    ["thumb-up"]        = "\u{E8DC}",
-    -- Разное
-    ["power"]           = "\u{E8AC}",
-    ["log-in"]          = "\u{E9BB}",
-    ["log-out"]         = "\u{E9BA}",
-    ["info"]            = "\u{E88E}",
-    ["alert-circle"]    = "\u{E002}",
-    ["help"]            = "\u{E887}",
-    ["package"]         = "\u{E179}",
-    ["box"]             = "\u{E179}",
-    ["at-sign"]         = "\u{E0BE}",
-    ["hash"]            = "\u{E9C3}",
-    ["percent"]         = "\u{EB58}",
-    ["palette"]         = "\u{E40A}",
-    ["format-font"]     = "\u{E165}",
-    ["opacity"]         = "\u{E91C}",
-    ["color-lens"]      = "\u{E43B}",
-    ["brush"]           = "\u{E3AE}",
+local LucideFallback = {
+    ["home"]="⌂", ["settings"]="⚙", ["menu"]="≡", ["search"]="🔍",
+    ["bell"]="🔔", ["user"]="👤", ["users"]="👥", ["star"]="★",
+    ["heart"]="♥", ["bookmark"]="🔖", ["plus"]="+", ["minus"]="−",
+    ["x"]="✕", ["check"]="✓", ["edit"]="✏", ["trash"]="🗑",
+    ["copy"]="⧉", ["download"]="↓", ["upload"]="↑", ["refresh-cw"]="↻",
+    ["shield"]="🛡", ["lock"]="🔒", ["unlock"]="🔓", ["eye"]="👁",
+    ["alert-circle"]="⚠", ["info"]="ℹ", ["zap"]="⚡", ["flame"]="🔥",
+    ["play"]="▶", ["pause"]="⏸", ["volume-2"]="🔊", ["volume-x"]="🔇",
+    ["folder"]="📁", ["file"]="📄", ["code"]="</>", ["globe"]="🌐",
+    ["map-pin"]="📍", ["clock"]="🕐", ["calendar"]="📅", ["wifi"]="📶",
+    ["sun"]="☀", ["moon"]="☽", ["cloud"]="☁", ["tag"]="🏷",
+    ["hash"]="#", ["at-sign"]="@", ["tool"]="🔧", ["wrench"]="🔧",
+    ["sword"]="⚔", ["package"]="📦", ["gift"]="🎁", ["trophy"]="🏆",
+    ["target"]="🎯", ["crosshair"]="✛", ["compass"]="🧭", ["flag"]="🚩",
+    ["send"]="➤", ["mail"]="✉", ["message-circle"]="💬", ["phone"]="📞",
+    ["video"]="📹", ["camera"]="📷", ["mic"]="🎤", ["music"]="🎵",
+    ["headphones"]="🎧", ["gamepad"]="🎮", ["terminal"]="⌨", ["monitor"]="🖥",
+    ["smartphone"]="📱", ["key"]="🔑", ["link"]="🔗", ["power"]="⏻",
+    ["bar-chart"]="📊", ["trending-up"]="📈", ["trending-down"]="📉",
+    ["dollar-sign"]="$", ["credit-card"]="💳", ["shopping-cart"]="🛒",
+    ["chevron-up"]="⌃", ["chevron-down"]="⌄", ["chevron-left"]="‹",
+    ["chevron-right"]="›", ["expand-more"]="⌄", ["more-vertical"]="⋮",
+    ["arrow-up"]="↑", ["arrow-down"]="↓", ["log-in"]="→", ["log-out"]="←",
+    ["activity"]="📈", ["layers"]="⊞", ["list"]="≣", ["grid"]="⊞",
+    ["shield-check"]="🛡", ["eye-off"]="🚫", ["stop-circle"]="⏹",
+    ["pie-chart"]="🥧", ["database"]="🗃", ["battery"]="🔋",
+    ["wind"]="💨", ["external-link"]="↗", ["maximize"]="⛶",
 }
 
--- Шрифт Material Icons
-local MATERIAL_FONT = Font.new(
-    "rbxasset://fonts/families/MaterialIcons.json",
-    Enum.FontWeight.Regular,
-    Enum.FontStyle.Normal
-)
-
-local function getMaterialIcon(iconName)
-    return MaterialIcons[iconName] or MaterialIcons["help"] or "\u{E887}"
+local function getLucideChar(iconName)
+    return LucideFallback[iconName] or "•"
 end
 
 local function parseIcon(iconStr)
     if not iconStr then return nil end
     if iconStr:sub(1, 7) == "lucide:" then
-        return { type = "material", name = iconStr:sub(8) }
-    elseif iconStr:sub(1, 9) == "material:" then
-        return { type = "material", name = iconStr:sub(10) }
+        return { type = "lucide", name = iconStr:sub(8) }
     elseif iconStr:sub(1, 13) == "rbxassetid://" then
         return { type = "asset", id = iconStr }
     end
@@ -826,20 +680,21 @@ function BeeUI:CreateWindow(config)
             local iconInfo = parseIcon(tabConfig.Icon)
             if iconInfo.type == "material" then
                 -- Настоящая иконка через Material Icons шрифт
-                local iconChar = getMaterialIcon(iconInfo.name)
-                local iconLbl = Instance.new("TextLabel")
-                iconLbl.Name                   = "TabIcon"
-                iconLbl.Text                   = iconChar
-                iconLbl.FontFace               = MATERIAL_FONT
-                iconLbl.TextSize               = 18
-                iconLbl.TextColor3             = isFirst and Color3.fromRGB(255,255,255) or theme.TabText
-                iconLbl.Size                   = UDim2.new(0, 22, 0, 22)
-                iconLbl.Position               = UDim2.new(0, 7, 0.5, -11)
-                iconLbl.TextXAlignment         = Enum.TextXAlignment.Center
-                iconLbl.BackgroundTransparency = 1
-                iconLbl.ZIndex                 = 2
-                iconLbl.Parent                 = tabBtn
-                textOffsetX = 31
+                if iconInfo.type == "lucide" then
+    local iconChar = getLucideChar(iconInfo.name)
+    Util.Label(tabBtn, {
+        Text                   = iconChar,
+        Font                   = Enum.Font.Ubuntu,
+        TextSize               = 16,
+        TextColor3             = isFirst and Color3.fromRGB(255,255,255) or theme.TabText,
+        Size                   = UDim2.new(0, 20, 0, 20),
+        Position               = UDim2.new(0, 8, 0.5, -10),
+        TextXAlignment         = Enum.TextXAlignment.Center,
+        BackgroundTransparency = 1,
+        ZIndex                 = 2,
+    })
+    tabBtn:SetAttribute("LucideIcon", true)
+    textOffsetX = 30
             elseif iconInfo.type == "asset" then
                 Util.Image(tabBtn, {
                     Name     = "TabIcon",
@@ -1196,16 +1051,15 @@ function BeeUI:CreateWindow(config)
             table.insert(self._window._fontTargets, dropLabel)
 
             -- Стрелка через Material Icons
-            local arrowLabel = Instance.new("TextLabel")
-            arrowLabel.Text                   = getMaterialIcon("expand-more")
-            arrowLabel.FontFace               = MATERIAL_FONT
-            arrowLabel.TextSize               = 18
-            arrowLabel.TextColor3             = theme.TextSecondary
-            arrowLabel.Size                   = UDim2.new(0, 22, 1, 0)
-            arrowLabel.Position               = UDim2.new(1, -24, 0, 0)
-            arrowLabel.TextXAlignment         = Enum.TextXAlignment.Center
-            arrowLabel.BackgroundTransparency = 1
-            arrowLabel.Parent                 = dropBtn
+            -- Везде где есть arrowLabel с MATERIAL_FONT, замени на:
+local arrowLabel = Util.Label(dropBtn, {
+    Text           = "▾",
+    TextSize       = 13,
+    TextColor3     = theme.TextSecondary,
+    Size           = UDim2.new(0, 20, 1, 0),
+    Position       = UDim2.new(1, -24, 0, 0),
+    TextXAlignment = Enum.TextXAlignment.Center,
+})
 
             local ITEM_H   = 30
             local ITEM_PAD = 2
@@ -2240,23 +2094,28 @@ function BeeUI:Notify(config)
     iconLbl.BackgroundTransparency = 1
     iconLbl.Parent                 = notify
 
-    Util.Label(notify, {
-        Text       = config.Title or "Notification",
-        Font       = Enum.Font.Ubuntu,
-        TextSize   = 14,
-        TextColor3 = theme.TextPrimary,
-        Size       = UDim2.new(1, -60, 0, 18),
-        Position   = UDim2.new(0, 46, 0, 12),
-    })
-    Util.Label(notify, {
-        Text        = config.Message or "",
-        Font        = Enum.Font.Ubuntu,
-        TextSize    = 12,
-        TextColor3  = theme.TextSecondary,
-        Size        = UDim2.new(1, -60, 0, 36),
-        Position    = UDim2.new(0, 46, 0, 30),
-        TextWrapped = true,
-    })
+    local icons = { info = "ℹ", success = "✓", warning = "⚠", error = "✕" }
+Util.Label(notify, {
+    Text           = icons[config.Type or "info"] or "ℹ",
+    Font           = Enum.Font.Ubuntu,
+    TextSize       = 16,
+    TextColor3     = accentColor,
+    Size           = UDim2.new(0, 24, 0, 24),
+    Position       = UDim2.new(0, 14, 0, 14),
+    TextXAlignment = Enum.TextXAlignment.Center,
+    BackgroundTransparency = 1,
+})
+    local icons = { info = "ℹ", success = "✓", warning = "⚠", error = "✕" }
+Util.Label(notify, {
+    Text           = icons[config.Type or "info"] or "ℹ",
+    Font           = Enum.Font.Ubuntu,
+    TextSize       = 16,
+    TextColor3     = accentColor,
+    Size           = UDim2.new(0, 24, 0, 24),
+    Position       = UDim2.new(0, 14, 0, 14),
+    TextXAlignment = Enum.TextXAlignment.Center,
+    BackgroundTransparency = 1,
+})
 
     local progressTrack = Util.Frame(notify, {
         Size             = UDim2.new(1, -8, 0, 2),
