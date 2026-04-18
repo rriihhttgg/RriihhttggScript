@@ -1,6 +1,6 @@
 --[[
 ╔═══════════════════════════════════════════════════════════════════╗
-║                         BeeUI v2.0                                ║
+║                         BeeUI v2.0a                                ║
 ║                   Roblox GUI Library by Me                        ║
 ║                                                                   ║
 ║  CHANGES v2.0:                                                    ║
@@ -466,25 +466,15 @@ function BeeUI:CreateWindow(config)
     -- точно так же как LeftControl, с плавной анимацией
     local minimized=false
     btnMin.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        if minimized then
-            -- Прячем — такая же логика как при нажатии LeftControl
-            Util.Tween(windowFrame, {Time=0.25, Ease=Enum.EasingStyle.Sine}, {BackgroundTransparency=1})
-            task.delay(0.2, function()
-                if minimized then
-                    windowFrame.Visible = false
-                    windowFrame.BackgroundTransparency = 0
-                end
-            end)
-            _guiVisible = false
-        else
-            -- Показываем
-            windowFrame.Visible = true
-            windowFrame.BackgroundTransparency = 1
-            Util.Tween(windowFrame, {Time=0.3, Ease=Enum.EasingStyle.Back, Dir=Enum.EasingDirection.Out}, {BackgroundTransparency=0})
-            _guiVisible = true
-        end
-    end)
+    minimized = not minimized
+    if minimized then
+        windowFrame.Visible = false
+        _guiVisible = false
+    else
+        windowFrame.Visible = true
+        _guiVisible = true
+    end
+end)
 
     btnClose.MouseButton1Click:Connect(function()
         Util.Tween(windowFrame,{Time=0.3,Ease=Enum.EasingStyle.Sine},{Size=UDim2.new(winSize.X.Scale,winSize.X.Offset,0,0),BackgroundTransparency=1})
