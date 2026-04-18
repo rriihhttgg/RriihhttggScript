@@ -1,9 +1,9 @@
 --[[
 ╔═══════════════════════════════════════════════════════════════════╗
-║                         BeeUI v2.0b                               ║
+║                         BeeUI v2.0с                               ║
 ║                   Roblox GUI Library by Me                        ║
 ║                                                                   ║
-║  CHANGES v2.0:                                                    ║
+║  CHANGES v2.0с:                                                    ║
 ║  • Minimize button (-) now hides/shows entire window like         ║
 ║    the LeftControl keybind (windowFrame.Visible toggle)           ║
 ║  • Settings text labels now fully respond to ApplyTextColor       ║
@@ -12,6 +12,8 @@
 ║  • New Tab:AddParagraph(config) — auto-sizing text block          ║
 ║  • Fixed slider dragging: knob now properly captures drag start   ║
 ║    and drag works from position zero                              ║
+║  • Background Image: fixed ZIndex and currentImgTransparency      ║
+║    closure order so image is actually visible                     ║
 ╚═══════════════════════════════════════════════════════════════════╝
 ]]
 
@@ -278,18 +280,14 @@ function Util.MakeDraggable(frame,handle)
     end)
 end
 
--- FIX: HoverEffectLive теперь принимает функцию isActive для проверки
--- является ли кнопка активной в данный момент
 function Util.HoverEffectLiveTab(btn, isActiveFn, normalColorFn, hoverColorFn, speed)
     speed = speed or 0.22
     btn.MouseEnter:Connect(function()
-        -- Подсвечиваем hover только если вкладка НЕ активна
         if not isActiveFn() then
             Util.TweenFast(btn, {BackgroundColor3 = hoverColorFn()}, speed)
         end
     end)
     btn.MouseLeave:Connect(function()
-        -- При уходе возвращаем правильный цвет в зависимости от состояния
         if isActiveFn() then
             Util.TweenFast(btn, {BackgroundColor3 = normalColorFn("active")}, speed)
         else
@@ -371,38 +369,43 @@ function BeeUI:CreateWindow(config)
     local winSize=config.Size or UDim2.new(0,580,0,460)
     local winPos=config.Position or UDim2.new(0.5,-290,0.5,-230)
 
-    -- ── FIX v2.0: Убираем ClipsDescendants с windowFrame,
-    -- чтобы все 4 угла были правильно скруглены.
-    -- Вместо этого добавляем отдельный контейнер с ClipsDescendants
-    -- внутри, чтобы контент не выходил за пределы.
     local windowFrame=Util.Frame(screenGui,{
         Name="BeeWindow",
         Size=winSize,
         Position=winPos,
         BackgroundColor3=theme.Background,
-        -- ClipsDescendants УБРАН — он срезал верхние скруглённые углы
-        -- потому что дочерние Frame (titleBar, accentLine) рисовались
-        -- поверх скруглённых краёв windowFrame
     })
     Util.Corner(windowFrame,20)
     Util.Stroke(windowFrame,theme.Border,1,0)
 
-    -- Внутренний clipper — весь видимый контент идёт сюда
     local innerClip=Util.Frame(windowFrame,{
         Name="InnerClip",
         Size=UDim2.new(1,0,1,0),
         BackgroundTransparency=1,
         ClipsDescendants=true,
     })
-    -- UICorner на innerClip тоже нужен, иначе контент вылезет за скруглённые углы
     Util.Corner(innerClip,20)
 
-    local accentLine=Util.Frame(innerClip,{Name="AccentLine",Size=UDim2.new(1,0,0,2),Position=UDim2.new(0,0,0,0),BackgroundColor3=theme.Accent})
+    -- ── FIX: bgImage создаётся ПЕРВЫМ внутри innerClip, чтобы ZIndex
+    -- был ниже всех остальных дочерних элементов.
+    -- ZIndex=1, всё остальное по умолчанию рисуется выше.
+    local bgImage = Instance.new("ImageLabel")
+    bgImage.Name = "BgImage"
+    bgImage.Size = UDim2.new(1, 0, 1, 0)
+    bgImage.Position = UDim2.new(0, 0, 0, 0)
+    bgImage.BackgroundTransparency = 1
+    bgImage.ImageTransparency = 1  -- скрыта по умолчанию
+    bgImage.ScaleType = Enum.ScaleType.Crop
+    bgImage.ZIndex = 1
+    bgImage.Parent = innerClip
+    Util.Corner(bgImage, 20)
 
-    local titleBar=Util.Frame(innerClip,{Name="TitleBar",Size=UDim2.new(1,0,0,52),Position=UDim2.new(0,0,0,2),BackgroundColor3=theme.TitleBarBg})
+    local accentLine=Util.Frame(innerClip,{Name="AccentLine",Size=UDim2.new(1,0,0,2),Position=UDim2.new(0,0,0,0),BackgroundColor3=theme.Accent,ZIndex=2})
+
+    local titleBar=Util.Frame(innerClip,{Name="TitleBar",Size=UDim2.new(1,0,0,52),Position=UDim2.new(0,0,0,2),BackgroundColor3=theme.TitleBarBg,ZIndex=2})
     Util.Padding(titleBar,0,14,0,14)
 
-    local titleDivider=Util.Frame(innerClip,{Name="TitleDivider",Size=UDim2.new(1,0,0,1),Position=UDim2.new(0,0,0,54),BackgroundColor3=theme.Border})
+    local titleDivider=Util.Frame(innerClip,{Name="TitleDivider",Size=UDim2.new(1,0,0,1),Position=UDim2.new(0,0,0,54),BackgroundColor3=theme.Border,ZIndex=2})
 
     local logoOffset=0
     if config.Logo then
@@ -422,7 +425,6 @@ function BeeUI:CreateWindow(config)
     Util.HoverEffect(btnMin,theme.MinBtn,Color3.fromRGB(220,160,10))
     Util.ClickEffect(btnClose);Util.ClickEffect(btnMin)
 
-    -- ── Visibility key — объявляем ДО bodyFrame
     local _visKey     = Enum.KeyCode.LeftControl
     local _guiVisible = true
     local _visConn    = nil
@@ -439,7 +441,7 @@ function BeeUI:CreateWindow(config)
     end
     rebindVisKey(_visKey)
 
-    local bodyFrame=Util.Frame(innerClip,{Name="Body",Size=UDim2.new(1,0,1,-55),Position=UDim2.new(0,0,0,55),BackgroundTransparency=1})
+    local bodyFrame=Util.Frame(innerClip,{Name="Body",Size=UDim2.new(1,0,1,-55),Position=UDim2.new(0,0,0,55),BackgroundTransparency=1,ZIndex=2})
     local tabSidebar=Util.Frame(bodyFrame,{Name="TabSidebar",Size=UDim2.new(0,140,1,0),BackgroundColor3=theme.Surface,ClipsDescendants=true})
 
     local tabTopScroll=Instance.new("ScrollingFrame")
@@ -462,19 +464,17 @@ function BeeUI:CreateWindow(config)
     windowFrame.BackgroundTransparency=1
     Util.Tween(windowFrame,{Time=0.5,Ease=Enum.EasingStyle.Back,Dir=Enum.EasingDirection.Out},{Size=winSize,BackgroundTransparency=0})
 
-    -- ── FIX v2.0: Minimize теперь скрывает/показывает весь windowFrame
-    -- точно так же как LeftControl, с плавной анимацией
     local minimized=false
     btnMin.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    if minimized then
-        windowFrame.Visible = false
-        _guiVisible = false
-    else
-        windowFrame.Visible = true
-        _guiVisible = true
-    end
-end)
+        minimized = not minimized
+        if minimized then
+            windowFrame.Visible = false
+            _guiVisible = false
+        else
+            windowFrame.Visible = true
+            _guiVisible = true
+        end
+    end)
 
     btnClose.MouseButton1Click:Connect(function()
         Util.Tween(windowFrame,{Time=0.3,Ease=Enum.EasingStyle.Sine},{Size=UDim2.new(winSize.X.Scale,winSize.X.Offset,0,0),BackgroundTransparency=1})
@@ -494,17 +494,6 @@ end)
     Window._shadowColor=Color3.fromRGB(0,0,0)
     Window._shadowTransparency=0.5
 
-    local bgImage = Instance.new("ImageLabel")
-bgImage.Name = "BgImage"
-bgImage.Size = UDim2.new(1, 0, 1, 0)
-bgImage.Position = UDim2.new(0, 0, 0, 0)
-bgImage.BackgroundTransparency = 1
-bgImage.ImageTransparency = 1  -- по умолчанию скрыт
-bgImage.ScaleType = Enum.ScaleType.Crop
-bgImage.ZIndex = 0
-bgImage.Parent = innerClip
-Util.Corner(bgImage, 20)
-
     local function regSurface(obj,role) table.insert(Window._surfaceElements,{obj=obj,role=role});return obj end
     local function regText(obj,role)    table.insert(Window._textElements,{obj=obj,role=role});return obj end
 
@@ -515,16 +504,17 @@ Util.Corner(bgImage, 20)
     regText(titleLabel,"TitleText"); regText(subTitleLabel,"SubTitleText")
     table.insert(Window._fontTargets,titleLabel); table.insert(Window._fontTargets,subTitleLabel)
 
+    -- ── SetBackgroundImage: управляет bgImage
     function Window:SetBackgroundImage(assetId, transparency)
-    transparency = transparency or 0
-    if assetId and assetId ~= "" then
-        bgImage.Image = "rbxassetid://" .. tostring(assetId)
-        bgImage.ImageTransparency = transparency
-    else
-        bgImage.ImageTransparency = 1
-        bgImage.Image = ""
+        transparency = transparency or 0
+        if assetId and assetId ~= "" then
+            bgImage.Image = "rbxassetid://" .. tostring(assetId)
+            bgImage.ImageTransparency = transparency
+        else
+            bgImage.ImageTransparency = 1
+            bgImage.Image = ""
+        end
     end
-end
 
     local function applyShadowToObj(obj)
         pcall(function()
@@ -575,7 +565,6 @@ end
         local secondary=Color3.new(math.clamp(r*0.65+0.1,0,1),math.clamp(g*0.65+0.1,0,1),math.clamp(b*0.65+0.1,0,1))
         local muted=Color3.new(math.clamp(r*0.4+0.15,0,1),math.clamp(g*0.4+0.15,0,1),math.clamp(b*0.4+0.15,0,1))
         self._theme.TextPrimary=primaryColor; self._theme.TextSecondary=secondary; self._theme.TextMuted=muted
-        -- FIX: Обновляем TabText тоже, чтобы неактивные вкладки в Settings меняли цвет
         self._theme.TabText=secondary
         for _,entry in ipairs(self._textElements) do
             if entry.obj and entry.obj.Parent then
@@ -588,9 +577,6 @@ end
         end
     end
 
-    -- ── FIX v2.0: createTabButton переписан.
-    -- HoverEffect теперь корректно проверяет активна ли вкладка,
-    -- и не застревает на hover-цвете когда убираешь курсор.
     local function createTabButton(parent, tabName, tabConfig, isFirst)
         local tabBtn=Util.Button(parent,{Name=tabName.."_Btn",Text="",Size=UDim2.new(1,0,0,36),
             BackgroundColor3=isFirst and theme.TabActive or theme.TabInactive})
@@ -623,8 +609,6 @@ end
         table.insert(Window._fontTargets,tabLabel)
         regText(tabLabel, isFirst and "primary" or "tab")
 
-        -- FIX: Используем новый HoverEffectLiveTab с isActiveFn
-        -- Это предотвращает застревание hover-цвета на активной/первой вкладке
         local function isActiveTab()
             return (Window._activeTab ~= nil and Window._activeTab.Button == tabBtn)
                 or (Window._settingsTabEntry ~= nil and Window._activeTab == Window._settingsTabEntry and Window._settingsTabEntry.Button == tabBtn)
@@ -807,12 +791,6 @@ end
             return obj
         end
 
-        -- ── FIX v2.0: Слайдер — полностью переписан механизм драга.
-        -- Проблема была в том, что:
-        -- 1. InputBegan вешался только на track, но knob перехватывал события
-        -- 2. При позиции 0 fill.Size.X = 0, knob был на X=−8, частично за пределами track
-        -- Решение: вешаем InputBegan и на knob тоже, используем единый флаг dragging
-        -- и обновляем позицию через глобальный InputChanged
         function Tab:AddSlider(config)
             config=config or {}
             local minVal=config.Min or 0;local maxVal=config.Max or 100;local step=config.Step or 1;local suffix=config.Suffix or ""
@@ -840,7 +818,6 @@ end
             local dragging=false
 
             local function upd(screenX)
-                -- Вычисляем позицию относительно track
                 local trackAbsPos = track.AbsolutePosition
                 local trackAbsSize = track.AbsoluteSize
                 local ratio = math.clamp((screenX - trackAbsPos.X) / trackAbsSize.X, 0, 1)
@@ -856,7 +833,6 @@ end
                 end
             end
 
-            -- Начало перетаскивания — и с track, и с knob
             local function startDrag(inp)
                 if inp.UserInputType == Enum.UserInputType.MouseButton1 then
                     dragging = true
@@ -866,7 +842,6 @@ end
             track.InputBegan:Connect(startDrag)
             knob.InputBegan:Connect(startDrag)
 
-            -- Глобальное отслеживание движения и отпускания
             UserInputService.InputChanged:Connect(function(inp)
                 if dragging and inp.UserInputType == Enum.UserInputType.MouseMovement then
                     upd(inp.Position.X)
@@ -929,17 +904,14 @@ end
             table.insert(self._window._fontTargets,lbl); regText(lbl,"secondary"); applyShadowToObj(lbl)
         end
 
-        -- ── NEW v2.0: AddParagraph — блок текста с авторазмером
-        -- Высота контейнера подстраивается под количество текста автоматически.
         function Tab:AddParagraph(config)
             config = config or {}
             local text = config.Text or ""
             local title = config.Title
 
-            -- Внешний контейнер с авторазмером по высоте
             local container = Util.Frame(scrollFrame, {
                 Name = "Paragraph_"..tostring(text):sub(1,20),
-                Size = UDim2.new(1, 0, 0, 0),          -- высота = 0, растянется
+                Size = UDim2.new(1, 0, 0, 0),
                 AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundColor3 = theme.SurfaceElevated,
             })
@@ -956,9 +928,6 @@ end
             layout.SortOrder = Enum.SortOrder.LayoutOrder
             layout.Parent = container
 
-            local yOffset = 0
-
-            -- Заголовок (опционально)
             if title and title ~= "" then
                 local titleLbl = Util.Label(container, {
                     Text = title,
@@ -973,10 +942,8 @@ end
                 table.insert(self._window._fontTargets, titleLbl)
                 regText(titleLbl, "primary")
                 applyShadowToObj(titleLbl)
-                yOffset = 1
             end
 
-            -- Основной текст
             local textLbl = Util.Label(container, {
                 Text = text,
                 Font = self._window._currentFont,
@@ -992,16 +959,12 @@ end
             applyShadowToObj(textLbl)
 
             local obj = {}
-            function obj:SetText(newText)
-                textLbl.Text = newText
-            end
+            function obj:SetText(newText) textLbl.Text = newText end
             function obj:SetTitle(newTitle)
                 if title and title ~= "" then
-                    -- Находим title label по LayoutOrder
                     for _, child in ipairs(container:GetChildren()) do
                         if child:IsA("TextLabel") and child.LayoutOrder == 1 then
-                            child.Text = newTitle
-                            break
+                            child.Text = newTitle; break
                         end
                     end
                 end
@@ -1109,8 +1072,6 @@ end
             local sLbl=Util.Label(badge,{Text=title or "Section",Font=Window._currentFont,TextSize=11,TextColor3=theme.Accent,Size=UDim2.new(0,0,1,0),AutomaticSize=Enum.AutomaticSize.X})
             table.insert(Window._fontTargets,sLbl)
         end
-        -- FIX: sLabel теперь регистрирует через regText — это значит ApplyTextColor
-        -- будет корректно менять цвет текста в Settings так же как и в обычных вкладках
         local function sLabel(parent,text,x,w,textRole)
             local lbl=Util.Label(parent,{Text=text,Font=Window._currentFont,TextSize=14,TextColor3=theme.TextPrimary,Size=UDim2.new(0,w or 200,0,20),Position=UDim2.new(0,x or 14,0.5,-10)})
             table.insert(Window._fontTargets,lbl)
@@ -1355,128 +1316,134 @@ end
                 local r,g,b=ib.Text:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
                 if r and g and b then Window:ApplyBackground(Color3.fromRGB(tonumber(r),tonumber(g),tonumber(b))) end
             end)
-            sSection("Background Image")
-do
-    -- Поле ввода Asset ID
-    local row = sMakeRow("Asset ID", 48)
-    sLabel(row, "Asset ID", 14, 160, "primary")
-    
-    local idBox = Instance.new("TextBox")
-    idBox.PlaceholderText = "123456789"
-    idBox.Text = ""
-    idBox.Font = Window._currentFont
-    idBox.TextSize = 13
-    idBox.TextColor3 = theme.TextPrimary
-    idBox.PlaceholderColor3 = theme.TextMuted
-    idBox.BackgroundColor3 = theme.ControlBg
-    idBox.BorderSizePixel = 0
-    idBox.ClearTextOnFocus = false
-    idBox.Size = UDim2.new(0, 150, 0, 30)
-    idBox.Position = UDim2.new(1, -162, 0.5, -15)
-    idBox.TextXAlignment = Enum.TextXAlignment.Left
-    idBox.Parent = row
-    Util.Corner(idBox, 8)
-    Util.Stroke(idBox, theme.ControlBorder, 1, 0)
-    Util.Padding(idBox, 0, 0, 0, 10)
-    table.insert(Window._fontTargets, idBox)
-    regSurface(idBox, "ControlBg")
-    regText(idBox, "primary")
-    idBox.Focused:Connect(function()
-        Util.TweenFast(idBox:FindFirstChildOfClass("UIStroke"), {Color = theme.Accent}, 0.15)
-    end)
-    idBox.FocusLost:Connect(function()
-        Util.TweenFast(idBox:FindFirstChildOfClass("UIStroke"), {Color = theme.ControlBorder}, 0.15)
-        local id = idBox.Text:match("%d+")
-        if id then
-            Window:SetBackgroundImage(id, currentImgTransparency)
         end
-    end)
 
-    -- Кнопка сброса
-    local clearRow = sMakeRow("Clear Image", 48)
-    sLabel(clearRow, "Remove Image", 14, 200, "primary")
-    local clearBtn = Util.Button(clearRow, {
-        Text = "Clear",
-        Font = Window._currentFont,
-        TextSize = 13,
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        BackgroundColor3 = theme.Error,
-        Size = UDim2.new(0, 80, 0, 30),
-        Position = UDim2.new(1, -92, 0.5, -15),
-    })
-    Util.Corner(clearBtn, 8)
-    Util.HoverEffect(clearBtn, theme.Error, Color3.fromRGB(200, 30, 30))
-    clearBtn.MouseButton1Click:Connect(function()
-        Window:SetBackgroundImage("", 1)
-        idBox.Text = ""
-    end)
+        -- ── Background Image ───────────────────────────────────────────
+        sSection("Background Image")
+        do
+            -- !! FIX: currentImgTransparency объявляется ПЕРВЫМ,
+            -- до всех замыканий которые его используют
+            local currentImgTransparency = 0
 
-    -- Слайдер прозрачности картинки
-    local currentImgTransparency = 0
-    local minV, maxV, stepV = 0, 90, 5
-    local opRow = sMakeRow("Image Opacity", 62)
-    local opNameLbl = Util.Label(opRow, {
-        Text = "Image Opacity",
-        Font = Window._currentFont, TextSize = 14,
-        TextColor3 = theme.TextPrimary,
-        Size = UDim2.new(0, 160, 0, 18),
-        Position = UDim2.new(0, 14, 0, 8),
-    })
-    table.insert(Window._fontTargets, opNameLbl)
-    regText(opNameLbl, "primary")
-    local opValLbl = Util.Label(opRow, {
-        Text = "100%",
-        Font = Window._currentFont, TextSize = 13,
-        TextColor3 = theme.Accent,
-        Size = UDim2.new(0, 80, 0, 18),
-        Position = UDim2.new(1, -94, 0, 8),
-        TextXAlignment = Enum.TextXAlignment.Right,
-    })
-    table.insert(Window._fontTargets, opValLbl)
-    local tH = 6
-    local opTrack = Util.Frame(opRow, {
-        Size = UDim2.new(1, -28, 0, tH),
-        Position = UDim2.new(0, 14, 1, -16),
-        BackgroundColor3 = theme.SliderTrack,
-    })
-    Util.Corner(opTrack, tH/2)
-    regSurface(opTrack, "SliderTrack")
-    local opFill = Util.Frame(opTrack, {Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = theme.SliderFill})
-    Util.Corner(opFill, tH/2)
-    local kS = 16
-    local opKnob = Util.Frame(opTrack, {
-        Size = UDim2.new(0, kS, 0, kS),
-        Position = UDim2.new(1, -kS/2, 0.5, -kS/2),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        ZIndex = 5,
-    })
-    Util.Corner(opKnob, kS/2)
-    Util.Stroke(opKnob, theme.Accent, 2, 0)
-    local opDrag = false
-    local function opUpd(ix)
-        local ratio = math.clamp((ix - opTrack.AbsolutePosition.X) / opTrack.AbsoluteSize.X, 0, 1)
-        local snap = math.clamp(math.round((minV + ratio*(maxV-minV))/stepV)*stepV, minV, maxV)
-        local nr = (snap - minV) / (maxV - minV)
-        opFill.Size = UDim2.new(nr, 0, 1, 0)
-        opKnob.Position = UDim2.new(nr, -kS/2, 0.5, -kS/2)
-        opValLbl.Text = tostring(100 - snap) .. "%"
-        currentImgTransparency = snap / 100
-        bgImage.ImageTransparency = currentImgTransparency
-    end
-    local function opStart(inp)
-        if inp.UserInputType == Enum.UserInputType.MouseButton1 then
-            opDrag = true; opUpd(inp.Position.X)
-        end
-    end
-    opTrack.InputBegan:Connect(opStart)
-    opKnob.InputBegan:Connect(opStart)
-    UserInputService.InputChanged:Connect(function(inp)
-        if opDrag and inp.UserInputType == Enum.UserInputType.MouseMovement then opUpd(inp.Position.X) end
-    end)
-    UserInputService.InputEnded:Connect(function(inp)
-        if inp.UserInputType == Enum.UserInputType.MouseButton1 then opDrag = false end
-    end)
-end
+            -- Поле ввода Asset ID
+            local row = sMakeRow("Asset ID", 48)
+            sLabel(row, "Asset ID", 14, 160, "primary")
+
+            local idBox = Instance.new("TextBox")
+            idBox.PlaceholderText = "123456789"
+            idBox.Text = ""
+            idBox.Font = Window._currentFont
+            idBox.TextSize = 13
+            idBox.TextColor3 = theme.TextPrimary
+            idBox.PlaceholderColor3 = theme.TextMuted
+            idBox.BackgroundColor3 = theme.ControlBg
+            idBox.BorderSizePixel = 0
+            idBox.ClearTextOnFocus = false
+            idBox.Size = UDim2.new(0, 150, 0, 30)
+            idBox.Position = UDim2.new(1, -162, 0.5, -15)
+            idBox.TextXAlignment = Enum.TextXAlignment.Left
+            idBox.Parent = row
+            Util.Corner(idBox, 8)
+            Util.Stroke(idBox, theme.ControlBorder, 1, 0)
+            Util.Padding(idBox, 0, 0, 0, 10)
+            table.insert(Window._fontTargets, idBox)
+            regSurface(idBox, "ControlBg")
+            regText(idBox, "primary")
+            idBox.Focused:Connect(function()
+                Util.TweenFast(idBox:FindFirstChildOfClass("UIStroke"), {Color = theme.Accent}, 0.15)
+            end)
+            idBox.FocusLost:Connect(function()
+                Util.TweenFast(idBox:FindFirstChildOfClass("UIStroke"), {Color = theme.ControlBorder}, 0.15)
+                local id = idBox.Text:match("%d+")
+                if id then
+                    -- currentImgTransparency уже объявлена выше — замыкание работает корректно
+                    Window:SetBackgroundImage(id, currentImgTransparency)
+                end
+            end)
+
+            -- Кнопка сброса
+            local clearRow = sMakeRow("Clear Image", 48)
+            sLabel(clearRow, "Remove Image", 14, 200, "primary")
+            local clearBtn = Util.Button(clearRow, {
+                Text = "Clear",
+                Font = Window._currentFont,
+                TextSize = 13,
+                TextColor3 = Color3.fromRGB(255, 255, 255),
+                BackgroundColor3 = theme.Error,
+                Size = UDim2.new(0, 80, 0, 30),
+                Position = UDim2.new(1, -92, 0.5, -15),
+            })
+            Util.Corner(clearBtn, 8)
+            Util.HoverEffect(clearBtn, theme.Error, Color3.fromRGB(200, 30, 30))
+            clearBtn.MouseButton1Click:Connect(function()
+                Window:SetBackgroundImage("", 1)
+                idBox.Text = ""
+            end)
+
+            -- Слайдер прозрачности картинки
+            local minV, maxV, stepV = 0, 90, 5
+            local opRow = sMakeRow("Image Opacity", 62)
+            local opNameLbl = Util.Label(opRow, {
+                Text = "Image Opacity",
+                Font = Window._currentFont, TextSize = 14,
+                TextColor3 = theme.TextPrimary,
+                Size = UDim2.new(0, 160, 0, 18),
+                Position = UDim2.new(0, 14, 0, 8),
+            })
+            table.insert(Window._fontTargets, opNameLbl)
+            regText(opNameLbl, "primary")
+            local opValLbl = Util.Label(opRow, {
+                Text = "100%",
+                Font = Window._currentFont, TextSize = 13,
+                TextColor3 = theme.Accent,
+                Size = UDim2.new(0, 80, 0, 18),
+                Position = UDim2.new(1, -94, 0, 8),
+                TextXAlignment = Enum.TextXAlignment.Right,
+            })
+            table.insert(Window._fontTargets, opValLbl)
+            local tH = 6
+            local opTrack = Util.Frame(opRow, {
+                Size = UDim2.new(1, -28, 0, tH),
+                Position = UDim2.new(0, 14, 1, -16),
+                BackgroundColor3 = theme.SliderTrack,
+            })
+            Util.Corner(opTrack, tH/2)
+            regSurface(opTrack, "SliderTrack")
+            local opFill = Util.Frame(opTrack, {Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = theme.SliderFill})
+            Util.Corner(opFill, tH/2)
+            local kS = 16
+            local opKnob = Util.Frame(opTrack, {
+                Size = UDim2.new(0, kS, 0, kS),
+                Position = UDim2.new(1, -kS/2, 0.5, -kS/2),
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                ZIndex = 5,
+            })
+            Util.Corner(opKnob, kS/2)
+            Util.Stroke(opKnob, theme.Accent, 2, 0)
+            local opDrag = false
+            local function opUpd(ix)
+                local ratio = math.clamp((ix - opTrack.AbsolutePosition.X) / opTrack.AbsoluteSize.X, 0, 1)
+                local snap = math.clamp(math.round((minV + ratio*(maxV-minV))/stepV)*stepV, minV, maxV)
+                local nr = (snap - minV) / (maxV - minV)
+                opFill.Size = UDim2.new(nr, 0, 1, 0)
+                opKnob.Position = UDim2.new(nr, -kS/2, 0.5, -kS/2)
+                opValLbl.Text = tostring(100 - snap) .. "%"
+                currentImgTransparency = snap / 100
+                bgImage.ImageTransparency = currentImgTransparency
+            end
+            local function opStart(inp)
+                if inp.UserInputType == Enum.UserInputType.MouseButton1 then
+                    opDrag = true; opUpd(inp.Position.X)
+                end
+            end
+            opTrack.InputBegan:Connect(opStart)
+            opKnob.InputBegan:Connect(opStart)
+            UserInputService.InputChanged:Connect(function(inp)
+                if opDrag and inp.UserInputType == Enum.UserInputType.MouseMovement then opUpd(inp.Position.X) end
+            end)
+            UserInputService.InputEnded:Connect(function(inp)
+                if inp.UserInputType == Enum.UserInputType.MouseButton1 then opDrag = false end
+            end)
         end
 
         -- ── Transparency ───────────────────────────────────────────────
