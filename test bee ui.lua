@@ -455,17 +455,18 @@ function BeeUI:CreateWindow(config)
     -- FIX: these use their own dedicated Font (Ubuntu) and specific
     -- symbols that are guaranteed to render — NOT affected by font picker.
     -- "✕" at size 12 in Ubuntu renders correctly; "−" (minus sign U+2212) also fine.
-    local btnClose = Util.Button(titleBar, {
-        Name="CloseBtn",
-        Text="✕",                       -- U+2715 works in Ubuntu
-        Font=Enum.Font.Ubuntu,          -- always Ubuntu, never changes with picker
-        TextSize=12,
-        TextColor3=Color3.fromRGB(255,255,255),
-        BackgroundColor3=theme.CloseBtn,
-        Size=UDim2.new(0,28,0,28),
-        Position=UDim2.new(1,-28,0.5,-14),
-    })
-    Util.Corner(btnClose,7)
+    -- Close button
+local btnClose = Util.Button(titleBar, {
+    Name="CloseBtn",
+    Text="X",                        
+    Font=Enum.Font.GothamBold,
+    TextSize=13,
+    TextColor3=Color3.fromRGB(255,255,255),
+    BackgroundColor3=theme.CloseBtn,
+    Size=UDim2.new(0,28,0,28),
+    Position=UDim2.new(1,-28,0.5,-14),
+})
+Util.Corner(btnClose,7)
 
     local btnMin = Util.Button(titleBar, {
         Name="MinBtn",
@@ -684,16 +685,16 @@ function BeeUI:CreateWindow(config)
             -- FIX for arrow: use a Frame rotated 90° with a right-triangle shape instead
             -- Actually simplest reliable fix: use ">" rotated via a label with Rotation=90
             -- Ubuntu supports ">" perfectly and Rotation on a TextLabel works fine.
-            local arrowLabel=Util.Label(dropBtn,{
-                Text=">",
-                Font=Enum.Font.Ubuntu,   -- Ubuntu always used for this, never changed by picker
-                TextSize=13,
-                TextColor3=theme.TextSecondary,
-                Size=UDim2.new(0,20,1,0),
-                Position=UDim2.new(1,-24,0,0),
-                TextXAlignment=Enum.TextXAlignment.Center,
-                Rotation=90,            -- ">" rotated 90° looks like "v" perfectly
-            })
+            local arrowLabel = Util.Label(dropBtn, {
+    Text = "v",                      
+    Font = Enum.Font.GothamBold,
+    TextSize = 11,
+    TextColor3 = theme.TextSecondary,
+    Size = UDim2.new(0,20,1,0),
+    Position = UDim2.new(1,-24,0,0),
+    TextXAlignment = Enum.TextXAlignment.Center,
+    -- НЕ используем Rotation — просто меняем текст
+})
 
             local ITEM_H=30;local ITEM_PAD=2;local LIST_PAD=4;local MAX_VIS=5;local listW=140
             local totalH=#options*(ITEM_H+ITEM_PAD)-ITEM_PAD+LIST_PAD*2
