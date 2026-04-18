@@ -1,7 +1,11 @@
 --[[
 ╔═══════════════════════════════════════════════════════════════════╗
-║                         BeeUI v2.0a                               ║
+║                         BeeUI v2.1                                ║
 ║                   Roblox GUI Library by Me                        ║
+║                                                                   ║
+║  CHANGES v2.1:                                                    ║
+║  • Settings → Text Size: ползунок 10–22px для изменения           ║
+║    размера всего текста в интерфейсе                              ║
 ║                                                                   ║
 ║  CHANGES v2.0:                                                    ║
 ║  • Minimize button (-) now hides/shows entire window like         ║
@@ -278,18 +282,14 @@ function Util.MakeDraggable(frame,handle)
     end)
 end
 
--- FIX: HoverEffectLive теперь принимает функцию isActive для проверки
--- является ли кнопка активной в данный момент
 function Util.HoverEffectLiveTab(btn, isActiveFn, normalColorFn, hoverColorFn, speed)
     speed = speed or 0.22
     btn.MouseEnter:Connect(function()
-        -- Подсвечиваем hover только если вкладка НЕ активна
         if not isActiveFn() then
             Util.TweenFast(btn, {BackgroundColor3 = hoverColorFn()}, speed)
         end
     end)
     btn.MouseLeave:Connect(function()
-        -- При уходе возвращаем правильный цвет в зависимости от состояния
         if isActiveFn() then
             Util.TweenFast(btn, {BackgroundColor3 = normalColorFn("active")}, speed)
         else
@@ -371,30 +371,21 @@ function BeeUI:CreateWindow(config)
     local winSize=config.Size or UDim2.new(0,580,0,460)
     local winPos=config.Position or UDim2.new(0.5,-290,0.5,-230)
 
-    -- ── FIX v2.0: Убираем ClipsDescendants с windowFrame,
-    -- чтобы все 4 угла были правильно скруглены.
-    -- Вместо этого добавляем отдельный контейнер с ClipsDescendants
-    -- внутри, чтобы контент не выходил за пределы.
     local windowFrame=Util.Frame(screenGui,{
         Name="BeeWindow",
         Size=winSize,
         Position=winPos,
         BackgroundColor3=theme.Background,
-        -- ClipsDescendants УБРАН — он срезал верхние скруглённые углы
-        -- потому что дочерние Frame (titleBar, accentLine) рисовались
-        -- поверх скруглённых краёв windowFrame
     })
     Util.Corner(windowFrame,20)
     Util.Stroke(windowFrame,theme.Border,1,0)
 
-    -- Внутренний clipper — весь видимый контент идёт сюда
     local innerClip=Util.Frame(windowFrame,{
         Name="InnerClip",
         Size=UDim2.new(1,0,1,0),
         BackgroundTransparency=1,
         ClipsDescendants=true,
     })
-    -- UICorner на innerClip тоже нужен, иначе контент вылезет за скруглённые углы
     Util.Corner(innerClip,20)
 
     local accentLine=Util.Frame(innerClip,{Name="AccentLine",Size=UDim2.new(1,0,0,2),Position=UDim2.new(0,0,0,0),BackgroundColor3=theme.Accent})
@@ -422,7 +413,6 @@ function BeeUI:CreateWindow(config)
     Util.HoverEffect(btnMin,theme.MinBtn,Color3.fromRGB(220,160,10))
     Util.ClickEffect(btnClose);Util.ClickEffect(btnMin)
 
-    -- ── Visibility key — объявляем ДО bodyFrame
     local _visKey     = Enum.KeyCode.LeftControl
     local _guiVisible = true
     local _visConn    = nil
@@ -462,19 +452,17 @@ function BeeUI:CreateWindow(config)
     windowFrame.BackgroundTransparency=1
     Util.Tween(windowFrame,{Time=0.5,Ease=Enum.EasingStyle.Back,Dir=Enum.EasingDirection.Out},{Size=winSize,BackgroundTransparency=0})
 
-    -- ── FIX v2.0: Minimize теперь скрывает/показывает весь windowFrame
-    -- точно так же как LeftControl, с плавной анимацией
     local minimized=false
     btnMin.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    if minimized then
-        windowFrame.Visible = false
-        _guiVisible = false
-    else
-        windowFrame.Visible = true
-        _guiVisible = true
-    end
-end)
+        minimized = not minimized
+        if minimized then
+            windowFrame.Visible = false
+            _guiVisible = false
+        else
+            windowFrame.Visible = true
+            _guiVisible = true
+        end
+    end)
 
     btnClose.MouseButton1Click:Connect(function()
         Util.Tween(windowFrame,{Time=0.3,Ease=Enum.EasingStyle.Sine},{Size=UDim2.new(winSize.X.Scale,winSize.X.Offset,0,0),BackgroundTransparency=1})
@@ -493,9 +481,19 @@ end)
     Window._shadowEnabled=false
     Window._shadowColor=Color3.fromRGB(0,0,0)
     Window._shadowTransparency=0.5
+    -- NEW v2.1: базовый размер текста (14px по умолчанию)
+    Window._textSize = 14
 
     local function regSurface(obj,role) table.insert(Window._surfaceElements,{obj=obj,role=role});return obj end
-    local function regText(obj,role)    table.insert(Window._textElements,{obj=obj,role=role});return obj end
+    -- ИЗМЕНЕНИЕ v2.1: regText теперь сохраняет baseSize — исходный TextSize объекта,
+    -- чтобы ApplyTextSize мог масштабировать пропорционально (крупные заголовки
+    -- останутся крупнее мелких подписей даже после изменения размера)
+    local function regText(obj, role)
+        local baseSize = 14
+        pcall(function() baseSize = obj.TextSize end)
+        table.insert(Window._textElements, {obj=obj, role=role, baseSize=baseSize})
+        return obj
+    end
 
     regSurface(tabSidebar,"Surface"); regSurface(settingsBtnHolder,"Surface")
     regSurface(titleBar,"TitleBarBg"); regSurface(settingsDivider,"Border")
@@ -553,7 +551,6 @@ end)
         local secondary=Color3.new(math.clamp(r*0.65+0.1,0,1),math.clamp(g*0.65+0.1,0,1),math.clamp(b*0.65+0.1,0,1))
         local muted=Color3.new(math.clamp(r*0.4+0.15,0,1),math.clamp(g*0.4+0.15,0,1),math.clamp(b*0.4+0.15,0,1))
         self._theme.TextPrimary=primaryColor; self._theme.TextSecondary=secondary; self._theme.TextMuted=muted
-        -- FIX: Обновляем TabText тоже, чтобы неактивные вкладки в Settings меняли цвет
         self._theme.TabText=secondary
         for _,entry in ipairs(self._textElements) do
             if entry.obj and entry.obj.Parent then
@@ -566,9 +563,28 @@ end)
         end
     end
 
-    -- ── FIX v2.0: createTabButton переписан.
-    -- HoverEffect теперь корректно проверяет активна ли вкладка,
-    -- и не застревает на hover-цвете когда убираешь курсор.
+    -- ══════════════════════════════════════════
+    --  NEW v2.1: ApplyTextSize
+    --  Масштабирует TextSize всех зарегистрированных текстовых объектов.
+    --  Каждый объект хранит свой baseSize (исходный размер на момент создания).
+    --  Новый размер = baseSize + (size - 14), то есть смещение применяется
+    --  пропорционально: заголовок 16px при size=16 станет 18px, а подпись 12px — 14px.
+    -- ══════════════════════════════════════════
+    function Window:ApplyTextSize(size)
+        size = math.clamp(size, 8, 32)
+        self._textSize = size
+        local delta = size - 14  -- смещение от базового дефолта 14px
+        for _, entry in ipairs(self._textElements) do
+            if entry.obj and entry.obj.Parent then
+                pcall(function()
+                    local base = entry.baseSize or 14
+                    local newSize = math.clamp(base + delta, 8, 32)
+                    Util.TweenFast(entry.obj, {TextSize = newSize}, 0.2)
+                end)
+            end
+        end
+    end
+
     local function createTabButton(parent, tabName, tabConfig, isFirst)
         local tabBtn=Util.Button(parent,{Name=tabName.."_Btn",Text="",Size=UDim2.new(1,0,0,36),
             BackgroundColor3=isFirst and theme.TabActive or theme.TabInactive})
@@ -601,8 +617,6 @@ end)
         table.insert(Window._fontTargets,tabLabel)
         regText(tabLabel, isFirst and "primary" or "tab")
 
-        -- FIX: Используем новый HoverEffectLiveTab с isActiveFn
-        -- Это предотвращает застревание hover-цвета на активной/первой вкладке
         local function isActiveTab()
             return (Window._activeTab ~= nil and Window._activeTab.Button == tabBtn)
                 or (Window._settingsTabEntry ~= nil and Window._activeTab == Window._settingsTabEntry and Window._settingsTabEntry.Button == tabBtn)
@@ -785,12 +799,6 @@ end)
             return obj
         end
 
-        -- ── FIX v2.0: Слайдер — полностью переписан механизм драга.
-        -- Проблема была в том, что:
-        -- 1. InputBegan вешался только на track, но knob перехватывал события
-        -- 2. При позиции 0 fill.Size.X = 0, knob был на X=−8, частично за пределами track
-        -- Решение: вешаем InputBegan и на knob тоже, используем единый флаг dragging
-        -- и обновляем позицию через глобальный InputChanged
         function Tab:AddSlider(config)
             config=config or {}
             local minVal=config.Min or 0;local maxVal=config.Max or 100;local step=config.Step or 1;local suffix=config.Suffix or ""
@@ -818,7 +826,6 @@ end)
             local dragging=false
 
             local function upd(screenX)
-                -- Вычисляем позицию относительно track
                 local trackAbsPos = track.AbsolutePosition
                 local trackAbsSize = track.AbsoluteSize
                 local ratio = math.clamp((screenX - trackAbsPos.X) / trackAbsSize.X, 0, 1)
@@ -834,7 +841,6 @@ end)
                 end
             end
 
-            -- Начало перетаскивания — и с track, и с knob
             local function startDrag(inp)
                 if inp.UserInputType == Enum.UserInputType.MouseButton1 then
                     dragging = true
@@ -844,7 +850,6 @@ end)
             track.InputBegan:Connect(startDrag)
             knob.InputBegan:Connect(startDrag)
 
-            -- Глобальное отслеживание движения и отпускания
             UserInputService.InputChanged:Connect(function(inp)
                 if dragging and inp.UserInputType == Enum.UserInputType.MouseMovement then
                     upd(inp.Position.X)
@@ -907,17 +912,14 @@ end)
             table.insert(self._window._fontTargets,lbl); regText(lbl,"secondary"); applyShadowToObj(lbl)
         end
 
-        -- ── NEW v2.0: AddParagraph — блок текста с авторазмером
-        -- Высота контейнера подстраивается под количество текста автоматически.
         function Tab:AddParagraph(config)
             config = config or {}
             local text = config.Text or ""
             local title = config.Title
 
-            -- Внешний контейнер с авторазмером по высоте
             local container = Util.Frame(scrollFrame, {
                 Name = "Paragraph_"..tostring(text):sub(1,20),
-                Size = UDim2.new(1, 0, 0, 0),          -- высота = 0, растянется
+                Size = UDim2.new(1, 0, 0, 0),
                 AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundColor3 = theme.SurfaceElevated,
             })
@@ -934,9 +936,6 @@ end)
             layout.SortOrder = Enum.SortOrder.LayoutOrder
             layout.Parent = container
 
-            local yOffset = 0
-
-            -- Заголовок (опционально)
             if title and title ~= "" then
                 local titleLbl = Util.Label(container, {
                     Text = title,
@@ -951,10 +950,8 @@ end)
                 table.insert(self._window._fontTargets, titleLbl)
                 regText(titleLbl, "primary")
                 applyShadowToObj(titleLbl)
-                yOffset = 1
             end
 
-            -- Основной текст
             local textLbl = Util.Label(container, {
                 Text = text,
                 Font = self._window._currentFont,
@@ -970,16 +967,12 @@ end)
             applyShadowToObj(textLbl)
 
             local obj = {}
-            function obj:SetText(newText)
-                textLbl.Text = newText
-            end
+            function obj:SetText(newText) textLbl.Text = newText end
             function obj:SetTitle(newTitle)
                 if title and title ~= "" then
-                    -- Находим title label по LayoutOrder
                     for _, child in ipairs(container:GetChildren()) do
                         if child:IsA("TextLabel") and child.LayoutOrder == 1 then
-                            child.Text = newTitle
-                            break
+                            child.Text = newTitle; break
                         end
                     end
                 end
@@ -1087,8 +1080,6 @@ end)
             local sLbl=Util.Label(badge,{Text=title or "Section",Font=Window._currentFont,TextSize=11,TextColor3=theme.Accent,Size=UDim2.new(0,0,1,0),AutomaticSize=Enum.AutomaticSize.X})
             table.insert(Window._fontTargets,sLbl)
         end
-        -- FIX: sLabel теперь регистрирует через regText — это значит ApplyTextColor
-        -- будет корректно менять цвет текста в Settings так же как и в обычных вкладках
         local function sLabel(parent,text,x,w,textRole)
             local lbl=Util.Label(parent,{Text=text,Font=Window._currentFont,TextSize=14,TextColor3=theme.TextPrimary,Size=UDim2.new(0,w or 200,0,20),Position=UDim2.new(0,x or 14,0.5,-10)})
             table.insert(Window._fontTargets,lbl)
@@ -1161,6 +1152,100 @@ end)
                     if obj and obj.Parent then pcall(function() obj.Font=newFont end) end
                 end
             end)
+        end
+
+        -- ══════════════════════════════════════════
+        --  NEW v2.1: Text Size slider
+        --  Диапазон: 10–22px, шаг 1, дефолт 14px.
+        --  Масштабирует все TextLabel/TextButton/TextBox,
+        --  сохраняя пропорции между крупным и мелким текстом.
+        -- ══════════════════════════════════════════
+        sSection("Text Size")
+        do
+            local minVal, maxVal, step, suffix = 10, 22, 1, "px"
+            local value = 14  -- дефолт совпадает с Window._textSize
+
+            local row = sMakeRow("Text Size", 62)
+
+            local nameLbl = Util.Label(row, {
+                Text = "Text Size",
+                Font = Window._currentFont, TextSize = 14,
+                TextColor3 = theme.TextPrimary,
+                Size = UDim2.new(0, 160, 0, 18),
+                Position = UDim2.new(0, 14, 0, 8),
+            })
+            table.insert(Window._fontTargets, nameLbl)
+            regText(nameLbl, "primary"); applyShadowToObj(nameLbl)
+
+            local valLbl = Util.Label(row, {
+                Text = tostring(value) .. suffix,
+                Font = Window._currentFont, TextSize = 13,
+                TextColor3 = theme.Accent,
+                Size = UDim2.new(0, 80, 0, 18),
+                Position = UDim2.new(1, -94, 0, 8),
+                TextXAlignment = Enum.TextXAlignment.Right,
+            })
+            table.insert(Window._fontTargets, valLbl)
+
+            local trackH = 6
+            local track = Util.Frame(row, {
+                Size = UDim2.new(1, -28, 0, trackH),
+                Position = UDim2.new(0, 14, 1, -16),
+                BackgroundColor3 = theme.SliderTrack,
+            })
+            Util.Corner(track, trackH / 2); regSurface(track, "SliderTrack")
+
+            local initR = (value - minVal) / (maxVal - minVal)
+            local fill = Util.Frame(track, {Size = UDim2.new(initR, 0, 1, 0), BackgroundColor3 = theme.SliderFill})
+            Util.Corner(fill, trackH / 2)
+
+            local knobS = 16
+            local knob = Util.Frame(track, {
+                Size = UDim2.new(0, knobS, 0, knobS),
+                Position = UDim2.new(initR, -knobS / 2, 0.5, -knobS / 2),
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                ZIndex = 5,
+            })
+            Util.Corner(knob, knobS / 2); Util.Stroke(knob, theme.Accent, 2, 0)
+
+            local dragging = false
+            local function upd(ix)
+                local ratio = math.clamp((ix - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+                local snap = math.clamp(math.round((minVal + ratio * (maxVal - minVal)) / step) * step, minVal, maxVal)
+                value = snap
+                local nr = (snap - minVal) / (maxVal - minVal)
+                fill.Size  = UDim2.new(nr, 0, 1, 0)
+                knob.Position = UDim2.new(nr, -knobS / 2, 0.5, -knobS / 2)
+                valLbl.Text = tostring(snap) .. suffix
+                Window:ApplyTextSize(snap)
+            end
+            local function startDrag(inp)
+                if inp.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true; upd(inp.Position.X)
+                end
+            end
+            track.InputBegan:Connect(startDrag)
+            knob.InputBegan:Connect(startDrag)
+            UserInputService.InputChanged:Connect(function(inp)
+                if dragging and inp.UserInputType == Enum.UserInputType.MouseMovement then upd(inp.Position.X) end
+            end)
+            UserInputService.InputEnded:Connect(function(inp)
+                if inp.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+            end)
+
+            -- Подсказка под ползунком
+            local hintRow = sMakeRow("TextSizeHint", 34)
+            hintRow.BackgroundTransparency = 1
+            local hs = hintRow:FindFirstChildOfClass("UIStroke"); if hs then hs:Destroy() end
+            local hLbl = Util.Label(hintRow, {
+                Text = "Изменяет размер всего текста в интерфейсе (10–22px).",
+                Font = Window._currentFont, TextSize = 12,
+                TextColor3 = theme.TextMuted,
+                Size = UDim2.new(1, -28, 1, 0),
+                Position = UDim2.new(0, 14, 0, 0),
+                TextWrapped = true,
+            })
+            table.insert(Window._fontTargets, hLbl); regText(hLbl, "muted"); applyShadowToObj(hLbl)
         end
 
         -- ── Text Color ─────────────────────────────────────────────────
