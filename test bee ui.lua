@@ -1,11 +1,11 @@
 --[[
 ╔═══════════════════════════════════════════════════════════════════╗
-║                         BeeUI v1.5b                               ║
-║              Roblox GUI Library by Me                             ║
+║                         BeeUI v1.5с                               ║
+║                   Roblox GUI Library by Me                        ║
 ║                                                                   ║
 ║  CHANGES v1.5b:                                                   ║
 ║  • Lucide icons restored (Unicode works in Ubuntu/Gotham)         ║
-║  • Close/Min buttons fixed: use GothamBold "×" and "−"           ║
+║  • Close/Min buttons fixed: use GothamBold "×" and "−"            ║
 ║  • Dropdown arrow fixed: uses rotated ">" character               ║
 ║  • Font picker now also changes Title & SubTitle                  ║
 ║  • Transparency slider affects ALL GUI elements                   ║
@@ -336,29 +336,39 @@ end
 -- ══════════════════════════════════════════
 --  Apply transparency to ALL descendants
 -- ══════════════════════════════════════════
+local _origTransparencies = nil
+
 local function applyWindowTransparency(windowFrame, alpha)
-    local function recurse(obj)
-        for _, child in ipairs(obj:GetChildren()) do
-            pcall(function()
+    if not _origTransparencies then
+        _origTransparencies = {}
+        local function collect(obj)
+            for _, child in ipairs(obj:GetChildren()) do
                 if child.Name == "DropdownOverlay" or child.Name == "NotifyHolder" then
-                    return
+                    continue
                 end
                 if child:IsA("Frame") or child:IsA("ScrollingFrame") then
-                    child.BackgroundTransparency = alpha
-                elseif child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-                    child.BackgroundTransparency = 1
-                    child.TextTransparency = alpha
-                elseif child:IsA("ImageLabel") or child:IsA("ImageButton") then
-                    child.BackgroundTransparency = 1
-                    child.ImageTransparency = alpha
+                    _origTransparencies[child] = child.BackgroundTransparency
                 elseif child:IsA("UIStroke") then
-                    child.Transparency = alpha
+                    _origTransparencies[child] = child.Transparency
                 end
-            end)
-            recurse(child)
+                collect(child)
+            end
         end
+        _origTransparencies[windowFrame] = windowFrame.BackgroundTransparency
+        collect(windowFrame)
     end
-    recurse(windowFrame)
+
+    for obj, origAlpha in pairs(_origTransparencies) do
+        if not obj or not obj.Parent then continue end
+        local newAlpha = origAlpha + (1 - origAlpha) * alpha
+        pcall(function()
+            if obj:IsA("Frame") or obj:IsA("ScrollingFrame") then
+                obj.BackgroundTransparency = newAlpha
+            elseif obj:IsA("UIStroke") then
+                obj.Transparency = newAlpha
+            end
+        end)
+    end
 end
 
 -- ══════════════════════════════════════════
