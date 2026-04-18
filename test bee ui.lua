@@ -380,7 +380,7 @@ function BeeUI:CreateWindow(config)
     local winPos=config.Position or UDim2.new(0.5,-290,0.5,-230)
 
     local windowFrame=Util.Frame(screenGui,{Name="BeeWindow",Size=winSize,Position=winPos,BackgroundColor3=theme.Background,ClipsDescendants=true})
-    Util.Corner(windowFrame,14);Util.Stroke(windowFrame,theme.Border,1,0)
+    Util.Corner(windowFrame,20);Util.Stroke(windowFrame,theme.Border,1,0)
 
     local accentLine=Util.Frame(windowFrame,{Name="AccentLine",Size=UDim2.new(1,0,0,2),Position=UDim2.new(0,0,0,0),BackgroundColor3=theme.Accent})
 
@@ -407,7 +407,26 @@ function BeeUI:CreateWindow(config)
     Util.HoverEffect(btnMin,theme.MinBtn,Color3.fromRGB(220,160,10))
     Util.ClickEffect(btnClose);Util.ClickEffect(btnMin)
 
-    local bodyFrame=Util.Frame(windowFrame,{Name="Body",Size=UDim2.new(1,0,1,-55),Position=UDim2.new(0,0,0,55),BackgroundTransparency=1})
+    local bodyFrame=Util.Frame(windowFrame,{Name="Body",
+            -- Visibility key toggle (default: LeftControl)
+    local _visKey = Enum.KeyCode.LeftControl
+    local _guiVisible = true
+    local _visConnection
+    local function setupVisKey()
+        if _visConnection then _visConnection:Disconnect() end
+        _visConnection = UserInputService.InputBegan:Connect(function(inp, gp)
+            if gp then return end
+            if inp.KeyCode == _visKey then
+                _guiVisible = not _guiVisible
+                windowFrame.Visible = _guiVisible
+            end
+        end)
+    end
+    setupVisKey()
+    Window = Window or {}
+    Window._visKey = _visKey
+    Window._setupVisKey = setupVisKey
+    Size=UDim2.new(1,0,1,-55),Position=UDim2.new(0,0,0,55),BackgroundTransparency=1})
     local tabSidebar=Util.Frame(bodyFrame,{Name="TabSidebar",Size=UDim2.new(0,140,1,0),BackgroundColor3=theme.Surface,ClipsDescendants=true})
 
     local tabTopScroll=Instance.new("ScrollingFrame")
@@ -445,6 +464,23 @@ function BeeUI:CreateWindow(config)
         Util.Tween(windowFrame,{Time=0.3,Ease=Enum.EasingStyle.Sine},{Size=UDim2.new(winSize.X.Scale,winSize.X.Offset,0,0),BackgroundTransparency=1})
         task.delay(0.25,function() screenGui:Destroy() end)
     end)
+
+    -- ── Visibility key (hide/show the window) ─────────────────────
+    local _visKey      = Enum.KeyCode.LeftControl
+    local _guiVisible  = true
+    local _visConn     = nil
+    local function rebindVisKey(newKey)
+        _visKey = newKey
+        if _visConn then _visConn:Disconnect() end
+        _visConn = UserInputService.InputBegan:Connect(function(inp, gp)
+            if gp then return end
+            if inp.KeyCode == _visKey then
+                _guiVisible = not _guiVisible
+                windowFrame.Visible = _guiVisible
+            end
+        end)
+    end
+    rebindVisKey(_visKey)   -- attach default binding
 
     -- ══════════════════════════════════════════
     --  WINDOW OBJECT
@@ -1374,6 +1410,7 @@ function BeeUI:CreateWindow(config)
                     end
                 end)
             end
+            
 
             -- ─── Inactive Tab Color ────────────────────────────────────
             buildColorSection("Inactive Tab Color  (normal state)", tabInactivePresets, function(col)
@@ -1400,6 +1437,55 @@ function BeeUI:CreateWindow(config)
         -- ════════════════════════════════════════════════════════════
 
         return {}
+
+        -- ── Visibility Key ────────────────────────────────────────────
+        sSection("Visibility Key")
+        do
+            local listening = false
+            local row = sMakeRow("Hide/Show Key", 48)
+            sLabel(row, "Hide/Show Key", 14, 200, "primary")
+
+            local kbBtn = Util.Button(row, {
+                Text = "[LeftControl]",
+                Font = Window._currentFont, TextSize = 13,
+                TextColor3 = theme.Accent,
+                BackgroundColor3 = theme.ControlBg,
+                Size = UDim2.new(0, 130, 0, 30),
+                Position = UDim2.new(1, -142, 0.5, -15),
+            })
+            Util.Corner(kbBtn, 8); Util.Stroke(kbBtn, theme.ControlBorder, 1, 0)
+            table.insert(Window._fontTargets, kbBtn); regSurface(kbBtn, "ControlBg")
+
+            kbBtn.MouseButton1Click:Connect(function()
+                if listening then return end
+                listening = true
+                kbBtn.Text = "[...]"
+                kbBtn.TextColor3 = theme.Warning
+            end)
+
+            UserInputService.InputBegan:Connect(function(inp, gp)
+                if gp then return end
+                if listening and inp.UserInputType == Enum.UserInputType.Keyboard then
+                    listening = false
+                    rebindVisKey(inp.KeyCode)
+                    kbBtn.Text = "[" .. inp.KeyCode.Name .. "]"
+                    kbBtn.TextColor3 = theme.Accent
+                end
+            end)
+
+            -- Hint label
+            local hintRow = sMakeRow("VisHint", 36)
+            hintRow.BackgroundTransparency = 1
+            local hs = hintRow:FindFirstChildOfClass("UIStroke"); if hs then hs:Destroy() end
+            local hLbl = Util.Label(hintRow, {
+                Text = "Press the button, then press any key to rebind.",
+                Font = Window._currentFont, TextSize = 12,
+                TextColor3 = theme.TextMuted,
+                Size = UDim2.new(1, -28, 1, 0),
+                Position = UDim2.new(0, 14, 0, 0),
+            })
+            table.insert(Window._fontTargets, hLbl); regText(hLbl, "muted"); applyShadowToObj(hLbl)
+        end
     end
 
     Window._settingsTab=buildSettingsTab()
