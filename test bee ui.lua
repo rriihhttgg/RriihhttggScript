@@ -1,7 +1,15 @@
 --[[
 ╔═══════════════════════════════════════════════════════════════════╗
-║                         BeeUI v1.7                                ║
+║                         BeeUI v1.8                                ║
 ║                   Roblox GUI Library by Me                        ║
+║                                                                   ║
+║  CHANGES v1.8:                                                     ║
+║  • Tab Colors section in Settings:                                ║
+║    – Inactive Tab Color: color swatches + custom RGB              ║
+║      Changes the background of non-active tabs instantly          ║
+║    – Hover Tab Color: color swatches + custom RGB                 ║
+║      Changes the highlight color when mouse hovers a tab          ║
+║      Works live thanks to HoverEffectLive getter pattern          ║
 ║                                                                   ║
 ║  CHANGES v1.7:                                                     ║
 ║  • Tab hover FIX: MouseLeave now reads live theme.TabInactive,    ║
@@ -567,7 +575,7 @@ function BeeUI:CreateWindow(config)
         table.insert(Window._fontTargets,tabLabel)
         regText(tabLabel, isFirst and "primary" or "tab")
 
-        -- FIX: live hover reads from theme so it's always correct after bg/accent change
+        -- FIX: live hover reads from theme so it's always correct after bg/accent/tab-color change
         Util.HoverEffectLive(tabBtn,
             function() return isFirst and theme.TabActive or theme.TabInactive end,
             function() return theme.SurfaceHover end)
@@ -1070,7 +1078,6 @@ function BeeUI:CreateWindow(config)
             for i,preset in ipairs(TextShadowPresets) do
                 local sw=Util.Button(shadowSwatchCont,{Text="",BackgroundColor3=preset.Color,Size=UDim2.new(0,24,0,24),LayoutOrder=i,ZIndex=2})
                 Util.Corner(sw,5);Util.Stroke(sw,theme.Border,1,0)
-                -- Tiny checkerboard hint for dark colors so they're visible on dark bg
                 sw.MouseEnter:Connect(function()
                     Util.TweenFast(sw,{Size=UDim2.new(0,26,0,26)},0.1)
                     local s=sw:FindFirstChildOfClass("UIStroke");if s then Util.TweenFast(s,{Color=theme.Accent,Thickness=2},0.1) end
@@ -1105,10 +1112,9 @@ function BeeUI:CreateWindow(config)
                 end
             end)
 
-            -- Shadow opacity slider (0 = fully opaque stroke, 95 = nearly invisible)
-            -- We store as transparency so 0%=opaque, 95%=invisible
+            -- Shadow opacity slider
             local opRow=sMakeRow("Shadow Opacity",62)
-            local minV,maxV,stepV=0,95,5; local suffV="%"; local valS=50  -- default 50% trans
+            local minV,maxV,stepV=0,95,5; local suffV="%"; local valS=50
             Window._shadowTransparency = valS/100
             local opNameLbl=Util.Label(opRow,{Text="Shadow Opacity",Font=Window._currentFont,TextSize=14,TextColor3=theme.TextPrimary,Size=UDim2.new(0,160,0,18),Position=UDim2.new(0,14,0,8)})
             table.insert(Window._fontTargets,opNameLbl); regText(opNameLbl,"primary"); applyShadowToObj(opNameLbl)
@@ -1129,7 +1135,6 @@ function BeeUI:CreateWindow(config)
                 local snap=math.clamp(math.round((minV+ratio*(maxV-minV))/stepV)*stepV,minV,maxV)
                 valS=snap; local nr=(snap-minV)/(maxV-minV)
                 opFill.Size=UDim2.new(nr,0,1,0); opKnob.Position=UDim2.new(nr,-opKnobS/2,0.5,-opKnobS/2)
-                -- Display as "Opacity %" (100 - transparency%)
                 opValLbl.Text=tostring(100-snap)..suffV
                 Window._shadowTransparency=snap/100
                 if Window._shadowEnabled then Window:ApplyShadow() end
@@ -1250,6 +1255,149 @@ function BeeUI:CreateWindow(config)
                 end)
             end
         end
+
+        -- ════════════════════════════════════════════════════════════
+        --  ── Tab Colors  (NEW in v1.8) ─────────────────────────────
+        -- ════════════════════════════════════════════════════════════
+        sSection("Tab Colors")
+        do
+            -- Preset palettes
+            local tabInactivePresets = {
+                { Name = "Dark Honey",  Color = Color3.fromRGB(44,  29,  9  ) },
+                { Name = "Charcoal",    Color = Color3.fromRGB(40,  40,  50 ) },
+                { Name = "Slate",       Color = Color3.fromRGB(50,  55,  70 ) },
+                { Name = "Navy",        Color = Color3.fromRGB(20,  30,  60 ) },
+                { Name = "Forest",      Color = Color3.fromRGB(15,  35,  20 ) },
+                { Name = "Plum",        Color = Color3.fromRGB(40,  20,  55 ) },
+                { Name = "Light Gray",  Color = Color3.fromRGB(230, 230, 240) },
+                { Name = "Silver",      Color = Color3.fromRGB(200, 200, 215) },
+                { Name = "Cream",       Color = Color3.fromRGB(248, 240, 220) },
+                { Name = "Sky",         Color = Color3.fromRGB(210, 228, 252) },
+                { Name = "Mint",        Color = Color3.fromRGB(210, 245, 225) },
+                { Name = "Rose",        Color = Color3.fromRGB(252, 215, 225) },
+            }
+            local tabHoverPresets = {
+                { Name = "Warm Dim",   Color = Color3.fromRGB(65,  44,  14 ) },
+                { Name = "Ash",        Color = Color3.fromRGB(70,  70,  85 ) },
+                { Name = "Steel",      Color = Color3.fromRGB(80,  90,  110) },
+                { Name = "Ocean",      Color = Color3.fromRGB(30,  55,  100) },
+                { Name = "Moss",       Color = Color3.fromRGB(25,  60,  35 ) },
+                { Name = "Grape",      Color = Color3.fromRGB(70,  40,  100) },
+                { Name = "Pearl",      Color = Color3.fromRGB(235, 235, 248) },
+                { Name = "Mist",       Color = Color3.fromRGB(215, 215, 232) },
+                { Name = "Butter",     Color = Color3.fromRGB(252, 245, 210) },
+                { Name = "Ice",        Color = Color3.fromRGB(195, 220, 252) },
+                { Name = "Sage",       Color = Color3.fromRGB(195, 238, 215) },
+                { Name = "Blush",      Color = Color3.fromRGB(250, 200, 215) },
+            }
+
+            -- ─── Helper: build a swatch row + custom RGB row ───────────
+            local function buildColorSection(subLabel, presets, onPick)
+                -- Thin subtitle label (transparent row)
+                local subRow = sMakeRow(subLabel, 28)
+                subRow.BackgroundTransparency = 1
+                local subStroke = subRow:FindFirstChildOfClass("UIStroke")
+                if subStroke then subStroke:Destroy() end
+                local subLbl = Util.Label(subRow, {
+                    Text = subLabel,
+                    Font = Window._currentFont, TextSize = 13,
+                    TextColor3 = theme.TextSecondary,
+                    Size = UDim2.new(1, -28, 1, 0),
+                    Position = UDim2.new(0, 14, 0, 0),
+                })
+                table.insert(Window._fontTargets, subLbl)
+                regText(subLbl, "secondary")
+                applyShadowToObj(subLbl)
+
+                -- Swatches
+                local swatchCont = Util.Frame(scrollFrame, {
+                    Size = UDim2.new(1, 0, 0, 80),
+                    BackgroundColor3 = theme.SurfaceElevated,
+                })
+                Util.Corner(swatchCont, 10)
+                Util.Stroke(swatchCont, theme.Border, 1, 0)
+                Util.Padding(swatchCont, 10, 10, 10, 10)
+                regSurface(swatchCont, "SurfaceElevated")
+
+                local grid = Instance.new("UIGridLayout")
+                grid.CellSize     = UDim2.new(0, 24, 0, 24)
+                grid.CellPadding  = UDim2.new(0, 6, 0, 6)
+                grid.FillDirection = Enum.FillDirection.Horizontal
+                grid.HorizontalAlignment = Enum.HorizontalAlignment.Left
+                grid.SortOrder    = Enum.SortOrder.LayoutOrder
+                grid.Parent       = swatchCont
+                grid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                    swatchCont.Size = UDim2.new(1, 0, 0, grid.AbsoluteContentSize.Y + 20)
+                end)
+
+                for i, preset in ipairs(presets) do
+                    local sw = Util.Button(swatchCont, {
+                        Text = "", BackgroundColor3 = preset.Color,
+                        Size = UDim2.new(0, 24, 0, 24), LayoutOrder = i, ZIndex = 2,
+                    })
+                    Util.Corner(sw, 5); Util.Stroke(sw, theme.Border, 1, 0)
+                    sw.MouseEnter:Connect(function()
+                        Util.TweenFast(sw, {Size = UDim2.new(0, 26, 0, 26)}, 0.1)
+                        local st = sw:FindFirstChildOfClass("UIStroke")
+                        if st then Util.TweenFast(st, {Color = theme.Accent, Thickness = 2}, 0.1) end
+                    end)
+                    sw.MouseLeave:Connect(function()
+                        Util.TweenFast(sw, {Size = UDim2.new(0, 24, 0, 24)}, 0.1)
+                        local st = sw:FindFirstChildOfClass("UIStroke")
+                        if st then Util.TweenFast(st, {Color = theme.Border, Thickness = 1}, 0.1) end
+                    end)
+                    sw.MouseButton1Click:Connect(function() onPick(preset.Color) end)
+                end
+
+                -- Custom RGB input
+                local customRow = sMakeRow("Custom " .. subLabel, 48)
+                sLabel(customRow, "Custom (R,G,B)", 14, 160, "primary")
+                local cib = Instance.new("TextBox")
+                cib.PlaceholderText = "R, G, B"
+                cib.Text = ""; cib.Font = Window._currentFont; cib.TextSize = 13
+                cib.TextColor3 = theme.TextPrimary; cib.PlaceholderColor3 = theme.TextMuted
+                cib.BackgroundColor3 = theme.ControlBg; cib.BorderSizePixel = 0
+                cib.ClearTextOnFocus = false; cib.Size = UDim2.new(0, 150, 0, 30)
+                cib.Position = UDim2.new(1, -162, 0.5, -15)
+                cib.TextXAlignment = Enum.TextXAlignment.Left; cib.Parent = customRow
+                Util.Corner(cib, 8); Util.Stroke(cib, theme.ControlBorder, 1, 0); Util.Padding(cib, 0, 0, 0, 10)
+                table.insert(Window._fontTargets, cib)
+                regSurface(cib, "ControlBg"); regText(cib, "primary"); applyShadowToObj(cib)
+                cib.Focused:Connect(function()
+                    Util.TweenFast(cib:FindFirstChildOfClass("UIStroke"), {Color = theme.Accent}, 0.15)
+                end)
+                cib.FocusLost:Connect(function()
+                    Util.TweenFast(cib:FindFirstChildOfClass("UIStroke"), {Color = theme.ControlBorder}, 0.15)
+                    local r, g, b = cib.Text:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
+                    if r and g and b then
+                        onPick(Color3.fromRGB(tonumber(r), tonumber(g), tonumber(b)))
+                    end
+                end)
+            end
+
+            -- ─── Inactive Tab Color ────────────────────────────────────
+            buildColorSection("Inactive Tab Color  (normal state)", tabInactivePresets, function(col)
+                theme.TabInactive = col
+                -- Recolor all currently inactive tabs immediately
+                for _, t in ipairs(Window._tabs) do
+                    if t ~= Window._activeTab then
+                        Util.TweenFast(t.Button, {BackgroundColor3 = col}, 0.3)
+                    end
+                end
+                -- Settings tab itself if not active
+                if Window._settingsTabEntry and Window._activeTab ~= Window._settingsTabEntry then
+                    Util.TweenFast(Window._settingsTabEntry.Button, {BackgroundColor3 = col}, 0.3)
+                end
+            end)
+
+            -- ─── Hover Tab Color ───────────────────────────────────────
+            -- HoverEffectLive reads theme.SurfaceHover via getter fn, so
+            -- simply updating the theme field is enough — no extra wiring needed.
+            buildColorSection("Hover Tab Color  (mouse-over)", tabHoverPresets, function(col)
+                theme.SurfaceHover = col
+            end)
+        end
+        -- ════════════════════════════════════════════════════════════
 
         return {}
     end
