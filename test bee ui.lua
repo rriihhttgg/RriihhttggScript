@@ -1,25 +1,22 @@
 --[[
 ╔═══════════════════════════════════════════════════════════════════╗
-║                         BeeUI v1.8                                ║
+║                         BeeUI v1.9                                ║
 ║                   Roblox GUI Library by Me                        ║
 ║                                                                   ║
-║  CHANGES v1.8:                                                     ║
+║  CHANGES v1.9:                                                    ║
+║  • Visibility Key section in Settings:                            ║
+║    – Keybind button (default: LeftControl)                        ║
+║      Click button → press any key → GUI hide/show rebinds live    ║
+║  • Window corner radius increased: 14 → 20                        ║
+║                                                                   ║
+║  CHANGES v1.8:                                                    ║
 ║  • Tab Colors section in Settings:                                ║
 ║    – Inactive Tab Color: color swatches + custom RGB              ║
-║      Changes the background of non-active tabs instantly          ║
 ║    – Hover Tab Color: color swatches + custom RGB                 ║
-║      Changes the highlight color when mouse hovers a tab          ║
-║      Works live thanks to HoverEffectLive getter pattern          ║
 ║                                                                   ║
-║  CHANGES v1.7:                                                     ║
-║  • Tab hover FIX: MouseLeave now reads live theme.TabInactive,    ║
-║    not the stale color captured at creation time                  ║
-║  • Text Shadow section in Settings:                               ║
-║    – Shadow On/Off toggle                                         ║
-║    – Shadow color presets (dark, white, accent-match, etc.)       ║
-║    – Shadow transparency slider (0–100 %)                         ║
-║    – Applies TextStrokeColor3 + TextStrokeTransparency to all     ║
-║      registered text elements                                     ║
+║  CHANGES v1.7:                                                    ║
+║  • Tab hover FIX: MouseLeave now reads live theme.TabInactive     ║
+║  • Text Shadow section in Settings                                ║
 ╚═══════════════════════════════════════════════════════════════════╝
 ]]
 
@@ -102,7 +99,6 @@ local TextColorPresets = {
     { Name = "Dark Brown", Color = Color3.fromRGB(80,  55,  30 ) },
 }
 
--- Shadow/stroke presets for "Text Shadow" section
 local TextShadowPresets = {
     { Name = "Black",      Color = Color3.fromRGB(0,   0,   0  ) },
     { Name = "Dark Gray",  Color = Color3.fromRGB(30,  30,  30 ) },
@@ -152,9 +148,6 @@ local function parseIcon(s)
     return {type="asset",id=s}
 end
 
--- ══════════════════════════════════════════
---  Derive surface colors from background
--- ══════════════════════════════════════════
 local function deriveColors(bgColor)
     local r,g,b = bgColor.R,bgColor.G,bgColor.B
     local isDark = (0.299*r+0.587*g+0.114*b) < 0.5
@@ -175,9 +168,6 @@ local function deriveColors(bgColor)
     }
 end
 
--- ══════════════════════════════════════════
---  THEMES
--- ══════════════════════════════════════════
 BeeUI.Themes = {
     Dark = {
         Background=Color3.fromRGB(28,18,6),Surface=Color3.fromRGB(38,25,8),
@@ -219,9 +209,6 @@ BeeUI.Themes = {
     },
 }
 
--- ══════════════════════════════════════════
---  UTILITIES
--- ══════════════════════════════════════════
 local Util = {}
 
 function Util.Tween(obj,info,props)
@@ -296,15 +283,11 @@ function Util.MakeDraggable(frame,handle)
     end)
 end
 
--- ── HoverEffect that reads colors LIVE from a getter function ─────
--- normalColorFn and hoverColorFn are zero-arg functions that return Color3.
--- This ensures that after a theme change the correct colors are used.
 function Util.HoverEffectLive(btn, normalColorFn, hoverColorFn, speed)
     speed = speed or 0.22
     btn.MouseEnter:Connect(function() Util.TweenFast(btn, {BackgroundColor3 = hoverColorFn()}, speed) end)
     btn.MouseLeave:Connect(function() Util.TweenFast(btn, {BackgroundColor3 = normalColorFn()}, speed) end)
 end
--- Legacy static version (still used for non-tab buttons)
 function Util.HoverEffect(btn,nc,hc,speed)
     speed=speed or 0.22
     btn.MouseEnter:Connect(function() Util.TweenFast(btn,{BackgroundColor3=hc},speed) end)
@@ -319,9 +302,6 @@ function Util.ClickEffect(btn)
     end)
 end
 
--- ══════════════════════════════════════════
---  Transparency helper
--- ══════════════════════════════════════════
 local _origTransparencies = nil
 local function applyWindowTransparency(windowFrame, alpha)
     if not _origTransparencies then
@@ -350,9 +330,6 @@ local function applyWindowTransparency(windowFrame, alpha)
     end
 end
 
--- ══════════════════════════════════════════
---  MAIN
--- ══════════════════════════════════════════
 BeeUI._activeTheme=nil; BeeUI._screenGui=nil; BeeUI._notifyHolder=nil
 BeeUI._notifyCount=0;   BeeUI._dropdownOverlay=nil
 
@@ -379,6 +356,7 @@ function BeeUI:CreateWindow(config)
     local winSize=config.Size or UDim2.new(0,580,0,460)
     local winPos=config.Position or UDim2.new(0.5,-290,0.5,-230)
 
+    -- ── FIX v1.9: Corner radius 20 (было 14) ──────────────────────
     local windowFrame=Util.Frame(screenGui,{Name="BeeWindow",Size=winSize,Position=winPos,BackgroundColor3=theme.Background,ClipsDescendants=true})
     Util.Corner(windowFrame,20);Util.Stroke(windowFrame,theme.Border,1,0)
 
@@ -407,14 +385,17 @@ function BeeUI:CreateWindow(config)
     Util.HoverEffect(btnMin,theme.MinBtn,Color3.fromRGB(220,160,10))
     Util.ClickEffect(btnClose);Util.ClickEffect(btnMin)
 
-    local bodyFrame=Util.Frame(windowFrame,{Name="Body",
-            -- Visibility key toggle (default: LeftControl)
-    local _visKey = Enum.KeyCode.LeftControl
+    -- ══════════════════════════════════════════
+    --  FIX v1.9: Visibility key — объявляем ДО bodyFrame, чтобы
+    --  rebindVisKey была доступна в buildSettingsTab через замыкание
+    -- ══════════════════════════════════════════
+    local _visKey     = Enum.KeyCode.LeftControl
     local _guiVisible = true
-    local _visConnection
-    local function setupVisKey()
-        if _visConnection then _visConnection:Disconnect() end
-        _visConnection = UserInputService.InputBegan:Connect(function(inp, gp)
+    local _visConn    = nil
+    local function rebindVisKey(newKey)
+        _visKey = newKey
+        if _visConn then _visConn:Disconnect() end
+        _visConn = UserInputService.InputBegan:Connect(function(inp, gp)
             if gp then return end
             if inp.KeyCode == _visKey then
                 _guiVisible = not _guiVisible
@@ -422,11 +403,9 @@ function BeeUI:CreateWindow(config)
             end
         end)
     end
-    setupVisKey()
-    Window = Window or {}
-    Window._visKey = _visKey
-    Window._setupVisKey = setupVisKey
-    Size=UDim2.new(1,0,1,-55),Position=UDim2.new(0,0,0,55),BackgroundTransparency=1})
+    rebindVisKey(_visKey) -- привязать по умолчанию
+
+    local bodyFrame=Util.Frame(windowFrame,{Name="Body",Size=UDim2.new(1,0,1,-55),Position=UDim2.new(0,0,0,55),BackgroundTransparency=1})
     local tabSidebar=Util.Frame(bodyFrame,{Name="TabSidebar",Size=UDim2.new(0,140,1,0),BackgroundColor3=theme.Surface,ClipsDescendants=true})
 
     local tabTopScroll=Instance.new("ScrollingFrame")
@@ -465,26 +444,6 @@ function BeeUI:CreateWindow(config)
         task.delay(0.25,function() screenGui:Destroy() end)
     end)
 
-    -- ── Visibility key (hide/show the window) ─────────────────────
-    local _visKey      = Enum.KeyCode.LeftControl
-    local _guiVisible  = true
-    local _visConn     = nil
-    local function rebindVisKey(newKey)
-        _visKey = newKey
-        if _visConn then _visConn:Disconnect() end
-        _visConn = UserInputService.InputBegan:Connect(function(inp, gp)
-            if gp then return end
-            if inp.KeyCode == _visKey then
-                _guiVisible = not _guiVisible
-                windowFrame.Visible = _guiVisible
-            end
-        end)
-    end
-    rebindVisKey(_visKey)   -- attach default binding
-
-    -- ══════════════════════════════════════════
-    --  WINDOW OBJECT
-    -- ══════════════════════════════════════════
     local Window={}
     Window._theme=theme; Window._tabs={}; Window._activeTab=nil
     Window._tabTopScroll=tabTopScroll; Window._settingsBtnHolder=settingsBtnHolder
@@ -492,12 +451,11 @@ function BeeUI:CreateWindow(config)
     Window._windowFrame=windowFrame; Window._screenGui=screenGui
     Window._currentFont=Enum.Font.Ubuntu; Window._fontTargets={}
     Window._settingsTabEntry=nil; Window._titleLabel=titleLabel; Window._subTitleLabel=subTitleLabel
-    Window._surfaceElements={}   -- {obj, role}
-    Window._textElements={}      -- {obj, role}
-    -- Text shadow state
+    Window._surfaceElements={}
+    Window._textElements={}
     Window._shadowEnabled=false
     Window._shadowColor=Color3.fromRGB(0,0,0)
-    Window._shadowTransparency=0.5   -- 0=opaque, 1=invisible
+    Window._shadowTransparency=0.5
 
     local function regSurface(obj,role) table.insert(Window._surfaceElements,{obj=obj,role=role});return obj end
     local function regText(obj,role)    table.insert(Window._textElements,{obj=obj,role=role});return obj end
@@ -509,7 +467,6 @@ function BeeUI:CreateWindow(config)
     regText(titleLabel,"TitleText"); regText(subTitleLabel,"SubTitleText")
     table.insert(Window._fontTargets,titleLabel); table.insert(Window._fontTargets,subTitleLabel)
 
-    -- ── Apply shadow to a single text object ─────────────────────────
     local function applyShadowToObj(obj)
         pcall(function()
             if Window._shadowEnabled then
@@ -521,7 +478,6 @@ function BeeUI:CreateWindow(config)
         end)
     end
 
-    -- ── Apply shadow to ALL registered text elements ─────────────────
     function Window:ApplyShadow()
         for _,entry in ipairs(self._textElements) do
             if entry.obj and entry.obj.Parent then
@@ -530,9 +486,6 @@ function BeeUI:CreateWindow(config)
         end
     end
 
-    -- ──────────────────────────────────────────
-    --  ApplyBackground
-    -- ──────────────────────────────────────────
     function Window:ApplyBackground(bgColor)
         local d=deriveColors(bgColor)
         local map={Background=bgColor,Surface=d.Surface,SurfaceElevated=d.SurfaceElevated,
@@ -558,9 +511,6 @@ function BeeUI:CreateWindow(config)
         end
     end
 
-    -- ──────────────────────────────────────────
-    --  ApplyTextColor
-    -- ──────────────────────────────────────────
     function Window:ApplyTextColor(primaryColor)
         local r,g,b=primaryColor.R,primaryColor.G,primaryColor.B
         local secondary=Color3.new(math.clamp(r*0.65+0.1,0,1),math.clamp(g*0.65+0.1,0,1),math.clamp(b*0.65+0.1,0,1))
@@ -577,9 +527,6 @@ function BeeUI:CreateWindow(config)
         end
     end
 
-    -- ──────────────────────────────────────────
-    --  createTabButton  (uses HoverEffectLive)
-    -- ──────────────────────────────────────────
     local function createTabButton(parent,tabName,tabConfig,isFirst)
         local tabBtn=Util.Button(parent,{Name=tabName.."_Btn",Text="",Size=UDim2.new(1,0,0,36),
             BackgroundColor3=isFirst and theme.TabActive or theme.TabInactive})
@@ -611,7 +558,6 @@ function BeeUI:CreateWindow(config)
         table.insert(Window._fontTargets,tabLabel)
         regText(tabLabel, isFirst and "primary" or "tab")
 
-        -- FIX: live hover reads from theme so it's always correct after bg/accent/tab-color change
         Util.HoverEffectLive(tabBtn,
             function() return isFirst and theme.TabActive or theme.TabInactive end,
             function() return theme.SurfaceHover end)
@@ -619,9 +565,6 @@ function BeeUI:CreateWindow(config)
         return tabBtn, tabLabel
     end
 
-    -- ──────────────────────────────────────────
-    --  Window:AddTab
-    -- ──────────────────────────────────────────
     function Window:AddTab(tabConfig)
         tabConfig=tabConfig or {}
         local tabName=tabConfig.Name or ("Tab "..( #self._tabs+1))
@@ -666,9 +609,6 @@ function BeeUI:CreateWindow(config)
         end
         tabBtn.MouseButton1Click:Connect(function() activateTab(tabEntry) end)
 
-        -- ────────────────────────────────────────
-        --  TAB OBJECT
-        -- ────────────────────────────────────────
         local Tab={}
         Tab._theme=theme;Tab._scroll=scrollFrame;Tab._tabEntry=tabEntry
         Tab._dropOverlay=self._dropOverlay;Tab._windowFrame=self._windowFrame;Tab._window=self
@@ -691,7 +631,6 @@ function BeeUI:CreateWindow(config)
             return lbl
         end
 
-        -- Dropdown builder
         local function buildDropdown(parentFrame,options,defaultSelected,onSelect)
             local selected=defaultSelected or (options[1] or "");local isOpen=false
             local dropBtn=Util.Button(parentFrame,{Name="DropBtn",Text="",BackgroundColor3=theme.ControlBg,Size=UDim2.new(0,140,0,30),Position=UDim2.new(1,-152,0.5,-15)})
@@ -751,7 +690,6 @@ function BeeUI:CreateWindow(config)
             return obj
         end
 
-        -- Tab:AddButton
         function Tab:AddButton(config)
             config=config or {}
             local row=makeRow(config.Label,48)
@@ -765,7 +703,6 @@ function BeeUI:CreateWindow(config)
             return btn
         end
 
-        -- Tab:AddToggle
         function Tab:AddToggle(config)
             config=config or {}; local value=config.Default==true
             local row=makeRow(config.Label,48)
@@ -789,7 +726,6 @@ function BeeUI:CreateWindow(config)
             return obj
         end
 
-        -- Tab:AddSlider
         function Tab:AddSlider(config)
             config=config or {}
             local minVal=config.Min or 0;local maxVal=config.Max or 100;local step=config.Step or 1;local suffix=config.Suffix or ""
@@ -826,7 +762,6 @@ function BeeUI:CreateWindow(config)
             return obj
         end
 
-        -- Tab:AddDropdown
         function Tab:AddDropdown(config)
             config=config or {}
             local row=makeRow(config.Label,48)
@@ -836,7 +771,6 @@ function BeeUI:CreateWindow(config)
             end)
         end
 
-        -- Tab:AddInput
         function Tab:AddInput(config)
             config=config or {}
             local row=makeRow(config.Label,48)
@@ -860,7 +794,6 @@ function BeeUI:CreateWindow(config)
             return obj
         end
 
-        -- Tab:AddLabel
         function Tab:AddLabel(text)
             local row=makeRow("Label_"..(text or ""),36); row.BackgroundTransparency=1
             local s=row:FindFirstChildOfClass("UIStroke");if s then s:Destroy() end
@@ -868,13 +801,11 @@ function BeeUI:CreateWindow(config)
             table.insert(self._window._fontTargets,lbl); regText(lbl,"secondary"); applyShadowToObj(lbl)
         end
 
-        -- Tab:AddSeparator
         function Tab:AddSeparator()
             local sep=Util.Frame(scrollFrame,{Name="Separator",Size=UDim2.new(1,0,0,1),BackgroundColor3=theme.Border})
             regSurface(sep,"Border")
         end
 
-        -- Tab:AddSection
         function Tab:AddSection(title)
             local holder=Util.Frame(scrollFrame,{Name="Section_"..(title or ""),Size=UDim2.new(1,0,0,28),BackgroundTransparency=1})
             local line=Util.Frame(holder,{Size=UDim2.new(1,0,0,1),Position=UDim2.new(0,0,0.5,0),BackgroundColor3=theme.Border})
@@ -885,7 +816,6 @@ function BeeUI:CreateWindow(config)
             table.insert(self._window._fontTargets,sLbl)
         end
 
-        -- Tab:AddColorPicker
         function Tab:AddColorPicker(config)
             config=config or {};local color=config.Default or Color3.fromRGB(255,100,50)
             local row=makeRow(config.Label,48)
@@ -897,7 +827,6 @@ function BeeUI:CreateWindow(config)
             local obj={}; function obj:Set(c) color=c;preview.BackgroundColor3=c end; function obj:Get() return color end; return obj
         end
 
-        -- Tab:AddKeybind
         function Tab:AddKeybind(config)
             config=config or {};local key=config.Default or Enum.KeyCode.F;local listening=false
             local row=makeRow(config.Label,48)
@@ -976,7 +905,6 @@ function BeeUI:CreateWindow(config)
             table.insert(Window._fontTargets,lbl); regText(lbl,textRole or "primary"); applyShadowToObj(lbl); return lbl
         end
 
-        -- ── Helper: build a small inline dropdown for Settings rows ───
         local function sDropdown(row, options, defaultSelected, onSelect)
             local selected=defaultSelected or (options[1] or ""); local isOpen=false
             local dropBtn=Util.Button(row,{Text="",BackgroundColor3=theme.ControlBg,Size=UDim2.new(0,140,0,30),Position=UDim2.new(1,-152,0.5,-15)})
@@ -1027,7 +955,7 @@ function BeeUI:CreateWindow(config)
             end)
         end
 
-        -- ── Font ─────────────────────────────────────────────────────
+        -- ── Font ──────────────────────────────────────────────────────
         sSection("Font")
         do
             local fontNames={}; for _,f in ipairs(AvailableFonts) do table.insert(fontNames,f.Name) end
@@ -1043,7 +971,7 @@ function BeeUI:CreateWindow(config)
             end)
         end
 
-        -- ── Text Color ────────────────────────────────────────────────
+        -- ── Text Color ─────────────────────────────────────────────────
         sSection("Text Color")
         do
             local swatchContainer=Util.Frame(scrollFrame,{Size=UDim2.new(1,0,0,80),BackgroundColor3=theme.SurfaceElevated})
@@ -1081,10 +1009,9 @@ function BeeUI:CreateWindow(config)
             table.insert(Window._fontTargets,prevLbl); regText(prevLbl,"primary"); applyShadowToObj(prevLbl)
         end
 
-        -- ── Text Shadow ───────────────────────────────────────────────
+        -- ── Text Shadow ────────────────────────────────────────────────
         sSection("Text Shadow")
         do
-            -- Toggle row
             local toggleRow=sMakeRow("Shadow Toggle",48)
             sLabel(toggleRow,"Text Shadow",14,220,"primary")
             local trackW,trackH=44,24
@@ -1102,7 +1029,6 @@ function BeeUI:CreateWindow(config)
                 Window:ApplyShadow()
             end)
 
-            -- Color swatches for shadow
             local shadowSwatchCont=Util.Frame(scrollFrame,{Size=UDim2.new(1,0,0,80),BackgroundColor3=theme.SurfaceElevated})
             Util.Corner(shadowSwatchCont,10);Util.Stroke(shadowSwatchCont,theme.Border,1,0);Util.Padding(shadowSwatchCont,10,10,10,10)
             regSurface(shadowSwatchCont,"SurfaceElevated")
@@ -1128,7 +1054,6 @@ function BeeUI:CreateWindow(config)
                 end)
             end
 
-            -- Custom shadow RGB
             local customRow=sMakeRow("Custom Shadow",48)
             sLabel(customRow,"Custom (R,G,B)",14,160,"primary")
             local sib=Instance.new("TextBox")
@@ -1148,7 +1073,6 @@ function BeeUI:CreateWindow(config)
                 end
             end)
 
-            -- Shadow opacity slider
             local opRow=sMakeRow("Shadow Opacity",62)
             local minV,maxV,stepV=0,95,5; local suffV="%"; local valS=50
             Window._shadowTransparency = valS/100
@@ -1180,7 +1104,7 @@ function BeeUI:CreateWindow(config)
             UserInputService.InputEnded:Connect(function(inp) if inp.UserInputType==Enum.UserInputType.MouseButton1 then opDragging=false end end)
         end
 
-        -- ── Background Color ──────────────────────────────────────────
+        -- ── Background Color ───────────────────────────────────────────
         sSection("Background Color")
         do
             local swatchContainer=Util.Frame(scrollFrame,{Size=UDim2.new(1,0,0,80),BackgroundColor3=theme.SurfaceElevated})
@@ -1215,7 +1139,7 @@ function BeeUI:CreateWindow(config)
             end)
         end
 
-        -- ── Transparency ──────────────────────────────────────────────
+        -- ── Transparency ───────────────────────────────────────────────
         sSection("Transparency")
         do
             local minVal=0;local maxVal=95;local step=5;local suffix="%";local value=0
@@ -1246,7 +1170,7 @@ function BeeUI:CreateWindow(config)
             UserInputService.InputEnded:Connect(function(inp) if inp.UserInputType==Enum.UserInputType.MouseButton1 then dragging=false end end)
         end
 
-        -- ── Accent Color ──────────────────────────────────────────────
+        -- ── Accent Color ───────────────────────────────────────────────
         sSection("Accent Color")
         do
             local accentPresets={
@@ -1292,12 +1216,9 @@ function BeeUI:CreateWindow(config)
             end
         end
 
-        -- ════════════════════════════════════════════════════════════
-        --  ── Tab Colors  (NEW in v1.8) ─────────────────────────────
-        -- ════════════════════════════════════════════════════════════
+        -- ── Tab Colors ─────────────────────────────────────────────────
         sSection("Tab Colors")
         do
-            -- Preset palettes
             local tabInactivePresets = {
                 { Name = "Dark Honey",  Color = Color3.fromRGB(44,  29,  9  ) },
                 { Name = "Charcoal",    Color = Color3.fromRGB(40,  40,  50 ) },
@@ -1327,123 +1248,83 @@ function BeeUI:CreateWindow(config)
                 { Name = "Blush",      Color = Color3.fromRGB(250, 200, 215) },
             }
 
-            -- ─── Helper: build a swatch row + custom RGB row ───────────
             local function buildColorSection(subLabel, presets, onPick)
-                -- Thin subtitle label (transparent row)
                 local subRow = sMakeRow(subLabel, 28)
                 subRow.BackgroundTransparency = 1
                 local subStroke = subRow:FindFirstChildOfClass("UIStroke")
                 if subStroke then subStroke:Destroy() end
                 local subLbl = Util.Label(subRow, {
-                    Text = subLabel,
-                    Font = Window._currentFont, TextSize = 13,
+                    Text = subLabel, Font = Window._currentFont, TextSize = 13,
                     TextColor3 = theme.TextSecondary,
-                    Size = UDim2.new(1, -28, 1, 0),
-                    Position = UDim2.new(0, 14, 0, 0),
+                    Size = UDim2.new(1, -28, 1, 0), Position = UDim2.new(0, 14, 0, 0),
                 })
-                table.insert(Window._fontTargets, subLbl)
-                regText(subLbl, "secondary")
-                applyShadowToObj(subLbl)
+                table.insert(Window._fontTargets, subLbl); regText(subLbl, "secondary"); applyShadowToObj(subLbl)
 
-                -- Swatches
-                local swatchCont = Util.Frame(scrollFrame, {
-                    Size = UDim2.new(1, 0, 0, 80),
-                    BackgroundColor3 = theme.SurfaceElevated,
-                })
-                Util.Corner(swatchCont, 10)
-                Util.Stroke(swatchCont, theme.Border, 1, 0)
-                Util.Padding(swatchCont, 10, 10, 10, 10)
-                regSurface(swatchCont, "SurfaceElevated")
-
+                local swatchCont = Util.Frame(scrollFrame, {Size=UDim2.new(1,0,0,80),BackgroundColor3=theme.SurfaceElevated})
+                Util.Corner(swatchCont,10); Util.Stroke(swatchCont,theme.Border,1,0); Util.Padding(swatchCont,10,10,10,10)
+                regSurface(swatchCont,"SurfaceElevated")
                 local grid = Instance.new("UIGridLayout")
-                grid.CellSize     = UDim2.new(0, 24, 0, 24)
-                grid.CellPadding  = UDim2.new(0, 6, 0, 6)
-                grid.FillDirection = Enum.FillDirection.Horizontal
-                grid.HorizontalAlignment = Enum.HorizontalAlignment.Left
-                grid.SortOrder    = Enum.SortOrder.LayoutOrder
-                grid.Parent       = swatchCont
+                grid.CellSize=UDim2.new(0,24,0,24); grid.CellPadding=UDim2.new(0,6,0,6)
+                grid.FillDirection=Enum.FillDirection.Horizontal; grid.HorizontalAlignment=Enum.HorizontalAlignment.Left
+                grid.SortOrder=Enum.SortOrder.LayoutOrder; grid.Parent=swatchCont
                 grid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                    swatchCont.Size = UDim2.new(1, 0, 0, grid.AbsoluteContentSize.Y + 20)
+                    swatchCont.Size = UDim2.new(1,0,0,grid.AbsoluteContentSize.Y+20)
                 end)
-
                 for i, preset in ipairs(presets) do
-                    local sw = Util.Button(swatchCont, {
-                        Text = "", BackgroundColor3 = preset.Color,
-                        Size = UDim2.new(0, 24, 0, 24), LayoutOrder = i, ZIndex = 2,
-                    })
-                    Util.Corner(sw, 5); Util.Stroke(sw, theme.Border, 1, 0)
+                    local sw = Util.Button(swatchCont, {Text="",BackgroundColor3=preset.Color,Size=UDim2.new(0,24,0,24),LayoutOrder=i,ZIndex=2})
+                    Util.Corner(sw,5); Util.Stroke(sw,theme.Border,1,0)
                     sw.MouseEnter:Connect(function()
-                        Util.TweenFast(sw, {Size = UDim2.new(0, 26, 0, 26)}, 0.1)
-                        local st = sw:FindFirstChildOfClass("UIStroke")
-                        if st then Util.TweenFast(st, {Color = theme.Accent, Thickness = 2}, 0.1) end
+                        Util.TweenFast(sw,{Size=UDim2.new(0,26,0,26)},0.1)
+                        local st=sw:FindFirstChildOfClass("UIStroke"); if st then Util.TweenFast(st,{Color=theme.Accent,Thickness=2},0.1) end
                     end)
                     sw.MouseLeave:Connect(function()
-                        Util.TweenFast(sw, {Size = UDim2.new(0, 24, 0, 24)}, 0.1)
-                        local st = sw:FindFirstChildOfClass("UIStroke")
-                        if st then Util.TweenFast(st, {Color = theme.Border, Thickness = 1}, 0.1) end
+                        Util.TweenFast(sw,{Size=UDim2.new(0,24,0,24)},0.1)
+                        local st=sw:FindFirstChildOfClass("UIStroke"); if st then Util.TweenFast(st,{Color=theme.Border,Thickness=1},0.1) end
                     end)
                     sw.MouseButton1Click:Connect(function() onPick(preset.Color) end)
                 end
 
-                -- Custom RGB input
-                local customRow = sMakeRow("Custom " .. subLabel, 48)
+                local customRow = sMakeRow("Custom "..subLabel, 48)
                 sLabel(customRow, "Custom (R,G,B)", 14, 160, "primary")
                 local cib = Instance.new("TextBox")
-                cib.PlaceholderText = "R, G, B"
-                cib.Text = ""; cib.Font = Window._currentFont; cib.TextSize = 13
-                cib.TextColor3 = theme.TextPrimary; cib.PlaceholderColor3 = theme.TextMuted
-                cib.BackgroundColor3 = theme.ControlBg; cib.BorderSizePixel = 0
-                cib.ClearTextOnFocus = false; cib.Size = UDim2.new(0, 150, 0, 30)
-                cib.Position = UDim2.new(1, -162, 0.5, -15)
-                cib.TextXAlignment = Enum.TextXAlignment.Left; cib.Parent = customRow
-                Util.Corner(cib, 8); Util.Stroke(cib, theme.ControlBorder, 1, 0); Util.Padding(cib, 0, 0, 0, 10)
-                table.insert(Window._fontTargets, cib)
-                regSurface(cib, "ControlBg"); regText(cib, "primary"); applyShadowToObj(cib)
-                cib.Focused:Connect(function()
-                    Util.TweenFast(cib:FindFirstChildOfClass("UIStroke"), {Color = theme.Accent}, 0.15)
-                end)
+                cib.PlaceholderText="R, G, B"; cib.Text=""; cib.Font=Window._currentFont; cib.TextSize=13
+                cib.TextColor3=theme.TextPrimary; cib.PlaceholderColor3=theme.TextMuted; cib.BackgroundColor3=theme.ControlBg
+                cib.BorderSizePixel=0; cib.ClearTextOnFocus=false; cib.Size=UDim2.new(0,150,0,30)
+                cib.Position=UDim2.new(1,-162,0.5,-15); cib.TextXAlignment=Enum.TextXAlignment.Left; cib.Parent=customRow
+                Util.Corner(cib,8); Util.Stroke(cib,theme.ControlBorder,1,0); Util.Padding(cib,0,0,0,10)
+                table.insert(Window._fontTargets,cib); regSurface(cib,"ControlBg"); regText(cib,"primary"); applyShadowToObj(cib)
+                cib.Focused:Connect(function() Util.TweenFast(cib:FindFirstChildOfClass("UIStroke"),{Color=theme.Accent},0.15) end)
                 cib.FocusLost:Connect(function()
-                    Util.TweenFast(cib:FindFirstChildOfClass("UIStroke"), {Color = theme.ControlBorder}, 0.15)
-                    local r, g, b = cib.Text:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
-                    if r and g and b then
-                        onPick(Color3.fromRGB(tonumber(r), tonumber(g), tonumber(b)))
-                    end
+                    Util.TweenFast(cib:FindFirstChildOfClass("UIStroke"),{Color=theme.ControlBorder},0.15)
+                    local r,g,b=cib.Text:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
+                    if r and g and b then onPick(Color3.fromRGB(tonumber(r),tonumber(g),tonumber(b))) end
                 end)
             end
-            
 
-            -- ─── Inactive Tab Color ────────────────────────────────────
             buildColorSection("Inactive Tab Color  (normal state)", tabInactivePresets, function(col)
                 theme.TabInactive = col
-                -- Recolor all currently inactive tabs immediately
                 for _, t in ipairs(Window._tabs) do
-                    if t ~= Window._activeTab then
-                        Util.TweenFast(t.Button, {BackgroundColor3 = col}, 0.3)
-                    end
+                    if t ~= Window._activeTab then Util.TweenFast(t.Button,{BackgroundColor3=col},0.3) end
                 end
-                -- Settings tab itself if not active
                 if Window._settingsTabEntry and Window._activeTab ~= Window._settingsTabEntry then
-                    Util.TweenFast(Window._settingsTabEntry.Button, {BackgroundColor3 = col}, 0.3)
+                    Util.TweenFast(Window._settingsTabEntry.Button,{BackgroundColor3=col},0.3)
                 end
             end)
 
-            -- ─── Hover Tab Color ───────────────────────────────────────
-            -- HoverEffectLive reads theme.SurfaceHover via getter fn, so
-            -- simply updating the theme field is enough — no extra wiring needed.
             buildColorSection("Hover Tab Color  (mouse-over)", tabHoverPresets, function(col)
                 theme.SurfaceHover = col
             end)
         end
-        -- ════════════════════════════════════════════════════════════
 
-        return {}
-
-        -- ── Visibility Key ────────────────────────────────────────────
+        -- ══════════════════════════════════════════════════════════════
+        --  ── Visibility Key  (NEW in v1.9) ────────────────────────────
+        -- ══════════════════════════════════════════════════════════════
         sSection("Visibility Key")
         do
             local listening = false
+
             local row = sMakeRow("Hide/Show Key", 48)
-            sLabel(row, "Hide/Show Key", 14, 200, "primary")
+            sLabel(row, "Hide / Show GUI", 14, 200, "primary")
 
             local kbBtn = Util.Button(row, {
                 Text = "[LeftControl]",
@@ -1453,42 +1334,49 @@ function BeeUI:CreateWindow(config)
                 Size = UDim2.new(0, 130, 0, 30),
                 Position = UDim2.new(1, -142, 0.5, -15),
             })
-            Util.Corner(kbBtn, 8); Util.Stroke(kbBtn, theme.ControlBorder, 1, 0)
-            table.insert(Window._fontTargets, kbBtn); regSurface(kbBtn, "ControlBg")
+            Util.Corner(kbBtn, 8)
+            Util.Stroke(kbBtn, theme.ControlBorder, 1, 0)
+            table.insert(Window._fontTargets, kbBtn)
+            regSurface(kbBtn, "ControlBg")
+            Util.HoverEffect(kbBtn, theme.ControlBg, theme.SurfaceHover)
 
             kbBtn.MouseButton1Click:Connect(function()
                 if listening then return end
                 listening = true
-                kbBtn.Text = "[...]"
+                kbBtn.Text = "[  ...  ]"
                 kbBtn.TextColor3 = theme.Warning
             end)
 
+            -- Перехватываем нажатие клавиши для перепривязки
             UserInputService.InputBegan:Connect(function(inp, gp)
                 if gp then return end
                 if listening and inp.UserInputType == Enum.UserInputType.Keyboard then
                     listening = false
-                    rebindVisKey(inp.KeyCode)
+                    rebindVisKey(inp.KeyCode)          -- замыкание из CreateWindow
                     kbBtn.Text = "[" .. inp.KeyCode.Name .. "]"
                     kbBtn.TextColor3 = theme.Accent
                 end
             end)
 
-            -- Hint label
-            local hintRow = sMakeRow("VisHint", 36)
+            -- Подсказка под кнопкой
+            local hintRow = sMakeRow("VisHint", 34)
             hintRow.BackgroundTransparency = 1
             local hs = hintRow:FindFirstChildOfClass("UIStroke"); if hs then hs:Destroy() end
             local hLbl = Util.Label(hintRow, {
-                Text = "Press the button, then press any key to rebind.",
+                Text = "Нажмите кнопку, затем нажмите любую клавишу для перепривязки.",
                 Font = Window._currentFont, TextSize = 12,
                 TextColor3 = theme.TextMuted,
                 Size = UDim2.new(1, -28, 1, 0),
                 Position = UDim2.new(0, 14, 0, 0),
+                TextWrapped = true,
             })
             table.insert(Window._fontTargets, hLbl); regText(hLbl, "muted"); applyShadowToObj(hLbl)
         end
-    end
 
-    Window._settingsTab=buildSettingsTab()
+        return {}
+    end  -- buildSettingsTab
+
+    Window._settingsTab = buildSettingsTab()
     return Window
 end
 
