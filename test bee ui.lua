@@ -1,6 +1,6 @@
 --[[
 ╔═══════════════════════════════════════════════════════════════════╗
-║                         BeeUI v2.0a                                ║
+║                         BeeUI v2.0b                               ║
 ║                   Roblox GUI Library by Me                        ║
 ║                                                                   ║
 ║  CHANGES v2.0:                                                    ║
@@ -494,6 +494,17 @@ end)
     Window._shadowColor=Color3.fromRGB(0,0,0)
     Window._shadowTransparency=0.5
 
+    local bgImage = Instance.new("ImageLabel")
+bgImage.Name = "BgImage"
+bgImage.Size = UDim2.new(1, 0, 1, 0)
+bgImage.Position = UDim2.new(0, 0, 0, 0)
+bgImage.BackgroundTransparency = 1
+bgImage.ImageTransparency = 1  -- по умолчанию скрыт
+bgImage.ScaleType = Enum.ScaleType.Crop
+bgImage.ZIndex = 0
+bgImage.Parent = innerClip
+Util.Corner(bgImage, 20)
+
     local function regSurface(obj,role) table.insert(Window._surfaceElements,{obj=obj,role=role});return obj end
     local function regText(obj,role)    table.insert(Window._textElements,{obj=obj,role=role});return obj end
 
@@ -503,6 +514,17 @@ end)
     regSurface(windowFrame,"Background")
     regText(titleLabel,"TitleText"); regText(subTitleLabel,"SubTitleText")
     table.insert(Window._fontTargets,titleLabel); table.insert(Window._fontTargets,subTitleLabel)
+
+    function Window:SetBackgroundImage(assetId, transparency)
+    transparency = transparency or 0
+    if assetId and assetId ~= "" then
+        bgImage.Image = "rbxassetid://" .. tostring(assetId)
+        bgImage.ImageTransparency = transparency
+    else
+        bgImage.ImageTransparency = 1
+        bgImage.Image = ""
+    end
+end
 
     local function applyShadowToObj(obj)
         pcall(function()
@@ -1333,6 +1355,128 @@ end)
                 local r,g,b=ib.Text:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
                 if r and g and b then Window:ApplyBackground(Color3.fromRGB(tonumber(r),tonumber(g),tonumber(b))) end
             end)
+            sSection("Background Image")
+do
+    -- Поле ввода Asset ID
+    local row = sMakeRow("Asset ID", 48)
+    sLabel(row, "Asset ID", 14, 160, "primary")
+    
+    local idBox = Instance.new("TextBox")
+    idBox.PlaceholderText = "123456789"
+    idBox.Text = ""
+    idBox.Font = Window._currentFont
+    idBox.TextSize = 13
+    idBox.TextColor3 = theme.TextPrimary
+    idBox.PlaceholderColor3 = theme.TextMuted
+    idBox.BackgroundColor3 = theme.ControlBg
+    idBox.BorderSizePixel = 0
+    idBox.ClearTextOnFocus = false
+    idBox.Size = UDim2.new(0, 150, 0, 30)
+    idBox.Position = UDim2.new(1, -162, 0.5, -15)
+    idBox.TextXAlignment = Enum.TextXAlignment.Left
+    idBox.Parent = row
+    Util.Corner(idBox, 8)
+    Util.Stroke(idBox, theme.ControlBorder, 1, 0)
+    Util.Padding(idBox, 0, 0, 0, 10)
+    table.insert(Window._fontTargets, idBox)
+    regSurface(idBox, "ControlBg")
+    regText(idBox, "primary")
+    idBox.Focused:Connect(function()
+        Util.TweenFast(idBox:FindFirstChildOfClass("UIStroke"), {Color = theme.Accent}, 0.15)
+    end)
+    idBox.FocusLost:Connect(function()
+        Util.TweenFast(idBox:FindFirstChildOfClass("UIStroke"), {Color = theme.ControlBorder}, 0.15)
+        local id = idBox.Text:match("%d+")
+        if id then
+            Window:SetBackgroundImage(id, currentImgTransparency)
+        end
+    end)
+
+    -- Кнопка сброса
+    local clearRow = sMakeRow("Clear Image", 48)
+    sLabel(clearRow, "Remove Image", 14, 200, "primary")
+    local clearBtn = Util.Button(clearRow, {
+        Text = "Clear",
+        Font = Window._currentFont,
+        TextSize = 13,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundColor3 = theme.Error,
+        Size = UDim2.new(0, 80, 0, 30),
+        Position = UDim2.new(1, -92, 0.5, -15),
+    })
+    Util.Corner(clearBtn, 8)
+    Util.HoverEffect(clearBtn, theme.Error, Color3.fromRGB(200, 30, 30))
+    clearBtn.MouseButton1Click:Connect(function()
+        Window:SetBackgroundImage("", 1)
+        idBox.Text = ""
+    end)
+
+    -- Слайдер прозрачности картинки
+    local currentImgTransparency = 0
+    local minV, maxV, stepV = 0, 90, 5
+    local opRow = sMakeRow("Image Opacity", 62)
+    local opNameLbl = Util.Label(opRow, {
+        Text = "Image Opacity",
+        Font = Window._currentFont, TextSize = 14,
+        TextColor3 = theme.TextPrimary,
+        Size = UDim2.new(0, 160, 0, 18),
+        Position = UDim2.new(0, 14, 0, 8),
+    })
+    table.insert(Window._fontTargets, opNameLbl)
+    regText(opNameLbl, "primary")
+    local opValLbl = Util.Label(opRow, {
+        Text = "100%",
+        Font = Window._currentFont, TextSize = 13,
+        TextColor3 = theme.Accent,
+        Size = UDim2.new(0, 80, 0, 18),
+        Position = UDim2.new(1, -94, 0, 8),
+        TextXAlignment = Enum.TextXAlignment.Right,
+    })
+    table.insert(Window._fontTargets, opValLbl)
+    local tH = 6
+    local opTrack = Util.Frame(opRow, {
+        Size = UDim2.new(1, -28, 0, tH),
+        Position = UDim2.new(0, 14, 1, -16),
+        BackgroundColor3 = theme.SliderTrack,
+    })
+    Util.Corner(opTrack, tH/2)
+    regSurface(opTrack, "SliderTrack")
+    local opFill = Util.Frame(opTrack, {Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = theme.SliderFill})
+    Util.Corner(opFill, tH/2)
+    local kS = 16
+    local opKnob = Util.Frame(opTrack, {
+        Size = UDim2.new(0, kS, 0, kS),
+        Position = UDim2.new(1, -kS/2, 0.5, -kS/2),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        ZIndex = 5,
+    })
+    Util.Corner(opKnob, kS/2)
+    Util.Stroke(opKnob, theme.Accent, 2, 0)
+    local opDrag = false
+    local function opUpd(ix)
+        local ratio = math.clamp((ix - opTrack.AbsolutePosition.X) / opTrack.AbsoluteSize.X, 0, 1)
+        local snap = math.clamp(math.round((minV + ratio*(maxV-minV))/stepV)*stepV, minV, maxV)
+        local nr = (snap - minV) / (maxV - minV)
+        opFill.Size = UDim2.new(nr, 0, 1, 0)
+        opKnob.Position = UDim2.new(nr, -kS/2, 0.5, -kS/2)
+        opValLbl.Text = tostring(100 - snap) .. "%"
+        currentImgTransparency = snap / 100
+        bgImage.ImageTransparency = currentImgTransparency
+    end
+    local function opStart(inp)
+        if inp.UserInputType == Enum.UserInputType.MouseButton1 then
+            opDrag = true; opUpd(inp.Position.X)
+        end
+    end
+    opTrack.InputBegan:Connect(opStart)
+    opKnob.InputBegan:Connect(opStart)
+    UserInputService.InputChanged:Connect(function(inp)
+        if opDrag and inp.UserInputType == Enum.UserInputType.MouseMovement then opUpd(inp.Position.X) end
+    end)
+    UserInputService.InputEnded:Connect(function(inp)
+        if inp.UserInputType == Enum.UserInputType.MouseButton1 then opDrag = false end
+    end)
+end
         end
 
         -- ── Transparency ───────────────────────────────────────────────
